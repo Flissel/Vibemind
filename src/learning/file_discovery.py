@@ -12,6 +12,8 @@ import logging
 import json
 from datetime import datetime
 
+from .knowledge_accumulator import KnowledgeAccumulator
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -42,6 +44,9 @@ class FileDiscoveryLearner:
         os.makedirs(self.cache_dir, exist_ok=True)
         self.cache_file = os.path.join(self.cache_dir, "discovered_commands.json")
         
+        # Knowledge accumulator for permanent learning
+        self.knowledge = KnowledgeAccumulator()
+        
         # Genetic material for evolving search strategies
         self.search_genome = {
             'command_pool': [],  # Will be discovered
@@ -54,6 +59,11 @@ class FileDiscoveryLearner:
         # Load cached discoveries
         self._load_cache()
         
+        # Discovery session tracking
+        self.session_start = datetime.now()
+        self.new_discoveries = []
+        self.rediscoveries = []
+        
     async def discover_file_commands(self) -> List[str]:
         """Discover available commands through exploration"""
         
@@ -64,11 +74,22 @@ class FileDiscoveryLearner:
         
         logger.info("Starting command discovery through exploration...")
         
+        # Get already known commands to skip
+        already_known = self.knowledge.get_already_known_commands()
+        logger.info(f"Already know {len(already_known)} commands from previous sessions")
+        
         # Try random command-like strings
         potential_commands = self._generate_command_candidates()
-        discovered = []
         
-        for cmd in potential_commands:
+        # Filter out already known commands for efficiency
+        commands_to_test = [cmd for cmd in potential_commands if cmd not in already_known]
+        logger.info(f"Testing {len(commands_to_test)} new candidates (skipping {len(potential_commands) - len(commands_to_test)} known)")
+        
+        discovered = []
+        commands_tested = 0
+        
+        for cmd in commands_to_test:
+            commands_tested += 1
             try:
                 # Test if command exists
                 result = subprocess.run(
@@ -79,16 +100,39 @@ class FileDiscoveryLearner:
                 )
                 
                 if result.returncode == 0:
-                    logger.info(f"Discovered command: {cmd}")
+                    logger.info(f"NEW DISCOVERY: {cmd}")
                     discovered.append(cmd)
                     self.discovered_commands[cmd] = FileCommand(command=cmd)
+                    self.knowledge.add_discovered_command(cmd)
+                    self.new_discoveries.append(cmd)
                     
             except Exception as e:
                 # Command doesn't exist or error
                 pass
         
+        # Also include previously known commands in our working set
+        for known_cmd in already_known:
+            if known_cmd not in self.discovered_commands:
+                self.discovered_commands[known_cmd] = FileCommand(command=known_cmd)
+                discovered.append(known_cmd)
+                self.rediscoveries.append(known_cmd)
+        
         # Update genome with discoveries
         self.search_genome['command_pool'] = discovered
+        
+        # Record discovery session
+        session_duration = (datetime.now() - self.session_start).total_seconds()
+        self.knowledge.record_discovery_session({
+            'duration': session_duration,
+            'commands_tested': commands_tested,
+            'new_discoveries': self.new_discoveries,
+            'rediscoveries': self.rediscoveries
+        })
+        
+        # Log knowledge stats
+        stats = self.knowledge.get_discovery_stats()
+        logger.info(f"Knowledge stats: {stats['total_permanent_commands']} total commands, "
+                   f"trend: {stats['knowledge_growth_trend']}")
         
         # Save to cache
         self._save_cache()
@@ -99,9 +143,9 @@ class FileDiscoveryLearner:
         """Generate potential command names to test"""
         
         # Start with common patterns
-        prefixes = ['', 'f', 'g', 'a', 'w']
+        prefixes = ['', 'f', 'g', 'a', 'w', 'e', 'n']
         roots = ['find', 'search', 'locate', 'look', 'seek', 'scan', 'grep', 'ls', 'where', 'which']
-        suffixes = ['', 'f', 'r', 'd', '.exe']
+        suffixes = ['', 'f', 'r', 'd', '.exe', '2', '3']
         
         candidates = []
         
@@ -110,6 +154,11 @@ class FileDiscoveryLearner:
             for root in roots:
                 for suffix in suffixes:
                     candidates.append(prefix + root + suffix)
+        
+        # Get suggestions for unexplored areas
+        suggestions = self.knowledge.suggest_unexplored_areas()
+        if suggestions:
+            logger.info(f"Knowledge suggests exploring: {suggestions[0]}")
         
         # Add platform-specific commands
         platform_commands = [
@@ -493,6 +542,9 @@ class FileDiscoveryLearner:
         
         logger.info(f"Recorded successful pattern: {strategy}")
         
+        # Add to permanent knowledge
+        self.knowledge.add_successful_pattern(success_record)
+        
         # Save updated success data to cache
         self._save_cache()
     
@@ -550,8 +602,13 @@ class FileDiscoveryLearner:
                 {'command': cmd, 'success_rate': obj.success_rate}
                 for cmd, obj in self.discovered_commands.items()
                 if obj.success_rate > 0
-            ]
+            ],
+            'knowledge_stats': self.knowledge.get_discovery_stats()
         }
+    
+    def generate_knowledge_report(self) -> str:
+        """Generate a report of accumulated knowledge"""
+        return self.knowledge.export_knowledge_report()
     
     def _calculate_best_fitness(self, results: List[Tuple[Dict, Dict]]) -> float:
         """Calculate the best fitness from results"""
