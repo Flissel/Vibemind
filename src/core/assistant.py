@@ -354,6 +354,42 @@ class SakanaAssistant:
     def _build_prompt(self, user_input: str, context: Dict[str, Any]) -> str:
         """Build prompt for LLM with context"""
         
+        # For Llama models, use proper chat format
+        if hasattr(self.llm, 'llm') and hasattr(self.llm.llm, 'metadata'):
+            # Llama chat format
+            system_msg = """You are Sakana, an intelligent desktop assistant. Keep responses short and helpful.
+Available commands: ls, cat, mkdir, find, sysinfo, cpu, memory, todo, search.
+Answer in 1-3 sentences unless more detail is requested."""
+            
+            # Build conversation in chat format
+            messages = [
+                {"role": "system", "content": system_msg}
+            ]
+            
+            # Add recent conversation history if available
+            if context.get('conversation_history'):
+                for exchange in context['conversation_history'][-2:]:
+                    messages.append({"role": "user", "content": exchange['user']})
+                    messages.append({"role": "assistant", "content": exchange['assistant']['content']})
+            
+            # Add current user input
+            messages.append({"role": "user", "content": user_input})
+            
+            # Format for Llama 3.2
+            prompt = "<|begin_of_text|>"
+            for msg in messages:
+                if msg["role"] == "system":
+                    prompt += f"<|start_header_id|>system<|end_header_id|>\n\n{msg['content']}<|eot_id|>"
+                elif msg["role"] == "user":
+                    prompt += f"<|start_header_id|>user<|end_header_id|>\n\n{msg['content']}<|eot_id|>"
+                elif msg["role"] == "assistant":
+                    prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n{msg['content']}<|eot_id|>"
+            
+            prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            
+            return prompt
+        
+        # Fallback for other models
         prompt_parts = [
             "You are Sakana, an intelligent desktop assistant with self-learning capabilities.",
             f"Current time: {context['timestamp']}",

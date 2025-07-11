@@ -36,13 +36,27 @@ class LocalLLM(LLMInterface):
     def __init__(self, model_path: Path, **kwargs):
         try:
             from llama_cpp import Llama
+            # Create main model for generation
             self.llm = Llama(
                 model_path=str(model_path),
                 n_ctx=kwargs.get('context_size', 4096),
                 n_threads=kwargs.get('threads', 8),
                 n_gpu_layers=kwargs.get('gpu_layers', 0),
-                embedding=True  # Enable embeddings for memory system
+                embedding=False  # Disable embeddings to avoid issues
             )
+            # Try to create separate embedding model, fall back to simple embeddings if fails
+            try:
+                self.embed_model = Llama(
+                    model_path=str(model_path),
+                    n_ctx=512,  # Smaller context for embeddings
+                    embedding=True,
+                    n_threads=kwargs.get('threads', 8)
+                )
+                self.use_model_embeddings = True
+            except:
+                logger.warning("Could not create embedding model, using fallback embeddings")
+                self.use_model_embeddings = False
+                
         except ImportError:
             raise ImportError("llama-cpp-python not installed")
         
@@ -54,13 +68,36 @@ class LocalLLM(LLMInterface):
         loop = asyncio.get_event_loop()
         
         def _generate():
-            response = self.llm(
-                prompt,
-                max_tokens=kwargs.get('max_tokens', self.max_tokens),
-                temperature=kwargs.get('temperature', self.temperature),
-                stop=kwargs.get('stop', [])
-            )
-            return response['choices'][0]['text']
+            try:
+                logger.info(f"Generating with prompt length: {len(prompt)}")
+                # Add proper stop tokens for Llama
+                stop_tokens = kwargs.get('stop', [])
+                if hasattr(self.llm, 'metadata') and 'tokenizer.ggml.eos_token_id' in self.llm.metadata:
+                    stop_tokens.extend(["<|eot_id|>", "<|end_of_text|>"])
+                
+                response = self.llm(
+                    prompt,
+                    max_tokens=kwargs.get('max_tokens', self.max_tokens),
+                    temperature=kwargs.get('temperature', self.temperature),
+                    stop=stop_tokens,
+                    echo=False  # Don't repeat the prompt
+                )
+                
+                if not response or 'choices' not in response:
+                    logger.error(f"Invalid response structure: {response}")
+                    return "I apologize, but I'm having trouble generating a response. Please try again."
+                
+                text = response['choices'][0].get('text', '')
+                logger.info(f"Generated response length: {len(text)}")
+                
+                if not text or text.isspace():
+                    return "Hello! I'm Sakana, your self-learning desktop assistant. How can I help you today?"
+                
+                return text.strip()
+                
+            except Exception as e:
+                logger.error(f"Generation error: {e}")
+                return f"I encountered an error: {str(e)}. Please try again."
         
         return await loop.run_in_executor(None, _generate)
     
@@ -84,12 +121,35 @@ class LocalLLM(LLMInterface):
     
     async def embed(self, text: str) -> List[float]:
         """Generate embeddings using local model"""
-        loop = asyncio.get_event_loop()
+        if self.use_model_embeddings:
+            loop = asyncio.get_event_loop()
+            
+            def _embed():
+                return self.embed_model.embed(text)
+            
+            try:
+                return await loop.run_in_executor(None, _embed)
+            except Exception as e:
+                logger.warning(f"Model embedding failed, using fallback: {e}")
+                self.use_model_embeddings = False
         
-        def _embed():
-            return self.llm.embed(text)
+        # Fallback: Simple hash-based embeddings
+        import hashlib
+        hash_obj = hashlib.sha256(text.encode())
+        hash_bytes = hash_obj.digest()
         
-        return await loop.run_in_executor(None, _embed)
+        # Convert to normalized floats
+        embedding = []
+        for i in range(0, min(len(hash_bytes), 96), 3):
+            if i + 2 < len(hash_bytes):
+                value = (hash_bytes[i] + hash_bytes[i+1] + hash_bytes[i+2]) / (255.0 * 3)
+                embedding.append(value * 2 - 1)  # Normalize to [-1, 1]
+        
+        # Pad to 384 dimensions
+        while len(embedding) < 384:
+            embedding.append(0.0)
+            
+        return embedding[:384]
 
 class OpenAILLM(LLMInterface):
     """OpenAI API interface"""

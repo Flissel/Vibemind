@@ -4,7 +4,7 @@
 llm_provider: "local"
 model_name: "llama-3.2-3b"
 temperature: 0.7
-max_tokens: 2048
+max_tokens: 256
 
 # Memory Settings
 max_short_term_memory: 100

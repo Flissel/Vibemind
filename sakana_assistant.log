@@ -29,3 +29,36 @@
 2025-07-11 02:43:27,933 - __main__ - INFO - Received signal 2
 2025-07-11 02:43:35,631 - __main__ - INFO - Received signal 2
 2025-07-11 02:44:05,955 - __main__ - INFO - Received signal 15
+2025-07-11 02:45:10,523 - __main__ - INFO - Received signal 2
+2025-07-11 02:45:43,013 - __main__ - INFO - Shutting down assistant...
+2025-07-11 02:45:43,014 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-07-11 02:45:43,015 - src.core.assistant - ERROR - Error processing request: Llama model must be created with embedding=True to call this method
+2025-07-11 02:45:48,662 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:45:48,662 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:45:50,382 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 02:45:50,386 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 02:45:50,386 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 02:45:50,386 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 02:45:50,387 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 02:45:50,389 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 02:45:50,389 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 02:45:50,389 - __main__ - INFO - Assistant ready!
+2025-07-11 02:46:00,478 - src.core.assistant - ERROR - Error processing request: NULL pointer access
+2025-07-11 02:47:01,718 - __main__ - INFO - Received signal 2
+2025-07-11 02:47:17,959 - __main__ - INFO - Shutting down assistant...
+2025-07-11 02:47:17,959 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-07-11 02:47:17,962 - src.execution.sandbox_executor - INFO - Sandbox cleanup completed
+2025-07-11 02:47:17,962 - src.core.assistant - INFO - Assistant shutdown complete
+2025-07-11 02:47:17,962 - __main__ - INFO - Shutdown complete
+2025-07-11 02:47:18,944 - src.core.assistant - ERROR - Error processing request: no active connection
+2025-07-11 02:47:22,787 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:47:22,787 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:47:24,656 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 02:47:24,659 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 02:47:24,659 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 02:47:24,659 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 02:47:24,660 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 02:47:24,661 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 02:47:24,661 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 02:47:24,661 - __main__ - INFO - Assistant ready!
+2025-07-11 02:51:21,887 - __main__ - INFO - Received signal 2
