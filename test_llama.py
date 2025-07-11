@@ -15,7 +15,7 @@ try:
         model_path=model_path,
         n_ctx=2048,
         n_threads=8,
-        verbose=True
+        verbose=False
     )
     print("Model loaded successfully!")
     

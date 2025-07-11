@@ -42,7 +42,8 @@ class LocalLLM(LLMInterface):
                 n_ctx=kwargs.get('context_size', 4096),
                 n_threads=kwargs.get('threads', 8),
                 n_gpu_layers=kwargs.get('gpu_layers', 0),
-                embedding=False  # Disable embeddings to avoid issues
+                embedding=False,  # Disable embeddings to avoid issues
+                verbose=False  # Suppress llama_print_timings output
             )
             # Try to create separate embedding model, fall back to simple embeddings if fails
             try:
@@ -50,7 +51,8 @@ class LocalLLM(LLMInterface):
                     model_path=str(model_path),
                     n_ctx=512,  # Smaller context for embeddings
                     embedding=True,
-                    n_threads=kwargs.get('threads', 8)
+                    n_threads=kwargs.get('threads', 8),
+                    verbose=False  # Suppress llama_print_timings output
                 )
                 self.use_model_embeddings = True
             except:

@@ -1,0 +1,57 @@
+[
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 49.60087231839113,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 49.60087231839113,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 49.60087231839113,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 49.60087231839113,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 49.60087231839113,
+    "generation": 0,
+    "mutations": []
+  }
+]

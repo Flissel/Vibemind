@@ -48,6 +48,9 @@ class SakanaAssistant:
         # Behavior genome for evolved capabilities
         self.behavior_genome = {}
         self.evolution_trigger = None
+        
+        # File discovery learner
+        self.file_discovery_learner = None
     
     async def initialize(self):
         """Initialize all components"""
@@ -80,8 +83,13 @@ class SakanaAssistant:
         )
         
         # Initialize evolution triggers
-        from ..learning import EvolutionTrigger
+        from ..learning import EvolutionTrigger, FileDiscoveryLearner
         self.evolution_trigger = EvolutionTrigger(self)
+        
+        # Initialize file discovery learner
+        self.file_discovery_learner = FileDiscoveryLearner()
+        # Start discovery process in background
+        asyncio.create_task(self._initialize_file_discovery())
         
         # Initialize execution sandbox
         if self.config.sandbox_enabled:
@@ -99,6 +107,19 @@ class SakanaAssistant:
         
         self.is_initialized = True
         logger.info("Assistant initialized successfully")
+    
+    async def _initialize_file_discovery(self):
+        """Initialize file discovery in background"""
+        try:
+            # Discover available commands
+            await self.file_discovery_learner.discover_file_commands()
+            # Learn about environment
+            await self.file_discovery_learner.learn_from_environment()
+            
+            learned = self.file_discovery_learner.get_learned_summary()
+            logger.info(f"File discovery initialized: {learned}")
+        except Exception as e:
+            logger.error(f"Error in file discovery initialization: {e}")
     
     async def process_request(self, user_input: str) -> Dict[str, Any]:
         """Process a user request with learning and adaptation"""
@@ -270,32 +291,59 @@ class SakanaAssistant:
                         file_path = match.group(1)
                         break
                 
-                if file_path and genome.get('path_handling') == 'smart':
-                    # Try multiple path variations
-                    path_variations = [
-                        file_path,
-                        file_path.replace('\\', '/'),
-                        f"/mnt/c/{file_path[3:].replace('\\', '/')}" if file_path.startswith('C:\\') else file_path,
-                    ]
-                    
-                    for path in path_variations:
-                        try:
-                            # Use the file reading method from genome
-                            if genome.get('file_reading_method') == 'cat':
-                                result = await self.plugin_manager.handle_command(f'cat {path}', context)
-                                if result and result.get('type') != 'error':
-                                    # Successfully read file, now summarize
-                                    content = result.get('content', '')
-                                    summary = await self._generate_summary(content)
-                                    return {
-                                        'success': True,
-                                        'content': summary,
-                                        'type': 'text',
-                                        'metadata': {'evolved_behavior': True, 'path_used': path}
+                if file_path:
+                    # Use file discovery learner to evolve search strategy
+                    if self.file_discovery_learner:
+                        logger.info(f"Using file discovery learner to find: {file_path}")
+                        search_result = await self.file_discovery_learner.evolve_search_strategy(file_path)
+                        
+                        if search_result and search_result.get('found'):
+                            found_path = search_result['path']
+                            logger.info(f"File found through evolution at: {found_path}")
+                            
+                            # Read the discovered file
+                            result = await self.plugin_manager.handle_command(f'cat {found_path}', context)
+                            if result and result.get('type') != 'error':
+                                content = result.get('content', '')
+                                summary = await self._generate_summary(content)
+                                return {
+                                    'success': True,
+                                    'content': f"Found file through self-evolution!\n\n{summary}",
+                                    'type': 'text',
+                                    'metadata': {
+                                        'evolved_behavior': True,
+                                        'path_discovered': found_path,
+                                        'strategy_used': search_result.get('strategy')
                                     }
-                        except Exception as e:
-                            logger.debug(f"Path variation {path} failed: {e}")
-                            continue
+                                }
+                    
+                    # Fallback to genome-based approach
+                    if genome.get('path_handling') == 'smart':
+                        # Try multiple path variations
+                        path_variations = [
+                            file_path,
+                            file_path.replace('\\', '/'),
+                            f"/mnt/c/{file_path[3:].replace('\\', '/')}" if file_path.startswith('C:\\') else file_path,
+                        ]
+                        
+                        for path in path_variations:
+                            try:
+                                # Use the file reading method from genome
+                                if genome.get('file_reading_method') == 'cat':
+                                    result = await self.plugin_manager.handle_command(f'cat {path}', context)
+                                    if result and result.get('type') != 'error':
+                                        # Successfully read file, now summarize
+                                        content = result.get('content', '')
+                                        summary = await self._generate_summary(content)
+                                        return {
+                                            'success': True,
+                                            'content': summary,
+                                            'type': 'text',
+                                            'metadata': {'evolved_behavior': True, 'path_used': path}
+                                        }
+                            except Exception as e:
+                                logger.debug(f"Path variation {path} failed: {e}")
+                                continue
             
         except Exception as e:
             logger.error(f"Evolved behavior failed: {e}")
@@ -599,6 +647,10 @@ Answer in 1-3 sentences unless more detail is requested."""
         # Document/file related
         if any(word in input_lower for word in ['read', 'document', 'file', 'summarize', 'summary', '.txt', '.pdf', '.doc']):
             return 'document_summarization'
+        
+        # File finding/searching
+        elif any(word in input_lower for word in ['find', 'search', 'locate', 'where', 'look for']):
+            return 'file_search'
         
         # Command execution
         elif any(word in input_lower for word in ['run', 'execute', 'command', 'ls', 'cd', 'mkdir']):
