@@ -154,3 +154,45 @@
 2025-07-11 03:40:21,726 - src.core.llm_interface - INFO - Generating with prompt length: 2881
 2025-07-11 03:40:54,915 - src.core.llm_interface - INFO - Generated response length: 1399
 2025-07-11 03:41:06,491 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for general
+2025-07-11 03:55:24,150 - __main__ - INFO - Received signal 2
+2025-07-11 03:56:38,368 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 03:56:38,368 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 03:56:42,333 - src.learning.evolutionary_learner - INFO - Loaded 5 individuals from archive
+2025-07-11 03:56:42,333 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 03:56:42,346 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 03:56:42,347 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 03:56:42,347 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 03:56:42,347 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 03:56:42,348 - src.learning.file_discovery - INFO - Starting command discovery through exploration...
+2025-07-11 03:56:43,691 - src.learning.file_discovery - INFO - Discovered command: readlink
+2025-07-11 03:57:00,021 - src.learning.file_discovery - INFO - Discovered command: cat
+2025-07-11 03:58:43,092 - src.learning.file_discovery - INFO - Discovered command: which
+2025-07-11 03:58:45,075 - src.learning.file_discovery - INFO - Discovered command: less
+2025-07-11 03:58:56,957 - src.learning.file_discovery - INFO - Discovered command: rg
+2025-07-11 03:59:04,385 - src.learning.file_discovery - INFO - Discovered command: dir
+2025-07-11 03:59:10,090 - src.learning.file_discovery - INFO - Discovered command: ls
+2025-07-11 03:59:18,853 - src.learning.file_discovery - INFO - Discovered command: wslpath
+2025-07-11 03:59:32,022 - src.learning.file_discovery - INFO - Discovered command: find.exe
+2025-07-11 03:59:42,150 - src.learning.file_discovery - INFO - Discovered command: more
+2025-07-11 03:59:44,476 - src.learning.file_discovery - INFO - Discovered command: fgrep
+2025-07-11 03:59:52,391 - src.learning.file_discovery - INFO - Discovered command: realpath
+2025-07-11 03:59:56,398 - src.learning.file_discovery - INFO - Discovered command: tail
+2025-07-11 04:00:08,322 - src.learning.file_discovery - INFO - Discovered command: head
+2025-07-11 04:00:09,621 - src.learning.file_discovery - INFO - Discovered command: find
+2025-07-11 04:00:09,623 - src.learning.file_discovery - INFO - Discovered command: look
+2025-07-11 04:00:16,913 - src.learning.file_discovery - INFO - Discovered command: where.exe
+2025-07-11 04:00:36,252 - src.learning.file_discovery - INFO - Discovered command: grep
+2025-07-11 04:00:42,621 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-07-11 04:00:42,627 - src.learning.file_discovery - INFO - Discovered listing command: ls
+2025-07-11 04:00:42,632 - src.learning.file_discovery - INFO - Discovered listing command: dir
+2025-07-11 04:00:43,992 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-07-11 04:00:43,992 - src.learning.file_discovery - INFO - Discovered valid path: /home
+2025-07-11 04:00:43,992 - src.learning.file_discovery - INFO - Discovered valid path: /usr
+2025-07-11 04:00:43,992 - src.learning.file_discovery - INFO - Discovered valid path: /etc
+2025-07-11 04:00:43,992 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-07-11 04:00:43,993 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-07-11 04:00:43,993 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-07-11 04:00:43,993 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['readlink', 'cat', 'which', 'less', 'rg', 'dir', 'ls', 'wslpath', 'find.exe', 'more', 'fgrep', 'realpath', 'tail', 'head', 'find', 'look', 'where.exe', 'grep', 'ls_list', 'dir_list'], 'successful_patterns': 0, 'known_paths': ['/', '/home', '/usr', '/etc', '~', '.', '..'], 'total_explorations': 0, 'best_commands': []}
+2025-07-11 04:00:43,994 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 04:00:43,994 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 04:00:43,994 - __main__ - INFO - Assistant ready!

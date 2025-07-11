@@ -19,6 +19,8 @@ INFO - Discovered valid path: /    ← Learning your file system!
 3. **3-5 minutes**: Learning file paths and system structure
 4. **5+ minutes**: Ready for interaction!
 
+**Note**: After first run, discovered commands are cached for 7 days. Subsequent starts take only 5-10 seconds!
+
 ## 💡 Understanding the Philosophy
 
 Traditional Assistant:
@@ -103,3 +105,12 @@ Unlike ChatGPT or Copilot, Sakana:
 - Never forgets what works
 
 Welcome to the future of self-evolving AI! 🐟✨
+
+## 🔧 Maintenance
+
+### Clear Cache (Force Rediscovery)
+If commands change on your system:
+```bash
+./clear_cache.sh
+```
+This forces the assistant to rediscover all commands on next run.

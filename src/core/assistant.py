@@ -86,8 +86,9 @@ class SakanaAssistant:
         from ..learning import EvolutionTrigger, FileDiscoveryLearner
         self.evolution_trigger = EvolutionTrigger(self)
         
-        # Initialize file discovery learner
-        self.file_discovery_learner = FileDiscoveryLearner()
+        # Initialize file discovery learner with cache
+        cache_dir = self.config.data_dir / "cache"
+        self.file_discovery_learner = FileDiscoveryLearner(cache_dir=str(cache_dir))
         # Start discovery process in background
         asyncio.create_task(self._initialize_file_discovery())
         

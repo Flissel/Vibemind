@@ -30,12 +30,17 @@ class FileCommand:
 class FileDiscoveryLearner:
     """Learns to find files through exploration and evolution"""
     
-    def __init__(self):
+    def __init__(self, cache_dir: str = None):
         # Start with NO knowledge - will discover everything
         self.discovered_commands = {}
         self.successful_patterns = []
         self.failed_attempts = []
         self.exploration_history = []
+        
+        # Cache directory for persistence
+        self.cache_dir = cache_dir or os.path.expanduser("~/.sakana/cache")
+        os.makedirs(self.cache_dir, exist_ok=True)
+        self.cache_file = os.path.join(self.cache_dir, "discovered_commands.json")
         
         # Genetic material for evolving search strategies
         self.search_genome = {
@@ -46,8 +51,16 @@ class FileDiscoveryLearner:
             'mutation_rate': 0.3
         }
         
+        # Load cached discoveries
+        self._load_cache()
+        
     async def discover_file_commands(self) -> List[str]:
         """Discover available commands through exploration"""
+        
+        # Check if we have recent cached discoveries
+        if self._has_valid_cache():
+            logger.info("Using cached command discoveries")
+            return self.search_genome['command_pool']
         
         logger.info("Starting command discovery through exploration...")
         
@@ -76,6 +89,10 @@ class FileDiscoveryLearner:
         
         # Update genome with discoveries
         self.search_genome['command_pool'] = discovered
+        
+        # Save to cache
+        self._save_cache()
+        
         return discovered
     
     def _generate_command_candidates(self) -> List[str]:
@@ -475,6 +492,9 @@ class FileDiscoveryLearner:
             cmd_obj.success_rate = (cmd_obj.success_rate * (cmd_obj.attempts - 1) + 1) / cmd_obj.attempts
         
         logger.info(f"Recorded successful pattern: {strategy}")
+        
+        # Save updated success data to cache
+        self._save_cache()
     
     async def learn_from_environment(self):
         """Explore the environment to learn about file structure"""
@@ -553,3 +573,87 @@ class FileDiscoveryLearner:
             best_fitness = max(best_fitness, fitness)
         
         return best_fitness
+    
+    def _load_cache(self):
+        """Load cached discoveries from disk"""
+        
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, 'r') as f:
+                    cache_data = json.load(f)
+                
+                # Restore discovered commands
+                for cmd_data in cache_data.get('discovered_commands', []):
+                    cmd = FileCommand(
+                        command=cmd_data['command'],
+                        success_rate=cmd_data.get('success_rate', 0.0),
+                        attempts=cmd_data.get('attempts', 0),
+                        discovered_at=cmd_data.get('discovered_at')
+                    )
+                    self.discovered_commands[cmd.command] = cmd
+                
+                # Restore genome
+                self.search_genome.update(cache_data.get('search_genome', {}))
+                
+                # Restore successful patterns
+                self.successful_patterns = cache_data.get('successful_patterns', [])
+                
+                logger.info(f"Loaded {len(self.discovered_commands)} cached commands")
+                
+            except Exception as e:
+                logger.warning(f"Failed to load cache: {e}")
+    
+    def _save_cache(self):
+        """Save discoveries to cache"""
+        
+        try:
+            cache_data = {
+                'timestamp': datetime.now().isoformat(),
+                'discovered_commands': [
+                    {
+                        'command': cmd.command,
+                        'success_rate': cmd.success_rate,
+                        'attempts': cmd.attempts,
+                        'discovered_at': cmd.discovered_at
+                    }
+                    for cmd in self.discovered_commands.values()
+                ],
+                'search_genome': self.search_genome,
+                'successful_patterns': self.successful_patterns[-20:]  # Keep last 20 patterns
+            }
+            
+            with open(self.cache_file, 'w') as f:
+                json.dump(cache_data, f, indent=2)
+                
+            logger.info(f"Saved {len(self.discovered_commands)} commands to cache")
+            
+        except Exception as e:
+            logger.error(f"Failed to save cache: {e}")
+    
+    def _has_valid_cache(self) -> bool:
+        """Check if cache is recent and valid"""
+        
+        if not os.path.exists(self.cache_file):
+            return False
+        
+        try:
+            # Check cache age
+            cache_age = datetime.now() - datetime.fromtimestamp(os.path.getmtime(self.cache_file))
+            
+            # Cache is valid for 7 days
+            if cache_age.days > 7:
+                logger.info("Cache is older than 7 days, will rediscover")
+                return False
+            
+            # Check if we have any commands
+            return len(self.search_genome.get('command_pool', [])) > 0
+            
+        except Exception:
+            return False
+    
+    def invalidate_cache(self):
+        """Force rediscovery on next run"""
+        
+        if os.path.exists(self.cache_file):
+            os.remove(self.cache_file)
+            logger.info("Cache invalidated, will rediscover on next run")
