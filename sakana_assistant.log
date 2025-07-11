@@ -14,3 +14,18 @@
 2025-07-11 02:27:27,930 - src.execution.sandbox_executor - INFO - Sandbox cleanup completed
 2025-07-11 02:27:27,931 - src.core.assistant - INFO - Assistant shutdown complete
 2025-07-11 02:27:27,932 - __main__ - INFO - Shutdown complete
+2025-07-11 02:42:17,424 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:42:17,424 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:42:19,103 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 02:42:19,108 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 02:42:19,108 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 02:42:19,108 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 02:42:19,108 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 02:42:19,110 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 02:42:19,110 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 02:42:19,110 - __main__ - INFO - Assistant ready!
+2025-07-11 02:42:30,463 - src.core.assistant - ERROR - Error processing request: Llama model must be created with embedding=True to call this method
+2025-07-11 02:43:03,340 - src.core.assistant - ERROR - Error processing request: Llama model must be created with embedding=True to call this method
+2025-07-11 02:43:27,933 - __main__ - INFO - Received signal 2
+2025-07-11 02:43:35,631 - __main__ - INFO - Received signal 2
+2025-07-11 02:44:05,955 - __main__ - INFO - Received signal 15

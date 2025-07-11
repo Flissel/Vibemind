@@ -1,8 +1,8 @@
 # Sakana Desktop Assistant Configuration
 
 # LLM Settings
-llm_provider: "local"  # Options: local, openai, mock
-model_name: "llama-3.2-3b"  # Model filename without .gguf
+llm_provider: "local"
+model_name: "llama-3.2-3b"
 temperature: 0.7
 max_tokens: 2048
 

@@ -40,7 +40,8 @@ class LocalLLM(LLMInterface):
                 model_path=str(model_path),
                 n_ctx=kwargs.get('context_size', 4096),
                 n_threads=kwargs.get('threads', 8),
-                n_gpu_layers=kwargs.get('gpu_layers', 0)
+                n_gpu_layers=kwargs.get('gpu_layers', 0),
+                embedding=True  # Enable embeddings for memory system
             )
         except ImportError:
             raise ImportError("llama-cpp-python not installed")
