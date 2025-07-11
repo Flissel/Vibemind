@@ -44,6 +44,10 @@ class SakanaAssistant:
             'patterns_learned': 0,
             'self_improvements': 0
         }
+        
+        # Behavior genome for evolved capabilities
+        self.behavior_genome = {}
+        self.evolution_trigger = None
     
     async def initialize(self):
         """Initialize all components"""
@@ -74,6 +78,10 @@ class SakanaAssistant:
             sandbox_enabled=self.config.sandbox_enabled,
             modifications_dir=self.config.data_dir / "modifications"
         )
+        
+        # Initialize evolution triggers
+        from ..learning import EvolutionTrigger
+        self.evolution_trigger = EvolutionTrigger(self)
         
         # Initialize execution sandbox
         if self.config.sandbox_enabled:
@@ -164,6 +172,17 @@ class SakanaAssistant:
             logger.error(f"Error processing request: {e}")
             self.metrics['errors'] += 1
             
+            # Detect task type from user input
+            task_type = self._detect_task_type(user_input)
+            
+            # Trigger evolution on failure
+            if self.evolution_trigger and task_type:
+                await self.evolution_trigger.on_task_failure(
+                    task_type=task_type,
+                    context={'user_input': user_input, 'error': str(e)},
+                    error=str(e)
+                )
+            
             return {
                 'success': False,
                 'error': str(e),
@@ -201,6 +220,15 @@ class SakanaAssistant:
     async def _generate_response(self, user_input: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Generate response using LLM with context"""
         
+        # Check if we have evolved behaviors for this task type
+        task_type = self._detect_task_type(user_input)
+        
+        if task_type in self.behavior_genome:
+            # Try evolved behavior first
+            evolved_response = await self._try_evolved_behavior(task_type, user_input, context)
+            if evolved_response and evolved_response.get('success'):
+                return evolved_response
+        
         # Build prompt with context
         prompt = self._build_prompt(user_input, context)
         
@@ -216,6 +244,79 @@ class SakanaAssistant:
             'actions': response_data.get('actions', []),
             'metadata': response_data.get('metadata', {})
         }
+    
+    async def _try_evolved_behavior(self, task_type: str, user_input: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Try to use evolved behavior for task"""
+        
+        genome = self.behavior_genome.get(task_type)
+        if not genome:
+            return None
+        
+        try:
+            # Extract file path if it's a document task
+            if task_type == 'document_summarization':
+                import re
+                # Try to extract file path from user input
+                path_patterns = [
+                    r'"([^"]+)"',  # Quoted path
+                    r'([A-Za-z]:\\[^\\]+(?:\\[^\\]+)*)',  # Windows path
+                    r'(/[^/]+(?:/[^/]+)*)',  # Unix path
+                ]
+                
+                file_path = None
+                for pattern in path_patterns:
+                    match = re.search(pattern, user_input)
+                    if match:
+                        file_path = match.group(1)
+                        break
+                
+                if file_path and genome.get('path_handling') == 'smart':
+                    # Try multiple path variations
+                    path_variations = [
+                        file_path,
+                        file_path.replace('\\', '/'),
+                        f"/mnt/c/{file_path[3:].replace('\\', '/')}" if file_path.startswith('C:\\') else file_path,
+                    ]
+                    
+                    for path in path_variations:
+                        try:
+                            # Use the file reading method from genome
+                            if genome.get('file_reading_method') == 'cat':
+                                result = await self.plugin_manager.handle_command(f'cat {path}', context)
+                                if result and result.get('type') != 'error':
+                                    # Successfully read file, now summarize
+                                    content = result.get('content', '')
+                                    summary = await self._generate_summary(content)
+                                    return {
+                                        'success': True,
+                                        'content': summary,
+                                        'type': 'text',
+                                        'metadata': {'evolved_behavior': True, 'path_used': path}
+                                    }
+                        except Exception as e:
+                            logger.debug(f"Path variation {path} failed: {e}")
+                            continue
+            
+        except Exception as e:
+            logger.error(f"Evolved behavior failed: {e}")
+        
+        return None
+    
+    async def _generate_summary(self, content: str) -> str:
+        """Generate a summary of content"""
+        
+        if not content:
+            return "Unable to read file content."
+        
+        # Limit content length for summarization
+        max_chars = 2000
+        if len(content) > max_chars:
+            content = content[:max_chars] + "... (truncated)"
+        
+        summary_prompt = f"Summarize the following content concisely:\n\n{content}\n\nSummary:"
+        summary = await self.llm.generate(summary_prompt, max_tokens=150)
+        
+        return summary
     
     async def _execute_code(self, response: Dict[str, Any]) -> Dict[str, Any]:
         """Execute code in sandbox if requested"""
@@ -242,18 +343,35 @@ class SakanaAssistant:
             'timestamp': datetime.now().isoformat()
         })
         
+        # Check for immediate feedback
+        if self.evolution_trigger:
+            feedback_type = self.evolution_trigger.analyze_user_feedback(user_input, self.current_context)
+            
+            if feedback_type == 'negative':
+                # User indicated something was wrong - trigger immediate evolution
+                task_type = self._detect_task_type(self.conversation_history[-2]['user'] if len(self.conversation_history) > 1 else user_input)
+                
+                if task_type:
+                    logger.info(f"Negative feedback detected, triggering evolution for {task_type}")
+                    await self.evolution_trigger.on_task_failure(
+                        task_type=task_type,
+                        context={
+                            'user_input': self.conversation_history[-2]['user'] if len(self.conversation_history) > 1 else user_input,
+                            'assistant_response': self.conversation_history[-2]['assistant'] if len(self.conversation_history) > 1 else response,
+                            'user_feedback': user_input
+                        },
+                        error="User indicated incorrect response"
+                    )
+            elif feedback_type == 'positive':
+                # Positive reinforcement - strengthen current approach
+                await self.memory_manager.detect_pattern(
+                    'successful_response',
+                    {'response_type': response['type'], 'context': self.current_context}
+                )
+        
         # Evolutionary learning - improve response generation
         if len(self.conversation_history) % 10 == 0:  # Every 10 interactions
             await self._run_evolutionary_improvement()
-        
-        # Pattern-based learning
-        success_indicators = ['thank', 'perfect', 'great', 'exactly']
-        if any(indicator in user_input.lower() for indicator in success_indicators):
-            # Positive reinforcement
-            await self.memory_manager.detect_pattern(
-                'successful_response',
-                {'response_type': response['type'], 'context': self.current_context}
-            )
     
     async def _run_evolutionary_improvement(self):
         """Run evolutionary algorithm to improve assistant behavior"""
@@ -472,6 +590,33 @@ Answer in 1-3 sentences unless more detail is requested."""
         # Simplified topic extraction
         keywords = self._extract_keywords(text)
         return keywords[:3]  # Top 3 keywords as topics
+    
+    def _detect_task_type(self, user_input: str) -> Optional[str]:
+        """Detect the type of task from user input"""
+        
+        input_lower = user_input.lower()
+        
+        # Document/file related
+        if any(word in input_lower for word in ['read', 'document', 'file', 'summarize', 'summary', '.txt', '.pdf', '.doc']):
+            return 'document_summarization'
+        
+        # Command execution
+        elif any(word in input_lower for word in ['run', 'execute', 'command', 'ls', 'cd', 'mkdir']):
+            return 'command_execution'
+        
+        # Code generation
+        elif any(word in input_lower for word in ['code', 'function', 'program', 'script', 'write code']):
+            return 'code_generation'
+        
+        # Information retrieval
+        elif any(word in input_lower for word in ['what', 'who', 'when', 'where', 'why', 'how', 'explain']):
+            return 'information_retrieval'
+        
+        # Task management
+        elif any(word in input_lower for word in ['todo', 'task', 'remind', 'schedule']):
+            return 'task_management'
+        
+        return 'general'
     
     def _contains_code_request(self, response: Dict[str, Any]) -> bool:
         """Check if response contains code to execute"""

@@ -62,3 +62,37 @@
 2025-07-11 02:47:24,661 - __main__ - INFO - GUI not yet implemented, using CLI
 2025-07-11 02:47:24,661 - __main__ - INFO - Assistant ready!
 2025-07-11 02:51:21,887 - __main__ - INFO - Received signal 2
+2025-07-11 02:53:22,067 - __main__ - INFO - Shutting down assistant...
+2025-07-11 02:53:22,068 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-07-11 02:53:22,070 - src.execution.sandbox_executor - INFO - Sandbox cleanup completed
+2025-07-11 02:53:22,071 - src.core.assistant - INFO - Assistant shutdown complete
+2025-07-11 02:53:22,071 - __main__ - INFO - Shutdown complete
+2025-07-11 02:53:37,785 - src.core.assistant - ERROR - Error processing request: no active connection
+2025-07-11 02:53:40,754 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:53:40,754 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:53:43,523 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 02:53:43,529 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 02:53:43,530 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 02:53:43,530 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 02:53:43,530 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 02:53:43,532 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 02:53:43,532 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 02:53:43,532 - __main__ - INFO - Assistant ready!
+2025-07-11 02:53:50,652 - src.core.llm_interface - INFO - Generating with prompt length: 393
+2025-07-11 02:53:53,671 - src.core.llm_interface - INFO - Generated response length: 68
+2025-07-11 02:54:16,662 - src.core.llm_interface - INFO - Generating with prompt length: 596
+2025-07-11 02:54:19,398 - src.core.llm_interface - INFO - Generated response length: 165
+2025-07-11 02:54:53,094 - src.core.llm_interface - INFO - Generating with prompt length: 932
+2025-07-11 02:54:56,161 - src.core.llm_interface - INFO - Generated response length: 154
+2025-07-11 02:56:52,678 - src.core.llm_interface - INFO - Generating with prompt length: 1307
+2025-07-11 02:57:01,142 - src.core.llm_interface - INFO - Generated response length: 260
+2025-07-11 02:57:52,424 - src.core.llm_interface - INFO - Generating with prompt length: 1530
+2025-07-11 02:58:02,080 - src.core.llm_interface - INFO - Generated response length: 282
+2025-07-11 02:58:44,203 - src.core.llm_interface - INFO - Generating with prompt length: 1700
+2025-07-11 02:58:53,478 - src.core.llm_interface - INFO - Generated response length: 206
+2025-07-11 02:59:34,544 - src.core.llm_interface - INFO - Generating with prompt length: 1438
+2025-07-11 02:59:44,755 - src.core.llm_interface - INFO - Generated response length: 325
+2025-07-11 03:00:49,485 - src.core.llm_interface - INFO - Generating with prompt length: 1433
+2025-07-11 03:01:00,856 - src.core.llm_interface - INFO - Generated response length: 472
+2025-07-11 03:06:13,563 - src.core.llm_interface - INFO - Generating with prompt length: 1717
+2025-07-11 03:06:43,220 - src.core.llm_interface - INFO - Generated response length: 1483
