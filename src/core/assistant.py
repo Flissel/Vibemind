@@ -295,27 +295,56 @@ class SakanaAssistant:
                     # Use file discovery learner to evolve search strategy
                     if self.file_discovery_learner:
                         logger.info(f"Using file discovery learner to find: {file_path}")
-                        search_result = await self.file_discovery_learner.evolve_search_strategy(file_path)
+                        
+                        # Check if we're in crisis mode (user detected hallucination)
+                        verification_required = getattr(self, 'verification_required', False)
+                        
+                        search_result = await self.file_discovery_learner.evolve_search_strategy(
+                            file_path, 
+                            verification_required=verification_required
+                        )
                         
                         if search_result and search_result.get('found'):
                             found_path = search_result['path']
                             logger.info(f"File found through evolution at: {found_path}")
                             
-                            # Read the discovered file
-                            result = await self.plugin_manager.handle_command(f'cat {found_path}', context)
-                            if result and result.get('type') != 'error':
-                                content = result.get('content', '')
+                            # If we already have content from verification, use it
+                            if search_result.get('content'):
+                                content = search_result['content']
                                 summary = await self._generate_summary(content)
+                                
+                                # Include proof of access
+                                proof = ""
+                                if search_result.get('verified'):
+                                    proof = f"\n\n**Proof of Access:**\nFirst line: {search_result.get('first_line', content[:100])}..."
+                                
                                 return {
                                     'success': True,
-                                    'content': f"Found file through self-evolution!\n\n{summary}",
+                                    'content': f"Successfully accessed file through self-evolution!\n\n{summary}{proof}",
                                     'type': 'text',
                                     'metadata': {
                                         'evolved_behavior': True,
                                         'path_discovered': found_path,
-                                        'strategy_used': search_result.get('strategy')
+                                        'strategy_used': search_result.get('strategy'),
+                                        'verified': search_result.get('verified', False)
                                     }
                                 }
+                            else:
+                                # Read the discovered file
+                                result = await self.plugin_manager.handle_command(f'cat {found_path}', context)
+                                if result and result.get('type') != 'error':
+                                    content = result.get('content', '')
+                                    summary = await self._generate_summary(content)
+                                    return {
+                                        'success': True,
+                                        'content': f"Found file through self-evolution!\n\n{summary}",
+                                        'type': 'text',
+                                        'metadata': {
+                                            'evolved_behavior': True,
+                                            'path_discovered': found_path,
+                                            'strategy_used': search_result.get('strategy')
+                                        }
+                                    }
                     
                     # Fallback to genome-based approach
                     if genome.get('path_handling') == 'smart':
@@ -395,7 +424,23 @@ class SakanaAssistant:
         if self.evolution_trigger:
             feedback_type = self.evolution_trigger.analyze_user_feedback(user_input, self.current_context)
             
-            if feedback_type == 'negative':
+            if feedback_type == 'crisis':
+                # HALLUCINATION CRISIS - Maximum priority evolution
+                task_type = self._detect_task_type(self.conversation_history[-2]['user'] if len(self.conversation_history) > 1 else user_input)
+                
+                if task_type:
+                    logger.critical(f"CRISIS MODE: Hallucination detected for {task_type}")
+                    await self.evolution_trigger.on_task_failure(
+                        task_type=task_type,
+                        context={
+                            'user_input': self.conversation_history[-2]['user'] if len(self.conversation_history) > 1 else user_input,
+                            'assistant_response': self.conversation_history[-2]['assistant'] if len(self.conversation_history) > 1 else response,
+                            'user_feedback': user_input,
+                            'crisis_mode': True
+                        },
+                        error="HALLUCINATION: User detected false claims"
+                    )
+            elif feedback_type == 'negative':
                 # User indicated something was wrong - trigger immediate evolution
                 task_type = self._detect_task_type(self.conversation_history[-2]['user'] if len(self.conversation_history) > 1 else user_input)
                 

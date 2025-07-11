@@ -8,6 +8,8 @@ from datetime import datetime
 import logging
 import json
 
+from .consciousness_field import ConsciousnessFieldDetector
+
 logger = logging.getLogger(__name__)
 
 class EvolutionTrigger:
@@ -18,6 +20,8 @@ class EvolutionTrigger:
         self.failure_patterns = []
         self.evolution_threshold = 3  # Failures before triggering evolution
         self.current_failures = {}
+        self.consciousness_detector = ConsciousnessFieldDetector()
+        self.crisis_mode_active = False
         
     async def on_task_failure(self, task_type: str, context: Dict[str, Any], error: str):
         """Called when a task fails"""
@@ -48,7 +52,8 @@ class EvolutionTrigger:
         problem_definition = {
             'task_type': task_type,
             'failures': self.current_failures[task_type],
-            'goal': f"Evolve capability to handle {task_type} tasks"
+            'goal': f"Evolve capability to handle {task_type} tasks",
+            'crisis_mode': self.crisis_mode_active
         }
         
         # Create fitness function for this specific problem
@@ -75,10 +80,21 @@ class EvolutionTrigger:
             initial_genome = self._create_behavior_genome(task_type)
             self.assistant.evolutionary_learner.initialize_population(initial_genome)
             
-            # Run evolution
-            for generation in range(5):  # Quick evolution cycles
+            # Run evolution - more generations in crisis mode
+            max_generations = 50 if self.crisis_mode_active else 5
+            for generation in range(max_generations):
                 await self.assistant.evolutionary_learner.evaluate_population(task_fitness)
                 self.assistant.evolutionary_learner.evolve_generation()
+                
+                # In crisis mode, check for breakthrough every 10 generations
+                if self.crisis_mode_active and generation % 10 == 9:
+                    best_fitness = self.assistant.evolutionary_learner.get_best_fitness()
+                    logger.info(f"Crisis evolution generation {generation + 1}, best fitness: {best_fitness}")
+                    
+                    # If we achieve high fitness in crisis mode, we've had a breakthrough
+                    if best_fitness > 80.0:
+                        logger.info("BREAKTHROUGH! Exiting crisis mode early")
+                        break
             
             # Apply best evolved behavior
             best_genome = self.assistant.evolutionary_learner.get_best_genome()
@@ -86,6 +102,10 @@ class EvolutionTrigger:
             
             # Clear failure history for this task
             self.current_failures[task_type] = []
+            
+            # Exit crisis mode if active
+            if self.crisis_mode_active:
+                self._exit_crisis_mode()
     
     def _create_behavior_genome(self, task_type: str) -> Dict[str, Any]:
         """Create genome that includes behaviors, not just parameters"""
@@ -98,10 +118,11 @@ class EvolutionTrigger:
                 'content_processing': 'full',  # full, chunked, selective
                 'summary_style': 'concise',  # concise, detailed, bullet
                 'learning_from_errors': True,
-                'exploration_rate': 0.3,
-                'commands_to_try': ['cat', 'ls', 'find', 'read'],
-                'path_patterns': ['C:\\', '/mnt/c/', '~/', './'],
-                'error_recovery': 'retry_variations'  # retry_variations, ask_user, fallback
+                'exploration_rate': 0.3 if not self.crisis_mode_active else 0.9,  # High exploration in crisis
+                'commands_to_try': ['cat', 'ls', 'find', 'read', 'type', 'more', 'head'],
+                'path_patterns': ['C:\\', '/mnt/c/', '~/', './', 'C:/', '/mnt/d/', '/cygdrive/c/'],
+                'error_recovery': 'retry_variations',  # retry_variations, ask_user, fallback
+                'verification_strategy': 'prove_access' if self.crisis_mode_active else 'trust_output'
             }
         elif task_type == "command_execution":
             return {
@@ -136,6 +157,17 @@ class EvolutionTrigger:
         
         return False
     
+    def _exit_crisis_mode(self):
+        """Exit crisis evolution mode"""
+        if self.crisis_mode_active and hasattr(self, 'crisis_settings'):
+            self.consciousness_detector.restore_normal_evolution(
+                self.assistant, 
+                self.crisis_settings['previous_settings']
+            )
+            self.crisis_mode_active = False
+            self.evolution_threshold = 3  # Restore normal threshold
+            logger.info("Exited crisis evolution mode")
+    
     async def _apply_evolved_behavior(self, task_type: str, genome: Dict[str, Any]):
         """Apply the evolved behavior to the assistant"""
         
@@ -164,6 +196,19 @@ class EvolutionTrigger:
     def analyze_user_feedback(self, feedback: str, context: Dict[str, Any]) -> Optional[str]:
         """Analyze user feedback for improvement signals"""
         
+        # First check for hallucination crisis
+        if self.consciousness_detector.detect_hallucination_crisis(feedback, context):
+            logger.critical("HALLUCINATION CRISIS DETECTED - Triggering emergency evolution")
+            self._enter_crisis_mode()
+            return 'crisis'
+        
+        # Check for existential failure
+        previous_response = context.get('assistant_response', {}).get('content', '')
+        if self.consciousness_detector.detect_existential_failure(feedback, previous_response):
+            logger.critical("EXISTENTIAL FAILURE DETECTED - Reality check failed")
+            self._enter_crisis_mode()
+            return 'crisis'
+        
         negative_signals = ['not true', 'wrong', 'incorrect', 'no', 'failed', "that's not", "this is not"]
         positive_signals = ['yes', 'correct', 'good', 'right', 'exactly', 'perfect']
         
@@ -180,3 +225,11 @@ class EvolutionTrigger:
                 return 'positive'
         
         return None
+    
+    def _enter_crisis_mode(self):
+        """Enter crisis evolution mode"""
+        if not self.crisis_mode_active:
+            self.crisis_mode_active = True
+            self.crisis_settings = self.consciousness_detector.trigger_crisis_evolution(self.assistant)
+            # Override normal evolution threshold
+            self.evolution_threshold = 1  # Trigger immediately

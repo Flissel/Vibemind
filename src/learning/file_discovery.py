@@ -82,9 +82,9 @@ class FileDiscoveryLearner:
         """Generate potential command names to test"""
         
         # Start with common patterns
-        prefixes = ['', 'f', 'g', 'a']
-        roots = ['find', 'search', 'locate', 'look', 'seek', 'scan', 'grep', 'ls']
-        suffixes = ['', 'f', 'r', 'd']
+        prefixes = ['', 'f', 'g', 'a', 'w']
+        roots = ['find', 'search', 'locate', 'look', 'seek', 'scan', 'grep', 'ls', 'where', 'which']
+        suffixes = ['', 'f', 'r', 'd', '.exe']
         
         candidates = []
         
@@ -94,6 +94,15 @@ class FileDiscoveryLearner:
                 for suffix in suffixes:
                     candidates.append(prefix + root + suffix)
         
+        # Add platform-specific commands
+        platform_commands = [
+            'type', 'more', 'less', 'head', 'tail', 'cat',
+            'wslpath', 'cygpath', 'realpath', 'readlink',
+            'where.exe', 'dir', 'Get-Content', 'gc',
+            'fd', 'rg', 'ag', 'ack'  # Modern alternatives
+        ]
+        candidates.extend(platform_commands)
+        
         # Add some completely random attempts
         for _ in range(10):
             random_cmd = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(2, 6)))
@@ -101,27 +110,30 @@ class FileDiscoveryLearner:
         
         return list(set(candidates))  # Remove duplicates
     
-    async def evolve_search_strategy(self, target_file: str) -> Optional[str]:
+    async def evolve_search_strategy(self, target_file: str, verification_required: bool = False) -> Optional[Dict[str, Any]]:
         """Evolve a strategy to find a specific file"""
         
-        logger.info(f"Evolving strategy to find: {target_file}")
+        logger.info(f"Evolving strategy to find: {target_file} (verification={verification_required})")
+        
+        # Detect if it's a Windows path
+        is_windows_path = any(pattern in target_file for pattern in ['C:\\', 'D:\\', 'C:/', 'D:/'])
         
         # Initialize population of search strategies
-        population = self._create_initial_population()
+        population = self._create_initial_population(is_windows_path=is_windows_path)
         
         best_result = None
         generation = 0
-        max_generations = 10
+        max_generations = 50 if verification_required else 10
         
         while generation < max_generations and best_result is None:
             # Test each strategy
             results = []
             
             for strategy in population:
-                result = await self._test_search_strategy(strategy, target_file)
+                result = await self._test_search_strategy(strategy, target_file, verification_required)
                 results.append((strategy, result))
                 
-                if result['found']:
+                if result['found'] and (not verification_required or result.get('verified')):
                     best_result = result
                     self._record_success(strategy, result)
                     break
@@ -129,15 +141,17 @@ class FileDiscoveryLearner:
             if best_result:
                 break
             
-            # Evolve population
-            population = self._evolve_population(results)
+            # Evolve population with higher mutation in crisis
+            crisis_mode = verification_required
+            population = self._evolve_population(results, crisis_mode=crisis_mode)
             generation += 1
             
-            logger.info(f"Generation {generation}: No success yet, evolving...")
+            if generation % 10 == 0:
+                logger.info(f"Generation {generation}: Still evolving... Best fitness so far: {self._calculate_best_fitness(results)}")
         
         return best_result
     
-    def _create_initial_population(self) -> List[Dict[str, Any]]:
+    def _create_initial_population(self, is_windows_path: bool = False) -> List[Dict[str, Any]]:
         """Create initial population of search strategies"""
         
         population = []
@@ -165,13 +179,37 @@ class FileDiscoveryLearner:
                 ]
                 population.extend(strategies)
         
-        # Add random exploration strategies
-        for _ in range(5):
-            population.append(self._generate_random_strategy())
+        # Add Windows-specific strategies if needed
+        if is_windows_path:
+            windows_strategies = [
+                {
+                    'command': 'find',
+                    'args': ['-name', '{filename}'],
+                    'paths': ['/mnt/c', '/mnt/d'],
+                    'path_translation': 'wsl'
+                },
+                {
+                    'command': 'cat',
+                    'args': ['{filepath}'],
+                    'paths': [''],
+                    'path_translation': 'direct_wsl'
+                },
+                {
+                    'command': 'wslpath',
+                    'args': ['-u', '{filepath}'],
+                    'paths': [''],
+                    'path_translation': 'convert_first'
+                }
+            ]
+            population.extend(windows_strategies)
         
-        return population[:20]  # Limit population size
+        # Add random exploration strategies
+        for _ in range(10):
+            population.append(self._generate_random_strategy(is_windows_path))
+        
+        return population[:30]  # Increased size for crisis mode
     
-    def _generate_random_strategy(self) -> Dict[str, Any]:
+    def _generate_random_strategy(self, is_windows_path: bool = False) -> Dict[str, Any]:
         """Generate a random search strategy"""
         
         # Try to discover new patterns
@@ -180,41 +218,87 @@ class FileDiscoveryLearner:
             ['-iname', '{filename}'],
             ['--name', '{filename}'],
             ['{filename}'],
+            ['{filepath}'],  # For direct file access
             ['-f', '{filename}'],
             ['/', '-name', '{filename}'],
-            ['.', '-name', '{filename}']
+            ['.', '-name', '{filename}'],
+            ['-path', '*{filename}*'],
+            ['2>/dev/null'],  # Suppress errors
         ]
         
         possible_paths = [
             ['.'], ['/'], ['~'], 
             ['/home'], ['/mnt'], ['/usr'],
-            ['C:\\'], ['D:\\'], ['/mnt/c']
+            ['C:\\'], ['D:\\'], ['/mnt/c'], ['/mnt/d'],
+            ['/cygdrive/c'], ['//wsl$/Ubuntu'],
+            [''] # Empty path for direct file access
         ]
         
-        return {
-            'command': random.choice(self.search_genome.get('command_pool', ['find'])),
+        # Add Windows-specific mutations
+        if is_windows_path:
+            possible_paths.extend([
+                ['/mnt/c/Users'], ['/mnt/c/Users/nicol'],
+                ['/mnt/c/Users/nicol/OneDrive'],
+                ['/mnt/c/Users/nicol/Desktop'],
+                ['/mnt/c/Users/nicol/OneDrive/Desktop']
+            ])
+        
+        strategy = {
+            'command': random.choice(self.search_genome.get('command_pool', ['find', 'cat', 'ls'])),
             'args': random.choice(possible_args),
             'paths': random.choice(possible_paths)
         }
+        
+        # Randomly add path translation strategy
+        if is_windows_path and random.random() < 0.5:
+            strategy['path_translation'] = random.choice(['wsl', 'direct_wsl', 'convert_first', 'cygwin'])
+        
+        return strategy
     
-    async def _test_search_strategy(self, strategy: Dict[str, Any], target_file: str) -> Dict[str, Any]:
+    async def _test_search_strategy(self, strategy: Dict[str, Any], target_file: str, verification_required: bool = False) -> Dict[str, Any]:
         """Test a search strategy"""
         
         result = {
             'found': False,
             'path': None,
             'strategy': strategy,
-            'error': None
+            'error': None,
+            'verified': False
         }
         
         try:
+            # Handle path translation for Windows paths
+            working_path = target_file
+            if strategy.get('path_translation') == 'wsl' and 'C:\\' in target_file:
+                # Convert C:\Users\... to /mnt/c/Users/...
+                working_path = target_file.replace('C:\\', '/mnt/c/').replace('\\', '/')
+            elif strategy.get('path_translation') == 'convert_first':
+                # Use wslpath to convert
+                proc = await asyncio.create_subprocess_exec(
+                    'wslpath', '-u', target_file,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, _ = await proc.communicate()
+                if proc.returncode == 0:
+                    working_path = stdout.decode().strip()
+            
             # Build command
             cmd_parts = [strategy['command']]
-            cmd_parts.extend(strategy.get('paths', []))
             
-            # Replace filename placeholder
-            args = [arg.replace('{filename}', target_file) for arg in strategy.get('args', [])]
-            cmd_parts.extend(args)
+            # Handle different command types
+            if strategy['command'] in ['cat', 'type', 'more', 'head', 'tail']:
+                # Direct file reading commands
+                cmd_parts.append(working_path)
+            else:
+                # Search commands
+                cmd_parts.extend(strategy.get('paths', []))
+                # Replace placeholders
+                filename = os.path.basename(working_path)
+                args = []
+                for arg in strategy.get('args', []):
+                    args.append(arg.replace('{filename}', filename).replace('{filepath}', working_path))
+                cmd_parts.extend(args)
             
             # Execute
             logger.debug(f"Testing command: {' '.join(cmd_parts)}")
@@ -228,12 +312,36 @@ class FileDiscoveryLearner:
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=5.0)
             
             if proc.returncode == 0 and stdout:
-                # Found something
-                paths = stdout.decode().strip().split('\n')
-                if paths and paths[0]:
+                output = stdout.decode()
+                
+                # Check if it's a file read or a search
+                if strategy['command'] in ['cat', 'type', 'more', 'head', 'tail']:
+                    # We successfully read the file
                     result['found'] = True
-                    result['path'] = paths[0]
-                    logger.info(f"Success! Found file at: {paths[0]}")
+                    result['path'] = working_path
+                    result['content'] = output[:500]  # First 500 chars for verification
+                    result['verified'] = True
+                    logger.info(f"Success! Read file at: {working_path}")
+                else:
+                    # Search result
+                    paths = output.strip().split('\n')
+                    if paths and paths[0]:
+                        result['found'] = True
+                        result['path'] = paths[0]
+                        
+                        # If verification required, try to read the file
+                        if verification_required:
+                            verify_proc = await asyncio.create_subprocess_exec(
+                                'head', '-n', '1', paths[0],
+                                stdout=asyncio.subprocess.PIPE,
+                                stderr=asyncio.subprocess.PIPE
+                            )
+                            verify_out, _ = await verify_proc.communicate()
+                            if verify_proc.returncode == 0:
+                                result['verified'] = True
+                                result['first_line'] = verify_out.decode().strip()
+                        
+                        logger.info(f"Success! Found file at: {paths[0]}")
             
         except asyncio.TimeoutError:
             result['error'] = 'timeout'
@@ -242,59 +350,88 @@ class FileDiscoveryLearner:
         
         return result
     
-    def _evolve_population(self, results: List[Tuple[Dict, Dict]]) -> List[Dict[str, Any]]:
+    def _evolve_population(self, results: List[Tuple[Dict, Dict]], crisis_mode: bool = False) -> List[Dict[str, Any]]:
         """Evolve population based on results"""
         
-        # Sort by fitness (strategies that didn't error are better)
+        # Enhanced fitness function for crisis mode
         def fitness(result):
+            score = 0
             if result[1]['found']:
-                return 100
+                score = 100
+                if result[1].get('verified'):
+                    score += 50  # Bonus for verification
             elif result[1]['error'] is None:
-                return 10
+                score = 10
             elif result[1]['error'] == 'timeout':
-                return 5
+                score = 5
             else:
-                return 0
+                score = 0
+            
+            # In crisis mode, heavily penalize repeated failures
+            if crisis_mode and result[1]['error']:
+                score -= 20
+            
+            return score
         
         results.sort(key=fitness, reverse=True)
         
         # Keep best strategies
         new_population = []
-        elite_count = min(5, len(results) // 2)
+        elite_count = min(5 if not crisis_mode else 3, len(results) // 2)
         
         for i in range(elite_count):
             new_population.append(results[i][0])
         
+        # In crisis mode, increase diversity
+        population_size = 30 if crisis_mode else 20
+        mutation_boost = 3 if crisis_mode else 1
+        
         # Mutate and crossover
-        while len(new_population) < 20:
-            parent = random.choice(new_population[:elite_count] if new_population else results[:5])[0]
-            child = self._mutate_strategy(parent)
-            new_population.append(child)
+        while len(new_population) < population_size:
+            if new_population and random.random() < 0.7:  # 70% mutation, 30% random
+                parent_idx = random.randint(0, min(elite_count, len(new_population)-1))
+                parent = new_population[parent_idx] if new_population else results[0][0]
+                
+                # Multiple mutations in crisis mode
+                child = parent.copy()
+                for _ in range(mutation_boost):
+                    child = self._mutate_strategy(child, aggressive=crisis_mode)
+                new_population.append(child)
+            else:
+                # Generate completely new strategy
+                is_windows = any('C:\\' in str(r[0]) or '/mnt/c' in str(r[0]) for r in results)
+                new_population.append(self._generate_random_strategy(is_windows))
         
         return new_population
     
-    def _mutate_strategy(self, strategy: Dict[str, Any]) -> Dict[str, Any]:
+    def _mutate_strategy(self, strategy: Dict[str, Any], aggressive: bool = False) -> Dict[str, Any]:
         """Mutate a search strategy"""
         
         mutated = strategy.copy()
+        mutation_rate = self.search_genome['mutation_rate'] * (3 if aggressive else 1)
         
-        # Mutate command (rarely)
-        if random.random() < 0.1 and self.search_genome['command_pool']:
-            mutated['command'] = random.choice(self.search_genome['command_pool'])
+        # Mutate command
+        if random.random() < (0.3 if aggressive else 0.1) and self.search_genome['command_pool']:
+            mutated['command'] = random.choice(self.search_genome['command_pool'] + ['cat', 'type', 'head', 'tail'])
         
         # Mutate arguments
-        if random.random() < self.search_genome['mutation_rate']:
+        if random.random() < mutation_rate:
             arg_mutations = [
                 ['-name', '{filename}'],
                 ['-iname', '{filename}'],
                 ['2>/dev/null', '-name', '{filename}'],
                 ['-type', 'f', '-name', '{filename}'],
-                ['-maxdepth', '5', '-name', '{filename}']
+                ['-maxdepth', '5', '-name', '{filename}'],
+                ['{filepath}'],  # Direct file path
+                ['-path', '*{filename}*'],
+                ['*{filename}*'],
+                ['-print'],
+                []
             ]
             mutated['args'] = random.choice(arg_mutations)
         
         # Mutate paths
-        if random.random() < self.search_genome['mutation_rate']:
+        if random.random() < mutation_rate:
             path_mutations = [
                 ['.'],
                 ['..'],
@@ -304,9 +441,18 @@ class FileDiscoveryLearner:
                 ['/home'],
                 [f'/home/{os.environ.get("USER", "user")}'],
                 ['/mnt/c/Users'],
-                [os.getcwd()]
+                ['/mnt/c/Users/nicol'],
+                ['/mnt/c/Users/nicol/OneDrive'],
+                ['/mnt/c/Users/nicol/OneDrive/Desktop'],
+                ['/mnt/c/Users/nicol/Desktop'],
+                [os.getcwd()],
+                ['']  # No path for direct access
             ]
             mutated['paths'] = random.choice(path_mutations)
+        
+        # Mutate path translation strategy
+        if random.random() < mutation_rate / 2:
+            mutated['path_translation'] = random.choice(['wsl', 'direct_wsl', 'convert_first', 'cygwin', None])
         
         return mutated
     
@@ -386,3 +532,24 @@ class FileDiscoveryLearner:
                 if obj.success_rate > 0
             ]
         }
+    
+    def _calculate_best_fitness(self, results: List[Tuple[Dict, Dict]]) -> float:
+        """Calculate the best fitness from results"""
+        if not results:
+            return 0.0
+        
+        best_fitness = 0.0
+        for _, result in results:
+            fitness = 0.0
+            if result['found']:
+                fitness = 100.0
+                if result.get('verified'):
+                    fitness += 50.0
+            elif result['error'] is None:
+                fitness = 10.0
+            elif result['error'] == 'timeout':
+                fitness = 5.0
+            
+            best_fitness = max(best_fitness, fitness)
+        
+        return best_fitness

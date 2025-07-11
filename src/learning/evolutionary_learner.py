@@ -287,3 +287,12 @@ class EvolutionaryLearner:
             return self.population[0].genome
         else:
             return {}
+    
+    def get_best_fitness(self) -> float:
+        """Get the fitness of the best individual"""
+        if self.archive and self.archive[0].fitness > 0:
+            return self.archive[0].fitness
+        elif self.population:
+            return self.population[0].fitness
+        else:
+            return 0.0

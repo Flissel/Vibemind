@@ -107,3 +107,50 @@
 2025-07-11 03:10:33,597 - src.core.assistant - INFO - Completed evolutionary improvement cycle 1
 2025-07-11 03:10:58,192 - src.core.llm_interface - INFO - Generating with prompt length: 2598
 2025-07-11 03:11:19,325 - src.core.llm_interface - INFO - Generated response length: 705
+2025-07-11 03:23:58,189 - __main__ - INFO - Received signal 2
+2025-07-11 03:30:03,673 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 03:30:03,674 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 03:30:10,217 - src.learning.evolutionary_learner - INFO - Loaded 5 individuals from archive
+2025-07-11 03:30:10,219 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 03:30:10,242 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 03:30:10,243 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 03:30:10,243 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 03:30:10,243 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 03:30:10,246 - src.learning.file_discovery - INFO - Starting command discovery through exploration...
+2025-07-11 03:30:33,307 - src.learning.file_discovery - INFO - Discovered command: look
+2025-07-11 03:31:43,278 - src.learning.file_discovery - INFO - Discovered command: fgrep
+2025-07-11 03:31:53,477 - src.learning.file_discovery - INFO - Discovered command: ls
+2025-07-11 03:32:10,691 - src.learning.file_discovery - INFO - Discovered command: find
+2025-07-11 03:32:42,910 - src.learning.file_discovery - INFO - Discovered command: grep
+2025-07-11 03:32:50,811 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-07-11 03:32:50,828 - src.learning.file_discovery - INFO - Discovered listing command: ls
+2025-07-11 03:32:50,837 - src.learning.file_discovery - INFO - Discovered listing command: dir
+2025-07-11 03:32:53,210 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-07-11 03:32:53,211 - src.learning.file_discovery - INFO - Discovered valid path: /home
+2025-07-11 03:32:53,211 - src.learning.file_discovery - INFO - Discovered valid path: /usr
+2025-07-11 03:32:53,212 - src.learning.file_discovery - INFO - Discovered valid path: /etc
+2025-07-11 03:32:53,212 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-07-11 03:32:53,212 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-07-11 03:32:53,213 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-07-11 03:32:53,213 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['look', 'fgrep', 'ls', 'find', 'grep', 'ls_list', 'dir_list'], 'successful_patterns': 0, 'known_paths': ['/', '/home', '/usr', '/etc', '~', '.', '..'], 'total_explorations': 0, 'best_commands': []}
+2025-07-11 03:32:53,215 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 03:32:53,215 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 03:32:53,216 - __main__ - INFO - Assistant ready!
+2025-07-11 03:33:16,411 - src.core.llm_interface - INFO - Generating with prompt length: 408
+2025-07-11 03:33:20,160 - src.core.llm_interface - INFO - Generated response length: 179
+2025-07-11 03:33:36,062 - src.core.llm_interface - INFO - Generating with prompt length: 733
+2025-07-11 03:33:39,530 - src.core.llm_interface - INFO - Generated response length: 163
+2025-07-11 03:33:42,155 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for information_retrieval
+2025-07-11 03:34:12,555 - src.core.llm_interface - INFO - Generating with prompt length: 1088
+2025-07-11 03:34:16,207 - src.core.llm_interface - INFO - Generated response length: 220
+2025-07-11 03:34:18,292 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for command_execution
+2025-07-11 03:35:04,642 - src.core.llm_interface - INFO - Generating with prompt length: 1187
+2025-07-11 03:35:23,032 - src.core.llm_interface - INFO - Generated response length: 1035
+2025-07-11 03:35:32,371 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for file_search
+2025-07-11 03:37:31,558 - src.core.llm_interface - INFO - Generating with prompt length: 2256
+2025-07-11 03:37:54,067 - src.core.llm_interface - INFO - Generated response length: 945
+2025-07-11 03:38:37,156 - src.core.llm_interface - INFO - Generating with prompt length: 2900
+2025-07-11 03:39:02,870 - src.core.llm_interface - INFO - Generated response length: 901
+2025-07-11 03:40:21,726 - src.core.llm_interface - INFO - Generating with prompt length: 2881
+2025-07-11 03:40:54,915 - src.core.llm_interface - INFO - Generated response length: 1399
+2025-07-11 03:41:06,491 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for general
