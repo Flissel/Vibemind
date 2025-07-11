@@ -2,6 +2,25 @@
 
 A self-learning desktop AI assistant that adapts to your needs and builds solutions autonomously, inspired by Sakana AI's cutting-edge self-learning methods.
 
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/nickinper/sakana-desktop-assistant.git
+cd sakana-desktop-assistant
+
+# Run the assistant
+./run.sh
+```
+
+Or manually:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements-minimal.txt
+python src/main.py
+```
+
 ## Features
 
 - **Self-Learning**: Adapts to user patterns and preferences over time

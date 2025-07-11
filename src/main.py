@@ -10,12 +10,13 @@ from pathlib import Path
 import logging
 from datetime import datetime
 import argparse
+from typing import Optional
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core import Config, SakanaAssistant
-from ui.cli_interface import CLIInterface
+from src.core import Config, SakanaAssistant
+from src.ui.cli_interface import CLIInterface
 
 # Configure logging
 logging.basicConfig(

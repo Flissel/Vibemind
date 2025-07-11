@@ -24,8 +24,8 @@ docker==7.1.0
 microsandbox==0.1.0
 
 # UI (Optional)
-PyQt6==6.7.0
-pyqt6-tools==6.7.0
+# PyQt6==6.7.0
+# pyqt6-tools==6.4.2.3.3
 
 # Voice Integration (Optional)
 speechrecognition==3.10.4

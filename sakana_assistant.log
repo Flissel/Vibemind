@@ -1,0 +1,16 @@
+2025-07-11 02:27:27,816 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:27:27,816 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 02:27:27,816 - src.core.llm_interface - WARNING - Model not found: /home/nicol/sakana-desktop-assistant/models/llama-3.2-3b.gguf, using mock LLM for testing
+2025-07-11 02:27:27,897 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 02:27:27,919 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 02:27:27,920 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 02:27:27,920 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 02:27:27,920 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 02:27:27,923 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 02:27:27,923 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 02:27:27,923 - __main__ - INFO - Assistant ready!
+2025-07-11 02:27:27,928 - __main__ - INFO - Shutting down assistant...
+2025-07-11 02:27:27,928 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-07-11 02:27:27,930 - src.execution.sandbox_executor - INFO - Sandbox cleanup completed
+2025-07-11 02:27:27,931 - src.core.assistant - INFO - Assistant shutdown complete
+2025-07-11 02:27:27,932 - __main__ - INFO - Shutdown complete
