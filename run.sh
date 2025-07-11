@@ -36,12 +36,22 @@ fi
 mkdir -p data models plugins
 
 # Check for LLM model
-if [ ! -f "models/llama-3.2-3b.gguf" ]; then
+if [ ! -d "models" ] || [ -z "$(ls -A models/*.gguf 2>/dev/null)" ]; then
     echo -e "${YELLOW}⚠️  Warning: No local LLM model found${NC}"
-    echo "To use local LLM, download a GGUF model to the models/ directory"
-    echo "Example: wget https://huggingface.co/[model-path]/resolve/main/model.gguf -O models/llama-3.2-3b.gguf"
+    echo ""
+    echo -e "${GREEN}To download a model, run:${NC}"
+    echo "./download_models.sh"
+    echo ""
+    echo "Or download manually:"
+    echo "wget https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf -O models/llama-3.2-3b.gguf"
     echo ""
     echo "You can also use OpenAI by setting OPENAI_API_KEY environment variable"
+    echo ""
+    read -p "Continue with mock LLM for testing? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
 fi
 
 # Run the assistant
