@@ -51,6 +51,9 @@ class SakanaAssistant:
         
         # File discovery learner
         self.file_discovery_learner = None
+        
+        # Project discovery learner
+        self.project_discovery_learner = None
     
     async def initialize(self):
         """Initialize all components"""
@@ -92,6 +95,12 @@ class SakanaAssistant:
         # Start discovery process in background
         asyncio.create_task(self._initialize_file_discovery())
         
+        # Initialize project discovery learner
+        from ..learning.project_discovery import ProjectDiscoveryLearner
+        self.project_discovery_learner = ProjectDiscoveryLearner()
+        # Start project discovery in background (after file discovery)
+        asyncio.create_task(self._initialize_project_discovery())
+        
         # Initialize execution sandbox
         if self.config.sandbox_enabled:
             self.sandbox_executor = SandboxExecutor(
@@ -121,6 +130,35 @@ class SakanaAssistant:
             logger.info(f"File discovery initialized: {learned}")
         except Exception as e:
             logger.error(f"Error in file discovery initialization: {e}")
+    
+    async def _initialize_project_discovery(self):
+        """Initialize project discovery in background"""
+        try:
+            # Wait a bit for file discovery to complete
+            await asyncio.sleep(10)
+            
+            # Discover projects in home directory
+            logger.info("Starting project discovery...")
+            projects = await self.project_discovery_learner.discover_projects()
+            
+            logger.info(f"Project discovery complete: found {len(projects)} projects")
+            
+            # Store in memory for quick access
+            for project in projects:
+                memory = Memory(
+                    type=MemoryType.LONG_TERM,
+                    content=f"Project: {project.name} at {project.path}",
+                    context={
+                        'type': 'discovered_project',
+                        'project_name': project.name,
+                        'project_type': project.type,
+                        'capabilities': project.capabilities
+                    }
+                )
+                await self.memory_manager.store_memory(memory)
+                
+        except Exception as e:
+            logger.error(f"Error in project discovery initialization: {e}")
     
     async def process_request(self, user_input: str) -> Dict[str, Any]:
         """Process a user request with learning and adaptation"""
@@ -697,6 +735,10 @@ Answer in 1-3 sentences unless more detail is requested."""
         # File finding/searching
         elif any(word in input_lower for word in ['find', 'search', 'locate', 'where', 'look for']):
             return 'file_search'
+        
+        # Project related
+        elif any(word in input_lower for word in ['project', 'repository', 'codebase', 'my code']):
+            return 'project_exploration'
         
         # Command execution
         elif any(word in input_lower for word in ['run', 'execute', 'command', 'ls', 'cd', 'mkdir']):

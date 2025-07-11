@@ -6,7 +6,9 @@ from .behavior_evolution import BehaviorEvolver, BehaviorGene
 from .file_discovery import FileDiscoveryLearner, FileCommand
 from .consciousness_field import ConsciousnessFieldDetector
 from .knowledge_accumulator import KnowledgeAccumulator
+from .project_discovery import ProjectDiscoveryLearner, DiscoveredProject
 
 __all__ = ['EvolutionaryLearner', 'Individual', 'SelfModifier', 'ReinforcementLearner', 
            'EvolutionTrigger', 'BehaviorEvolver', 'BehaviorGene', 'FileDiscoveryLearner', 
-           'FileCommand', 'ConsciousnessFieldDetector', 'KnowledgeAccumulator']
+           'FileCommand', 'ConsciousnessFieldDetector', 'KnowledgeAccumulator',
+           'ProjectDiscoveryLearner', 'DiscoveredProject']

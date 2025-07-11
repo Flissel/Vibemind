@@ -205,3 +205,141 @@
 2025-07-11 04:05:06,669 - src.core.llm_interface - INFO - Generating with prompt length: 1150
 2025-07-11 04:05:29,969 - src.core.llm_interface - INFO - Generated response length: 232
 2025-07-11 04:05:36,864 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for document_summarization
+2025-07-11 04:07:49,400 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 04:07:49,400 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-07-11 04:07:51,305 - src.learning.evolutionary_learner - INFO - Loaded 5 individuals from archive
+2025-07-11 04:07:51,306 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-07-11 04:07:51,308 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-07-11 04:07:51,309 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-07-11 04:07:51,309 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-07-11 04:07:51,309 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-07-11 04:07:51,309 - src.learning.file_discovery - INFO - Starting command discovery through exploration...
+2025-07-11 04:07:51,309 - src.learning.file_discovery - INFO - Already know 0 commands from previous sessions
+2025-07-11 04:07:51,309 - src.learning.file_discovery - INFO - Testing 517 new candidates (skipping 0 known)
+2025-07-11 04:08:24,543 - src.learning.file_discovery - INFO - NEW DISCOVERY: look
+2025-07-11 04:08:24,543 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: look
+2025-07-11 04:08:42,271 - src.learning.file_discovery - INFO - NEW DISCOVERY: grep
+2025-07-11 04:08:42,271 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: grep
+2025-07-11 04:08:52,655 - src.learning.file_discovery - INFO - NEW DISCOVERY: where.exe
+2025-07-11 04:08:52,656 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: where.exe
+2025-07-11 04:09:13,923 - src.learning.file_discovery - INFO - NEW DISCOVERY: dir
+2025-07-11 04:09:13,923 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: dir
+2025-07-11 04:09:30,882 - src.learning.file_discovery - INFO - NEW DISCOVERY: realpath
+2025-07-11 04:09:30,882 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: realpath
+2025-07-11 04:09:34,652 - src.learning.file_discovery - INFO - NEW DISCOVERY: more
+2025-07-11 04:09:34,653 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: more
+2025-07-11 04:09:53,987 - src.learning.file_discovery - INFO - NEW DISCOVERY: cat
+2025-07-11 04:09:53,988 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: cat
+2025-07-11 04:10:15,357 - src.learning.file_discovery - INFO - NEW DISCOVERY: fgrep
+2025-07-11 04:10:15,357 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: fgrep
+2025-07-11 04:11:07,786 - src.learning.file_discovery - INFO - NEW DISCOVERY: find.exe
+2025-07-11 04:11:07,786 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: find.exe
+2025-07-11 04:11:09,150 - src.learning.file_discovery - INFO - NEW DISCOVERY: head
+2025-07-11 04:11:09,151 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: head
+2025-07-11 04:11:29,596 - src.learning.file_discovery - INFO - NEW DISCOVERY: wslpath
+2025-07-11 04:11:29,596 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: wslpath
+2025-07-11 04:12:21,852 - src.learning.file_discovery - INFO - NEW DISCOVERY: less
+2025-07-11 04:12:21,852 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: less
+2025-07-11 04:12:23,482 - src.learning.file_discovery - INFO - NEW DISCOVERY: ls
+2025-07-11 04:12:23,483 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: ls
+2025-07-11 04:12:31,327 - src.learning.file_discovery - INFO - NEW DISCOVERY: which
+2025-07-11 04:12:31,327 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: which
+2025-07-11 04:13:04,960 - src.learning.file_discovery - INFO - NEW DISCOVERY: egrep
+2025-07-11 04:13:04,961 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: egrep
+2025-07-11 04:13:07,549 - src.learning.file_discovery - INFO - NEW DISCOVERY: find
+2025-07-11 04:13:07,550 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: find
+2025-07-11 04:14:39,949 - src.learning.file_discovery - INFO - NEW DISCOVERY: readlink
+2025-07-11 04:14:39,949 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: readlink
+2025-07-11 04:15:07,918 - src.learning.file_discovery - INFO - NEW DISCOVERY: rg
+2025-07-11 04:15:07,919 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: rg
+2025-07-11 04:15:22,203 - src.learning.file_discovery - INFO - NEW DISCOVERY: tail
+2025-07-11 04:15:22,203 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: tail
+2025-07-11 04:16:01,327 - src.learning.knowledge_accumulator - INFO - Discovery session complete: 19 new, 0 rediscovered
+2025-07-11 04:16:01,327 - src.learning.file_discovery - INFO - Knowledge stats: 19 total commands, trend: growing
+2025-07-11 04:16:01,328 - src.learning.file_discovery - INFO - Saved 19 commands to cache
+2025-07-11 04:16:01,328 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-07-11 04:16:01,331 - src.learning.file_discovery - INFO - Discovered listing command: ls
+2025-07-11 04:16:01,335 - src.learning.file_discovery - INFO - Discovered listing command: dir
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: /home
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: /usr
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: /etc
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-07-11 04:16:03,067 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-07-11 04:16:03,068 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['look', 'grep', 'where.exe', 'dir', 'realpath', 'more', 'cat', 'fgrep', 'find.exe', 'head', 'wslpath', 'less', 'ls', 'which', 'egrep', 'find', 'readlink', 'rg', 'tail', 'ls_list', 'dir_list'], 'successful_patterns': 0, 'known_paths': ['/', '/home', '/usr', '/etc', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 19, 'total_successful_patterns': 0, 'total_discovery_sessions': 1, 'average_new_discoveries_per_session': 19.0, 'knowledge_growth_trend': 'growing'}}
+2025-07-11 04:16:03,068 - src.core.assistant - INFO - Assistant initialized successfully
+2025-07-11 04:16:03,068 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-07-11 04:16:03,068 - __main__ - INFO - Assistant ready!
+2025-07-11 04:16:28,548 - src.core.llm_interface - INFO - Generating with prompt length: 444
+2025-07-11 04:16:39,838 - src.core.llm_interface - INFO - Generated response length: 110
+2025-07-11 04:17:04,786 - src.core.llm_interface - INFO - Generating with prompt length: 679
+2025-07-11 04:17:18,809 - src.core.llm_interface - INFO - Generated response length: 276
+2025-07-11 04:17:55,309 - src.core.llm_interface - INFO - Generating with prompt length: 1099
+2025-07-11 04:18:03,188 - src.core.llm_interface - INFO - Generated response length: 183
+2025-07-11 04:18:06,875 - src.learning.consciousness_field - CRITICAL - HALLUCINATION CRISIS DETECTED: 'i think you might be hallucinating.'
+2025-07-11 04:18:06,875 - src.learning.evolution_triggers - CRITICAL - HALLUCINATION CRISIS DETECTED - Triggering emergency evolution
+2025-07-11 04:18:06,875 - src.learning.consciousness_field - CRITICAL - === ENTERING CRISIS EVOLUTION MODE ===
+2025-07-11 04:18:06,875 - src.learning.consciousness_field - CRITICAL - Crisis evolution settings: {'evolution_mode': 'CRISIS', 'mutation_rate': 0.8999999999999999, 'exploration_depth': 2, 'population_size': 40, 'verification_required': True, 'max_generations': 50, 'elite_pressure': 0.1, 'innovation_bonus': 2.0, 'reality_check_weight': 10.0}
+2025-07-11 04:18:06,875 - src.core.assistant - CRITICAL - CRISIS MODE: Hallucination detected for general
+2025-07-11 04:18:06,875 - src.learning.evolution_triggers - INFO - Triggering evolution for task type: general
+2025-07-11 04:18:06,877 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-07-11 04:18:06,879 - src.learning.evolutionary_learner - INFO - Generation 0 - Best fitness: 0.000
+2025-07-11 04:18:06,882 - src.learning.evolutionary_learner - INFO - Generation 1 - Best fitness: 0.000
+2025-07-11 04:18:06,883 - src.learning.evolutionary_learner - INFO - Generation 2 - Best fitness: 0.000
+2025-07-11 04:18:06,885 - src.learning.evolutionary_learner - INFO - Generation 3 - Best fitness: 0.000
+2025-07-11 04:18:06,888 - src.learning.evolutionary_learner - INFO - Generation 4 - Best fitness: 0.000
+2025-07-11 04:18:06,890 - src.learning.evolutionary_learner - INFO - Generation 5 - Best fitness: 0.000
+2025-07-11 04:18:06,891 - src.learning.evolutionary_learner - INFO - Generation 6 - Best fitness: 0.000
+2025-07-11 04:18:06,892 - src.learning.evolutionary_learner - INFO - Generation 7 - Best fitness: 0.000
+2025-07-11 04:18:06,894 - src.learning.evolutionary_learner - INFO - Generation 8 - Best fitness: 0.000
+2025-07-11 04:18:06,895 - src.learning.evolutionary_learner - INFO - Generation 9 - Best fitness: 0.000
+2025-07-11 04:18:06,895 - src.learning.evolution_triggers - INFO - Crisis evolution generation 10, best fitness: 49.60087231839113
+2025-07-11 04:18:06,896 - src.learning.evolutionary_learner - INFO - Generation 10 - Best fitness: 0.000
+2025-07-11 04:18:06,897 - src.learning.evolutionary_learner - INFO - Generation 11 - Best fitness: 0.000
+2025-07-11 04:18:06,898 - src.learning.evolutionary_learner - INFO - Generation 12 - Best fitness: 0.000
+2025-07-11 04:18:06,899 - src.learning.evolutionary_learner - INFO - Generation 13 - Best fitness: 0.000
+2025-07-11 04:18:06,901 - src.learning.evolutionary_learner - INFO - Generation 14 - Best fitness: 0.000
+2025-07-11 04:18:06,902 - src.learning.evolutionary_learner - INFO - Generation 15 - Best fitness: 0.000
+2025-07-11 04:18:06,904 - src.learning.evolutionary_learner - INFO - Generation 16 - Best fitness: 0.000
+2025-07-11 04:18:06,905 - src.learning.evolutionary_learner - INFO - Generation 17 - Best fitness: 0.000
+2025-07-11 04:18:06,906 - src.learning.evolutionary_learner - INFO - Generation 18 - Best fitness: 0.000
+2025-07-11 04:18:06,908 - src.learning.evolutionary_learner - INFO - Generation 19 - Best fitness: 0.000
+2025-07-11 04:18:06,908 - src.learning.evolution_triggers - INFO - Crisis evolution generation 20, best fitness: 49.60087231839113
+2025-07-11 04:18:06,909 - src.learning.evolutionary_learner - INFO - Generation 20 - Best fitness: 0.000
+2025-07-11 04:18:06,911 - src.learning.evolutionary_learner - INFO - Generation 21 - Best fitness: 0.000
+2025-07-11 04:18:06,912 - src.learning.evolutionary_learner - INFO - Generation 22 - Best fitness: 0.000
+2025-07-11 04:18:06,914 - src.learning.evolutionary_learner - INFO - Generation 23 - Best fitness: 0.000
+2025-07-11 04:18:06,915 - src.learning.evolutionary_learner - INFO - Generation 24 - Best fitness: 0.000
+2025-07-11 04:18:06,917 - src.learning.evolutionary_learner - INFO - Generation 25 - Best fitness: 0.000
+2025-07-11 04:18:06,918 - src.learning.evolutionary_learner - INFO - Generation 26 - Best fitness: 0.000
+2025-07-11 04:18:06,919 - src.learning.evolutionary_learner - INFO - Generation 27 - Best fitness: 0.000
+2025-07-11 04:18:06,921 - src.learning.evolutionary_learner - INFO - Generation 28 - Best fitness: 0.000
+2025-07-11 04:18:06,922 - src.learning.evolutionary_learner - INFO - Generation 29 - Best fitness: 0.000
+2025-07-11 04:18:06,923 - src.learning.evolution_triggers - INFO - Crisis evolution generation 30, best fitness: 49.60087231839113
+2025-07-11 04:18:06,924 - src.learning.evolutionary_learner - INFO - Generation 30 - Best fitness: 0.000
+2025-07-11 04:18:06,926 - src.learning.evolutionary_learner - INFO - Generation 31 - Best fitness: 0.000
+2025-07-11 04:18:06,927 - src.learning.evolutionary_learner - INFO - Generation 32 - Best fitness: 0.000
+2025-07-11 04:18:06,930 - src.learning.evolutionary_learner - INFO - Generation 33 - Best fitness: 0.000
+2025-07-11 04:18:06,932 - src.learning.evolutionary_learner - INFO - Generation 34 - Best fitness: 0.000
+2025-07-11 04:18:06,933 - src.learning.evolutionary_learner - INFO - Generation 35 - Best fitness: 0.000
+2025-07-11 04:18:06,934 - src.learning.evolutionary_learner - INFO - Generation 36 - Best fitness: 0.000
+2025-07-11 04:18:06,936 - src.learning.evolutionary_learner - INFO - Generation 37 - Best fitness: 0.000
+2025-07-11 04:18:06,937 - src.learning.evolutionary_learner - INFO - Generation 38 - Best fitness: 0.000
+2025-07-11 04:18:06,938 - src.learning.evolutionary_learner - INFO - Generation 39 - Best fitness: 0.000
+2025-07-11 04:18:06,939 - src.learning.evolution_triggers - INFO - Crisis evolution generation 40, best fitness: 49.60087231839113
+2025-07-11 04:18:06,940 - src.learning.evolutionary_learner - INFO - Generation 40 - Best fitness: 0.000
+2025-07-11 04:18:06,941 - src.learning.evolutionary_learner - INFO - Generation 41 - Best fitness: 0.000
+2025-07-11 04:18:06,942 - src.learning.evolutionary_learner - INFO - Generation 42 - Best fitness: 0.000
+2025-07-11 04:18:06,944 - src.learning.evolutionary_learner - INFO - Generation 43 - Best fitness: 0.000
+2025-07-11 04:18:06,946 - src.learning.evolutionary_learner - INFO - Generation 44 - Best fitness: 0.000
+2025-07-11 04:18:06,947 - src.learning.evolutionary_learner - INFO - Generation 45 - Best fitness: 0.000
+2025-07-11 04:18:06,949 - src.learning.evolutionary_learner - INFO - Generation 46 - Best fitness: 0.000
+2025-07-11 04:18:06,951 - src.learning.evolutionary_learner - INFO - Generation 47 - Best fitness: 0.000
+2025-07-11 04:18:06,953 - src.learning.evolutionary_learner - INFO - Generation 48 - Best fitness: 0.000
+2025-07-11 04:18:06,954 - src.learning.evolutionary_learner - INFO - Generation 49 - Best fitness: 0.000
+2025-07-11 04:18:06,955 - src.learning.evolution_triggers - INFO - Crisis evolution generation 50, best fitness: 49.60087231839113
+2025-07-11 04:18:06,955 - src.learning.evolution_triggers - INFO - Applying evolved behavior for general: {'temperature': 0.7, 'max_tokens': 2048, 'learning_rate': 0.01, 'pattern_threshold': 0.7}
+2025-07-11 04:18:06,963 - src.learning.consciousness_field - INFO - Restoring normal evolution mode
+2025-07-11 04:18:06,963 - src.learning.evolution_triggers - INFO - Exited crisis evolution mode
+2025-07-11 04:18:28,723 - src.core.llm_interface - INFO - Generating with prompt length: 1178
