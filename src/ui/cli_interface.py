@@ -3,7 +3,11 @@ import sys
 from typing import Optional
 import json
 from datetime import datetime
-import readline  # For better input handling
+try:
+    import readline  # For better input handling (Unix/Linux)
+except ImportError:
+    # readline is not available on Windows by default, but that's okay
+    pass
 
 class CLIInterface:
     """Command line interface for the assistant"""
@@ -20,15 +24,20 @@ class CLIInterface:
             '/history': self.show_history,
             '/clear': self.clear_screen,
             '/save': self.save_conversation,
-            '/feedback': self.provide_feedback
+            '/feedback': self.provide_feedback,
+            '/run': self.run_plugin_command,
         }
     
     async def initialize(self):
         """Initialize the CLI interface"""
         
-        # Setup readline for better input
-        readline.parse_and_bind('tab: complete')
-        readline.set_completer(self.completer)
+        # Setup readline for better input (if available)
+        try:
+            readline.parse_and_bind('tab: complete')
+            readline.set_completer(self.completer)
+        except NameError:
+            # readline not available (e.g., on Windows)
+            pass
     
     def completer(self, text, state):
         """Tab completion for commands"""
@@ -82,6 +91,50 @@ class CLIInterface:
         
         parts = command.split()
         cmd = parts[0].lower()
+        
+        # Special-case: /delegate supports an inline natural-language goal
+        if cmd == '/delegate':
+            goal = command[len('/delegate'):].strip()
+            if not goal:
+                print("Usage: /delegate <goal>")
+                print("Example: /delegate create docs/dev folder and scaffold agents")
+            else:
+                try:
+                    from ..delegation.delegation_entry import run_delegation
+                    result = await run_delegation(goal)
+                    print(f"\n🧭 Delegation engine: {result.get('engine')}")
+                    steps = result.get('transcript', [])
+                    print(f"📝 Executed {len(steps)} step(s)")
+                    for i, entry in enumerate(steps, 1):
+                        # Normalize transcript entry to a common dict shape for safe printing
+                        # - If entry is a raw string, wrap it as an info message
+                        # - If entry is a dict without 'input'/'result' (e.g., command-style), map to friendly fields
+                        if isinstance(entry, str):
+                            entry = {
+                                'input': '',
+                                'result': {'type': 'info', 'content': entry}
+                            }
+                        elif isinstance(entry, dict) and ('input' not in entry or 'result' not in entry):
+                            pretty_input = (f"{entry.get('command', '')} {entry.get('args', '')}").strip()
+                            entry = {
+                                'input': pretty_input,
+                                'result': {
+                                    'type': entry.get('status', 'info'),
+                                    'content': entry.get('message') or entry.get('output') or entry.get('content') or ''
+                                }
+                            }
+                        
+                        inp = entry.get('input', '')
+                        res = entry.get('result', {})
+                        rtype = (res.get('type') or 'info') if isinstance(res, dict) else 'info'
+                        snippet = ''
+                        if isinstance(res, dict):
+                            raw = res.get('content', '')
+                            snippet = raw[:120] if isinstance(raw, str) else str(raw)[:120]
+                        print(f"  {i}. {inp} -> {rtype}: {snippet}")
+                except Exception as e:
+                    print(f"Delegation failed: {e}")
+            return
         
         if cmd in self.commands:
             handler = self.commands[cmd]
@@ -149,6 +202,8 @@ class CLIInterface:
         print("/clear     - Clear the screen")
         print("/save      - Save conversation to file")
         print("/feedback  - Provide feedback on responses")
+        print("/delegate  - Run delegation planner for a natural-language goal")
+        print("/run <cmd> - Run a plugin command explicitly (e.g., /run fs.ls .)")
         print("/exit      - Exit the assistant")
         print("\n💡 Tips:")
         print("- The assistant learns from your interactions")
@@ -193,6 +248,26 @@ class CLIInterface:
             print(f"States explored: {rl_stats['states_explored']}")
             print(f"Episodes completed: {rl_stats['episodes_completed']}")
             print(f"Exploration rate: {rl_stats['exploration_rate']:.3f}")
+        
+        # Show Tool metrics if available
+        try:
+            tool_bucket = stats.get('tool_metrics') or {}
+            tools = tool_bucket.get('tools') or {}
+            if tools:
+                print("\n🛠️ Tool Usage Metrics:")
+                print("Tool                Calls   Success%   Avg Latency (ms)")
+                print("-" * 60)
+                for name, rec in sorted(tools.items()):
+                    calls = rec.get('calls', 0) or 0
+                    succ = rec.get('successes', 0) or 0
+                    total_lat = rec.get('total_latency_ms', 0) or 0
+                    success_rate = (succ / calls * 100.0) if calls > 0 else 0.0
+                    avg_latency = (total_lat / calls) if calls > 0 else 0
+                    print(f"{name:<20} {calls:>6}   {success_rate:>7.1f}%   {int(avg_latency):>8}")
+                if tool_bucket.get('last_updated'):
+                    print(f"Last updated: {tool_bucket['last_updated']}")
+        except Exception:
+            pass
     
     async def show_history(self):
         """Show conversation history"""
@@ -276,3 +351,50 @@ class CLIInterface:
         """Shutdown the interface"""
         
         self.running = False
+
+
+    async def run_plugin_command(self):
+        """Forward an explicit plugin command entered as '/run <command ...>'
+        This allows users who prefer slash commands to invoke tools directly.
+        """
+        try:
+            # Read the full line from stdin buffer already captured in handle_command
+            # Since handle_command only passes the command token, re-prompt for the rest here
+            print("Enter plugin command (example: fs.ls .):")
+            full = await self.get_input()
+            user_input = full.strip()
+            if not user_input:
+                print("Usage: /run <plugin command>\nExample: /run fs.ls .")
+                return
+            
+            # Build a minimal context (no additional memories) for deterministic tool execution
+            context = self.assistant._build_context(user_input, [])  # Internal but stable; used for consistent tool context
+            result = await self.assistant.plugin_manager.handle_command(user_input, context)
+            if not result:
+                print("No plugin handled that command. Use /plugins to see available commands.")
+                return
+            
+            # Print result consistently with normal responses
+            print("\n" + "-"*60)
+            rtype = result.get('type', 'info') if isinstance(result, dict) else 'info'
+            content = result.get('content') if isinstance(result, dict) else str(result)
+            if rtype == 'error':
+                print("❌ Error:")
+            elif rtype == 'code':
+                print("💻 Code:")
+            else:
+                print("🔧 Tool Result:")
+            print(content)
+            
+            # Show execution_result if provided
+            if isinstance(result, dict) and 'execution_result' in result:
+                exec_result = result['execution_result']
+                if exec_result.get('success'):
+                    print("\n✅ Execution Output:")
+                    print(exec_result.get('output', ''))
+                else:
+                    print("\n❌ Execution Error:")
+                    print(exec_result.get('error', ''))
+            print("-"*60)
+        except Exception as e:
+            print(f"Error running plugin command: {e}")

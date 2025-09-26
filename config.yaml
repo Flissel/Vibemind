@@ -1,8 +1,8 @@
 # Sakana Desktop Assistant Configuration
 
 # LLM Settings
-llm_provider: "local"
-model_name: "llama-3.2-3b"
+llm_provider: "openai"
+model_name: "gpt-4.1"
 temperature: 0.7
 max_tokens: 256
 

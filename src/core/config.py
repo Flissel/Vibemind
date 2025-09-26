@@ -18,11 +18,19 @@ class Config:
     plugins_dir: Path = None
     
     # LLM Settings
-    llm_provider: str = "local"  # local, openai, anthropic
+    llm_provider: str = "local"  # local, openai, anthropropic, gemini/google, grok
     model_name: str = "llama-3.2-3b"
     api_key: Optional[str] = None
+    # Optional base URL for OpenAI-compatible endpoints (e.g., Ollama, LocalAI)
+    openai_base_url: Optional[str] = None
     temperature: float = 0.7
     max_tokens: int = 2048
+
+    # Provider-specific credentials (optional; loaded from env if not set)
+    anthropic_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None  # Google Generative AI (Gemini)
+    xai_api_key: Optional[str] = None     # xAI (Grok)
+    xai_base_url: Optional[str] = None    # Custom base URL for xAI if needed
     
     # Memory Settings
     memory_db_path: Path = None
@@ -45,6 +53,11 @@ class Config:
     enable_gui: bool = True
     enable_voice: bool = False
     theme: str = "dark"
+
+    # Tool Selection (adaptive) Settings
+    tool_selection_enabled: bool = True
+    tool_selection_exploration_rate: float = 0.1  # epsilon for epsilon-greedy
+    tool_selection_min_samples: int = 5  # min calls before exploitation kicks in
     
     def __post_init__(self):
         # Set default paths
@@ -74,9 +87,25 @@ class Config:
                 "manage_tasks"
             ]
         
-        # Load API key from environment
+        # Load generic API key from environment (backward-compatible)
         if self.api_key is None:
             self.api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+        
+        # Load OpenAI-compatible base URL from environment (e.g., Ollama/LocalAI)
+        if self.openai_base_url is None:
+            self.openai_base_url = os.getenv("OPENAI_BASE_URL")
+
+        # Provider-specific env fallbacks (do not override explicit config fields)
+        if self.anthropic_api_key is None:
+            self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        if self.gemini_api_key is None:
+            # Google uses GOOGLE_API_KEY. Also accept GEMINI_API_KEY for user convenience
+            self.gemini_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if self.xai_api_key is None:
+            # xAI (Grok) uses XAI_API_KEY; also accept GROK_API_KEY
+            self.xai_api_key = os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
+        if self.xai_base_url is None:
+            self.xai_base_url = os.getenv("XAI_BASE_URL") or os.getenv("GROK_BASE_URL")
     
     @classmethod
     def from_yaml(cls, path: Path) -> "Config":

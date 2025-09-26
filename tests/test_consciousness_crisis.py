@@ -79,14 +79,33 @@ async def test_crisis_file_discovery():
     learner = FileDiscoveryLearner()
     
     # Simulate a Windows path that needs translation
-    windows_path = "C:\\Users\\nicol\\OneDrive\\Desktop\\test_crisis.txt"
+    windows_path = "C:\\Users\\User\\Desktop\\AutoGen_CLI_Deployment_Architecture.md"
     
-    # Create a test file in WSL equivalent path
-    wsl_path = "/mnt/c/Users/nicol/OneDrive/Desktop/test_crisis.txt"
+    # Prepare a test file: if the provided file already exists, we will use it as-is.
+    # Otherwise, create a small sample file so the search can succeed.
     import os
-    os.makedirs(os.path.dirname(wsl_path), exist_ok=True)
-    with open(wsl_path, 'w') as f:
-        f.write("This is the actual file content that proves access!")
+    created_sample_windows = False
+    created_sample_wsl = False
+    wsl_path = None
+    if not os.path.exists(windows_path):
+        try:
+            with open(windows_path, 'w', encoding='utf-8') as f:
+                f.write("This is the actual file content that proves access!")
+            created_sample_windows = True
+            print(f"(Created sample file at {windows_path} for testing)")
+        except Exception as e:
+            # Attempt WSL-style path only if /mnt/c exists (indicates WSL)
+            if os.path.exists("/mnt/c") and len(windows_path) > 2 and windows_path[1] == ':':
+                drive = windows_path[0].lower()
+                rest = windows_path[2:].replace("\\", "/")
+                wsl_path = f"/mnt/{drive}{rest}"
+                os.makedirs(os.path.dirname(wsl_path), exist_ok=True)
+                with open(wsl_path, 'w', encoding='utf-8') as f:
+                    f.write("This is the actual file content that proves access!")
+                created_sample_wsl = True
+                print(f"(Created sample file at {wsl_path} for testing)")
+            else:
+                print(f"Warning: Could not create sample file: {e}")
     
     print(f"Testing normal evolution for: {windows_path}")
     result = await learner.evolve_search_strategy(windows_path, verification_required=False)
@@ -110,8 +129,11 @@ async def test_crisis_file_discovery():
     
     # Clean up
     try:
-        os.remove(wsl_path)
-    except:
+        if created_sample_windows and os.path.exists(windows_path):
+            os.remove(windows_path)
+        if created_sample_wsl and wsl_path and os.path.exists(wsl_path):
+            os.remove(wsl_path)
+    except Exception:
         pass
     
     print("\n=== Crisis Mode Advantages ===")

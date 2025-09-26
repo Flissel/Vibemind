@@ -45,24 +45,34 @@ class AssistantRunner:
         self.running = False
     
     async def initialize(self):
-        """Initialize the assistant and interface"""
-        
-        logger.info("Initializing Sakana Desktop Assistant...")
-        
-        # Create assistant
+        """Initialize the assistant and selected interface"""
         self.assistant = SakanaAssistant(self.config)
+        # Initialize assistant BEFORE starting any interface (ensures memory_manager, plugins, etc.)
         await self.assistant.initialize()
+        # Align learning flag with config (if present)
+        try:
+            self.assistant.learning_enabled = bool(getattr(self.config, 'learning_enabled', True))
+        except Exception:
+            pass
         
-        # Create interface
         if self.config.enable_gui:
-            # TODO: Implement GUI interface
-            logger.info("GUI not yet implemented, using CLI")
-            self.interface = CLIInterface(self.assistant)
-        else:
-            self.interface = CLIInterface(self.assistant)
+            try:
+                from src.ui.gui_interface import GUIInterface
+                self.interface = GUIInterface(self.assistant)
+                await self.interface.initialize()
+                # Log actual bound host:port (port may fall back)
+                host = getattr(self.interface, 'host', '127.0.0.1')
+                port = getattr(self.interface, 'port', 8765)
+                logger.info("GUI interface initialized; open http://%s:%d/", host, port)
+                logger.info("Assistant ready!")
+                return
+            except Exception as e:
+                logger.error(f"Failed to initialize GUI: {e}. Falling back to CLI.")
         
+        # Fallback to CLI
+        self.interface = CLIInterface(self.assistant)
         await self.interface.initialize()
-        
+        logger.info("CLI interface initialized")
         logger.info("Assistant ready!")
     
     async def run(self):
@@ -72,7 +82,7 @@ class AssistantRunner:
         
         # Print welcome message
         print("\n" + "="*60)
-        print("🐟 Sakana Desktop Assistant")
+        print("*** Sakana Desktop Assistant ***")
         print("Self-learning AI that adapts to your needs")
         print("="*60)
         print("\nCommands:")

@@ -1,0 +1,17 @@
+{
+  "servers": [
+    {
+      "name": "playwright",
+      "active": true,
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@playwright/mcp@latest",
+        "--browser=msedge",
+        "--viewport-size=1280,720"
+      ],
+      "read_timeout_seconds": 120
+    }
+  ]
+}

@@ -18,6 +18,7 @@ class MemoryType(Enum):
     EPISODIC = "episodic"
     PROCEDURAL = "procedural"
     PATTERN = "pattern"
+    
 
 @dataclass
 class Memory:
@@ -96,7 +97,12 @@ class MemoryManager:
         async with self._lock:
             # Generate embedding if LLM interface is available
             if self.llm_interface and not memory.embedding:
-                memory.embedding = await self.llm_interface.embed(memory.content)
+                try:
+                    memory.embedding = await self.llm_interface.embed(memory.content)
+                except Exception as e:
+                    # Make embeddings optional-safe (e.g., Ollama/OpenAI-compatible without embeddings)
+                    logger.warning(f"Embedding generation failed; storing without embedding: {e}")
+                    memory.embedding = None
             
             cursor = await self._db.execute('''
                 INSERT INTO memories (type, content, context, embedding, timestamp, 
@@ -131,23 +137,30 @@ class MemoryManager:
         """Retrieve memories based on query or type"""
         async with self._lock:
             if query and self.llm_interface:
-                # Semantic search using embeddings
-                query_embedding = await self.llm_interface.embed(query)
-                return await self._semantic_search(query_embedding, limit, similarity_threshold)
-            else:
-                # Type-based retrieval
-                where_clause = "WHERE type = ?" if memory_type else ""
-                params = [memory_type.value] if memory_type else []
-                
-                cursor = await self._db.execute(f'''
-                    SELECT * FROM memories
-                    {where_clause}
-                    ORDER BY importance_score DESC, timestamp DESC
-                    LIMIT ?
-                ''', params + [limit])
-                
-                rows = await cursor.fetchall()
-                return [self._row_to_memory(row) for row in rows]
+                # Semantic search using embeddings; if it fails, gracefully fallback
+                try:
+                    query_embedding = await self.llm_interface.embed(query)
+                    if query_embedding is not None:
+                        return await self._semantic_search(query_embedding, limit, similarity_threshold)
+                    else:
+                        logger.info("Embedding not available; falling back to type/time-based retrieval")
+                except Exception as e:
+                    logger.warning(f"Query embedding failed; falling back to type/time-based retrieval: {e}")
+                # FALLBACK path continues below to type-based retrieval
+            
+            # Type-based retrieval (fallback or when no query)
+            where_clause = "WHERE type = ?" if memory_type else ""
+            params = [memory_type.value] if memory_type else []
+            
+            cursor = await self._db.execute(f'''
+                SELECT * FROM memories
+                {where_clause}
+                ORDER BY importance_score DESC, timestamp DESC
+                LIMIT ?
+            ''', params + [limit])
+            
+            rows = await cursor.fetchall()
+            return [self._row_to_memory(row) for row in rows]
     
     async def _semantic_search(
         self, 

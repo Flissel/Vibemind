@@ -1,8 +1,25 @@
 {
-  "requests_handled": 2,
-  "successful_completions": 1,
+  "requests_handled": 4,
+  "successful_completions": 3,
   "errors": 0,
-  "average_response_time": 167.641034,
-  "patterns_learned": 1,
-  "self_improvements": 0
+  "average_response_time": 6.0624199999999995,
+  "patterns_learned": 30,
+  "self_improvements": 0,
+  "tool_metrics": {
+    "tools": {
+      "fs.ls": {
+        "calls": 1,
+        "successes": 1,
+        "failures": 0,
+        "total_latency_ms": 7
+      },
+      "ctx7.search": {
+        "calls": 1,
+        "successes": 1,
+        "failures": 0,
+        "total_latency_ms": 0
+      }
+    },
+    "last_updated": "2025-09-20T15:26:42.952608"
+  }
 }

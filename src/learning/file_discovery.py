@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import logging
 import json
 from datetime import datetime
+import shutil  # Cross-platform command discovery (shutil.which)
 
 from .knowledge_accumulator import KnowledgeAccumulator
 
@@ -91,22 +92,14 @@ class FileDiscoveryLearner:
         for cmd in commands_to_test:
             commands_tested += 1
             try:
-                # Test if command exists
-                result = subprocess.run(
-                    ['which', cmd],
-                    capture_output=True,
-                    text=True,
-                    timeout=2
-                )
-                
-                if result.returncode == 0:
+                # Cross-platform check: use shutil.which to test if command exists in PATH
+                if shutil.which(cmd):
                     logger.info(f"NEW DISCOVERY: {cmd}")
                     discovered.append(cmd)
                     self.discovered_commands[cmd] = FileCommand(command=cmd)
                     self.knowledge.add_discovered_command(cmd)
                     self.new_discoveries.append(cmd)
-                    
-            except Exception as e:
+            except Exception:
                 # Command doesn't exist or error
                 pass
         
@@ -181,6 +174,27 @@ class FileDiscoveryLearner:
         
         logger.info(f"Evolving strategy to find: {target_file} (verification={verification_required})")
         
+        # Fast-path: if the provided path is absolute and exists, skip evolution and return immediately
+        # This avoids unnecessary generations when the user gives a concrete file path.
+        try:
+            if os.path.isabs(target_file) and os.path.exists(target_file):
+                result = {
+                    'found': True,
+                    'path': target_file,
+                }
+                if verification_required:
+                    try:
+                        with open(target_file, 'r', encoding='utf-8', errors='ignore') as f:
+                            first_line = f.readline().strip()
+                        result['verified'] = True
+                        result['first_line'] = first_line
+                    except Exception as e:
+                        logger.warning(f"Verification read failed for {target_file}: {e}")
+                        result['verified'] = False
+                return result
+        except Exception as e:
+            logger.debug(f"Absolute path check failed for {target_file}: {e}")
+        
         # Detect if it's a Windows path
         is_windows_path = any(pattern in target_file for pattern in ['C:\\', 'D:\\', 'C:/', 'D:/'])
         
@@ -192,13 +206,27 @@ class FileDiscoveryLearner:
         max_generations = 50 if verification_required else 10
         
         while generation < max_generations and best_result is None:
-            # Test each strategy
+            # Test strategies with bounded concurrency for faster throughput
             results = []
+            # Cap concurrency to avoid overwhelming the system (especially on Windows)
+            max_concurrency = min(8, max(2, (os.cpu_count() or 4)))
+            sem = asyncio.Semaphore(max_concurrency)
+
+            async def run_strategy(strategy):
+                """Run a single strategy under semaphore control."""
+                # Acquire semaphore to bound concurrent subprocesses
+                async with sem:
+                    res = await self._test_search_strategy(strategy, target_file, verification_required)
+                    return strategy, res
+
+            tasks = [asyncio.create_task(run_strategy(strategy)) for strategy in population]
+
+            # Gather all results to avoid leaking tasks/subprocesses on Windows
+            gathered = await asyncio.gather(*tasks, return_exceptions=False)
+            results.extend(gathered)
             
-            for strategy in population:
-                result = await self._test_search_strategy(strategy, target_file, verification_required)
-                results.append((strategy, result))
-                
+            # Early success check after batch finishes
+            for strategy, result in results:
                 if result['found'] and (not verification_required or result.get('verified')):
                     best_result = result
                     self._record_success(strategy, result)
@@ -309,8 +337,11 @@ class FileDiscoveryLearner:
                 ['/mnt/c/Users/nicol/OneDrive/Desktop']
             ])
         
+        # Fallback to defaults if no discovered commands yet
+        command_pool = self.search_genome.get('command_pool') or ['find', 'cat', 'ls', 'type']
+        
         strategy = {
-            'command': random.choice(self.search_genome.get('command_pool', ['find', 'cat', 'ls'])),
+            'command': random.choice(command_pool),
             'args': random.choice(possible_args),
             'paths': random.choice(possible_paths)
         }

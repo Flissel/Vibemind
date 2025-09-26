@@ -6,7 +6,271 @@
       "learning_rate": 0.01,
       "pattern_threshold": 0.7
     },
-    "fitness": 49.60087231839113,
+    "fitness": 119.66729807389916,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 119.66729807389916,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 119.66729807389916,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 119.66729807389916,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 119.66729807389916,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 113.00851152812285,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 113.00851152812285,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 113.00851152812285,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 113.00851152812285,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 113.00851152812285,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 108.13619723323718,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 108.13619723323718,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 108.13619723323718,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 108.13619723323718,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 108.13619723323718,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 104.34483361346452,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 104.34483361346452,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 104.34483361346452,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 104.34483361346452,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 104.34483361346452,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 99.63842225866827,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 99.63842225866827,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 99.63842225866827,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 99.63842225866827,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 99.63842225866827,
     "generation": 0,
     "mutations": []
   },
@@ -56,386 +320,352 @@
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
     },
-    "fitness": 0.0,
+    "fitness": 49.60087231839113,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },
   {
     "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
+      "approach": "direct",
+      "file_reading_method": "cat",
+      "path_handling": "absolute",
+      "content_processing": "full",
+      "summary_style": "concise",
+      "learning_from_errors": true,
+      "exploration_rate": 0.9,
+      "commands_to_try": [
+        "cat",
+        "ls",
+        "find",
+        "read",
+        "type",
+        "more",
+        "head"
+      ],
+      "path_patterns": [
+        "C:\\",
+        "/mnt/c/",
+        "~/",
+        "./",
+        "C:/",
+        "/mnt/d/",
+        "/cygdrive/c/"
+      ],
+      "error_recovery": "retry_variations",
+      "verification_strategy": "prove_access"
     },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
+    "fitness": 40.0,
     "generation": 0,
     "mutations": []
   },

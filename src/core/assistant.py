@@ -1,9 +1,11 @@
 import asyncio
 import json
+import re
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
 from pathlib import Path
 import logging
+from dataclasses import asdict
 
 from .config import Config
 from .llm_interface import LLMFactory
@@ -42,7 +44,12 @@ class SakanaAssistant:
             'errors': 0,
             'average_response_time': 0.0,
             'patterns_learned': 0,
-            'self_improvements': 0
+            'self_improvements': 0,
+            # Tool telemetry bucket for adaptive selection & observability
+            'tool_metrics': {
+                'tools': {},  # tool_name -> {calls, successes, failures, total_latency_ms}
+                'last_updated': None
+            }
         }
         
         # Behavior genome for evolved capabilities
@@ -108,8 +115,8 @@ class SakanaAssistant:
             )
             await self.sandbox_executor.initialize()
         
-        # Initialize plugin system
-        self.plugin_manager = PluginManager(self.config.plugins_dir)
+        # Initialize plugin system (pass assistant for telemetry & sandbox access)
+        self.plugin_manager = PluginManager(self.config.plugins_dir, assistant=self)
         await self.plugin_manager.load_plugins()
         
         # Load user preferences and patterns
@@ -143,23 +150,27 @@ class SakanaAssistant:
             
             logger.info(f"Project discovery complete: found {len(projects)} projects")
             
-            # Store in memory for quick access
-            for project in projects:
-                memory = Memory(
-                    type=MemoryType.LONG_TERM,
-                    content=f"Project: {project.name} at {project.path}",
-                    context={
-                        'type': 'discovered_project',
-                        'project_name': project.name,
-                        'project_type': project.type,
-                        'capabilities': project.capabilities
-                    }
-                )
-                await self.memory_manager.store_memory(memory)
-                
+            # Store in memory for quick access — handle empty safely and store each project
+            if not projects:
+                logger.info("No projects discovered; skipping memory store")
+            else:
+                for project in projects:
+                    # Convert dataclass to JSON-serializable dict for storage
+                    project_payload = asdict(project)
+                    memory = Memory(
+                        type=MemoryType.LONG_TERM,
+                        content=json.dumps(project_payload),
+                        context={'discovery': 'project_scan'},
+                        importance=0.4,
+                    )
+                    # Guard against early requests before memory manager is ready
+                    if self.memory_manager is not None:
+                        await self.memory_manager.store_memory(memory)
+                    else:
+                        logger.debug("Memory manager not ready, skipping project memory store")
         except Exception as e:
             logger.error(f"Error in project discovery initialization: {e}")
-    
+
     async def process_request(self, user_input: str) -> Dict[str, Any]:
         """Process a user request with learning and adaptation"""
         
@@ -173,16 +184,24 @@ class SakanaAssistant:
                 content=user_input,
                 context={'type': 'user_input', 'timestamp': start_time.isoformat()}
             )
-            await self.memory_manager.store_memory(input_memory)
+            # Safe store: guard when memory manager is not yet initialized
+            if self.memory_manager is not None:
+                await self.memory_manager.store_memory(input_memory)
+            else:
+                logger.debug("Memory manager is None during input store; request will continue")
             
             # Detect patterns in user behavior
             await self._detect_user_patterns(user_input)
             
             # Retrieve relevant memories
-            relevant_memories = await self.memory_manager.retrieve_memories(
-                query=user_input,
-                limit=10
-            )
+            if self.memory_manager is not None:
+                relevant_memories = await self.memory_manager.retrieve_memories(
+                    query=user_input,
+                    limit=10
+                )
+            else:
+                logger.debug("Memory manager is None during retrieval; using empty memory context")
+                relevant_memories = []
             
             # Build context
             context = self._build_context(user_input, relevant_memories)
@@ -210,7 +229,10 @@ class SakanaAssistant:
                     'timestamp': datetime.now().isoformat()
                 }
             )
-            await self.memory_manager.store_memory(response_memory)
+            if self.memory_manager is not None:
+                await self.memory_manager.store_memory(response_memory)
+            else:
+                logger.debug("Memory manager is None during response store; skipping")
             
             # Learn from interaction
             if self.learning_enabled:
@@ -254,6 +276,11 @@ class SakanaAssistant:
     
     async def _detect_user_patterns(self, user_input: str):
         """Detect patterns in user behavior"""
+        
+        # If memory manager isn't ready, skip pattern detection gracefully
+        if self.memory_manager is None:
+            logger.debug("Memory manager is None during pattern detection; skipping")
+            return
         
         # Time-based patterns
         current_hour = datetime.now().hour
@@ -388,10 +415,11 @@ class SakanaAssistant:
                     # Fallback to genome-based approach
                     if genome.get('path_handling') == 'smart':
                         # Try multiple path variations
+                        wsl_path = file_path[3:].replace('\\', '/') if file_path.startswith('C:\\') else file_path
                         path_variations = [
                             file_path,
                             file_path.replace('\\', '/'),
-                            f"/mnt/c/{file_path[3:].replace('\\', '/')}" if file_path.startswith('C:\\') else file_path,
+                            f"/mnt/c/{wsl_path}" if file_path.startswith('C:\\') else file_path,
                         ]
                         
                         for path in path_variations:
@@ -496,11 +524,14 @@ class SakanaAssistant:
                     )
             elif feedback_type == 'positive':
                 # Positive reinforcement - strengthen current approach
-                await self.memory_manager.detect_pattern(
-                    'successful_response',
-                    {'response_type': response['type'], 'context': self.current_context}
-                )
-        
+                if self.memory_manager is not None:
+                    await self.memory_manager.detect_pattern(
+                        'successful_response',
+                        {'response_type': response['type'], 'context': self.current_context}
+                    )
+                else:
+                    logger.debug("Memory manager is None during positive feedback pattern detection; skipping")
+
         # Evolutionary learning - improve response generation
         if len(self.conversation_history) % 10 == 0:  # Every 10 interactions
             await self._run_evolutionary_improvement()
@@ -688,8 +719,12 @@ Answer in 1-3 sentences unless more detail is requested."""
     async def _load_user_profile(self):
         """Load user preferences and patterns from memory"""
         
-        patterns = await self.memory_manager.get_patterns(min_confidence=0.7)
-        
+        patterns: List[Dict[str, Any]] = []
+        if self.memory_manager is not None:
+            patterns = await self.memory_manager.get_patterns(min_confidence=0.7)
+        else:
+            logger.debug("Memory manager is None during load_user_profile; using empty patterns")
+
         for pattern in patterns:
             if pattern['pattern_type'] == 'time_preference':
                 # Adjust behavior based on time preferences
@@ -697,9 +732,9 @@ Answer in 1-3 sentences unless more detail is requested."""
             elif pattern['pattern_type'] == 'topic_interest':
                 # Prioritize certain topics
                 pass
-        
+
         self.metrics['patterns_learned'] = len(patterns)
-    
+
     # Utility methods
     def _classify_input(self, text: str) -> str:
         """Classify input type"""
@@ -826,3 +861,148 @@ Answer in 1-3 sentences unless more detail is requested."""
             json.dump(self.metrics, f, indent=2)
         
         logger.info("Assistant shutdown complete")
+
+    async def plan_and_execute(self, goal: str) -> Dict[str, Any]:
+        """Plan and execute a small sequence of plugin commands from a natural-language goal.
+        This uses lightweight heuristics and the existing PluginManager only (no external frameworks).
+        Returns a dict with execution transcript.
+        """
+        if not self.plugin_manager:
+            raise RuntimeError("Plugin system not initialized")
+
+        available_cmds = {c['command'] for c in self.plugin_manager.get_available_commands()}
+
+        steps: List[Dict[str, str]] = []
+        text = goal.strip()
+
+        # Heuristic: extract Windows paths and intents
+        path_pattern = r"[A-Za-z]:\\[^\s\"]+"
+        paths = re.findall(path_pattern, text)
+
+        # Also extract relative paths like 'src\\delegation' or 'src/utils'
+        rel_path_pattern = r"(?:\.?\.?|~|[A-Za-z0-9_.-]+)(?:[\\/][A-Za-z0-9_.-]+)+"
+        rel_paths = re.findall(rel_path_pattern, text)
+        if rel_paths:
+            # Merge, preserving order: absolute first, then relatives
+            paths = paths + rel_paths
+
+        lower = text.lower()
+        # mkdir intent: broaden phrasing detection
+        if ("make a dir" in lower or "make directory" in lower or "mkdir" in lower or "create folder" in lower or "create a folder" in lower) and "mkdir" in available_cmds:
+            if paths:
+                steps.append({"command": "mkdir", "args": paths[0]})
+        # list dir intent
+        if ("list" in lower or "ls" in lower or "show files" in lower) and "ls" in available_cmds:
+            # If we have any path (abs or rel), use it; otherwise special-case common tokens like 'src'
+            if paths:
+                target = paths[0]
+            elif re.search(r"\bsrc\b", text, flags=re.IGNORECASE):
+                target = "src"
+            else:
+                target = "."
+            steps.append({"command": "ls", "args": target})
+        # read file intent
+        if ("read" in lower or "open" in lower or "cat" in lower) and "cat" in available_cmds and paths:
+            steps.append({"command": "cat", "args": paths[-1]})
+
+        # If no steps inferred but a single path present, and mkdir exists, default to mkdir
+        if not steps and paths and "mkdir" in available_cmds:
+            steps.append({"command": "mkdir", "args": paths[0]})
+
+        if not steps:
+            # Fallback: if user mentions 'docs' or 'dev', try to create a delegation folder under src
+            project_root = self.config.base_dir
+            delegation_dir = str(project_root / "src" / "delegation")
+            if "mkdir" in available_cmds:
+                steps.append({"command": "mkdir", "args": delegation_dir})
+
+        # Adaptive Tool Selection: epsilon-greedy over equivalent commands
+        def _select_tool_command(base_cmd: str) -> str:
+            try:
+                if not getattr(self.config, 'tool_selection_enabled', False):
+                    return base_cmd
+                # Map plain command -> fs.* equivalent
+                equivalent = {
+                    'ls': 'fs.ls',
+                    'cat': 'fs.cat',
+                    'mkdir': 'fs.mkdir',
+                }
+                candidates: List[str] = []
+                # Prefer to keep base command first to preserve behavior
+                for cand in [base_cmd, equivalent.get(base_cmd)]:
+                    if cand and cand in available_cmds and cand not in candidates:
+                        candidates.append(cand)
+                if len(candidates) <= 1:
+                    return candidates[0] if candidates else base_cmd
+
+                import random
+                eps = float(getattr(self.config, 'tool_selection_exploration_rate', 0.1) or 0.1)
+                min_samples = int(getattr(self.config, 'tool_selection_min_samples', 5) or 5)
+
+                # Use tool_metrics for exploitation decision
+                tool_bucket = (self.metrics.get('tool_metrics') or {})
+                tools = tool_bucket.get('tools') or {}
+
+                # Metrics are recorded under fs.* names; map any plain name to fs.* for stats lookup
+                def stats_for(cmd: str):
+                    key = equivalent.get(cmd, cmd)
+                    rec = tools.get(key, {})
+                    calls = int(rec.get('calls', 0) or 0)
+                    succ = int(rec.get('successes', 0) or 0)
+                    total_lat = int(rec.get('total_latency_ms', 0) or 0)
+                    success_rate = (succ / calls) if calls > 0 else 0.0
+                    avg_latency = (total_lat / calls) if calls > 0 else float('inf')
+                    return calls, success_rate, avg_latency
+
+                # Exploration
+                if random.random() < eps:
+                    return random.choice(candidates)
+
+                # Exploitation: prefer those with sufficient samples
+                sufficient = [c for c in candidates if stats_for(c)[0] >= min_samples]
+                pool = sufficient if sufficient else candidates
+                # Sort by success_rate desc, then avg_latency asc
+                best = sorted(pool, key=lambda c: (-stats_for(c)[1], stats_for(c)[2]))[0]
+                return best
+            except Exception:
+                return base_cmd
+
+        if getattr(self.config, 'tool_selection_enabled', False):
+            for step in steps:
+                step['command'] = _select_tool_command(step['command'])
+
+        transcript: List[Dict[str, Any]] = []
+        context = self._build_context(goal, [])
+
+        for step in steps:
+            cmd = step["command"].strip()
+            args = step.get("args", "").strip()
+            user_input = f"{cmd} {args}".strip()
+            try:
+                result = await self.plugin_manager.handle_command(user_input, context)
+                # Normalize result to a dict for consistent downstream handling
+                if isinstance(result, str):
+                    result = {"type": "info", "content": result}
+                elif not isinstance(result, dict):
+                    try:
+                        import json as _json
+                        result = {"type": "info", "content": _json.dumps(result, default=str)[:1000]}
+                    except Exception:
+                        result = {"type": "info", "content": str(result)[:1000]}
+                if not result:
+                    result = {"type": "error", "content": "No plugin handled the command."}
+            except Exception as e:
+                result = {"type": "error", "content": f"{type(e).__name__}: {e}"}
+            transcript.append({"input": user_input, "result": result})
+
+        summary_lines = [f"Executed {len(transcript)} step(s):"]
+        for i, entry in enumerate(transcript, 1):
+            summary_lines.append(f"{i}. {entry['input']} -> {entry['result'].get('type','info')}")
+        summary = "\n".join(summary_lines)
+
+        return {
+            "success": True,
+            "type": "info",
+            "content": summary,
+            "transcript": transcript
+        }

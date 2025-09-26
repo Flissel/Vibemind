@@ -1,206 +1,89 @@
 import asyncio
-import tempfile
-import subprocess
-import os
-import sys
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 import json
-import logging
+import os
+import platform
+import subprocess
+import tempfile
 from datetime import datetime
-import shutil
+from pathlib import Path
+from typing import Dict, Any, Optional, List, Tuple
+import logging
 
 logger = logging.getLogger(__name__)
 
 class SandboxExecutor:
-    """Execute code in a sandboxed environment"""
+    """Execute code in a restricted environment using subprocess or Docker"""
     
-    def __init__(self, max_execution_time: int = 30, use_docker: bool = False):
+    def __init__(self, max_execution_time: int = 10):
         self.max_execution_time = max_execution_time
-        self.use_docker = use_docker
+        self.sandbox_dir = Path(tempfile.gettempdir()) / "sakana_sandbox"
         self.execution_history = []
-        self.sandbox_dir = Path.home() / ".sakana_sandbox"
-        self.sandbox_dir.mkdir(exist_ok=True)
     
     async def initialize(self):
-        """Initialize the sandbox environment"""
-        
-        if self.use_docker:
-            # Check if Docker is available
-            try:
-                result = subprocess.run(['docker', '--version'], capture_output=True)
-                if result.returncode != 0:
-                    logger.warning("Docker not available, falling back to subprocess isolation")
-                    self.use_docker = False
-            except FileNotFoundError:
-                logger.warning("Docker not installed, using subprocess isolation")
-                self.use_docker = False
-        
-        # Create sandbox directories
-        (self.sandbox_dir / "scripts").mkdir(exist_ok=True)
-        (self.sandbox_dir / "outputs").mkdir(exist_ok=True)
-        (self.sandbox_dir / "environments").mkdir(exist_ok=True)
-        
-        logger.info(f"Sandbox initialized. Using Docker: {self.use_docker}")
+        """Initialize sandbox environment"""
+        self.sandbox_dir.mkdir(parents=True, exist_ok=True)
+        (self.sandbox_dir / "scripts").mkdir(parents=True, exist_ok=True)
+        (self.sandbox_dir / "outputs").mkdir(parents=True, exist_ok=True)
+        logger.info(f"Sandbox initialized at {self.sandbox_dir}")
     
-    async def execute(
-        self,
-        code: str,
-        language: str = "python",
-        environment: Optional[Dict[str, str]] = None,
-        files: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
-        """Execute code in sandbox"""
+    async def execute(self, code: str, language: str = 'python', environment: Optional[Dict[str, str]] = None, files: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        """Execute code in the sandbox using subprocess or Docker"""
         
-        execution_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        # Use subprocess for Python code, Docker for others
+        if language == 'python':
+            return await self._execute_subprocess(code, language, environment, files, execution_id=f"exec_{len(self.execution_history)+1}")
+        else:
+            return await self._execute_docker(code, language, environment, files, execution_id=f"exec_{len(self.execution_history)+1}")
+    
+    async def _execute_subprocess(self, code: str, language: str, environment: Optional[Dict[str, str]], files: Optional[Dict[str, str]], execution_id: str) -> Dict[str, Any]:
+        """Execute code using subprocess (safe mode for Python)"""
         
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, dir=self.sandbox_dir / "scripts") as f:
+            f.write(code)
+            script_path = f.name
+        
+        cmd = [sys.executable, script_path] if language == 'python' else [language, script_path]
+        env = os.environ.copy()
+        if environment:
+            env.update(environment)
+        
+        start_time = datetime.now()
         try:
-            if self.use_docker:
-                result = await self._execute_docker(code, language, environment, files, execution_id)
-            else:
-                result = await self._execute_subprocess(code, language, environment, files, execution_id)
-            
-            # Log execution
-            self.execution_history.append({
-                'id': execution_id,
-                'timestamp': datetime.now().isoformat(),
-                'language': language,
-                'success': result['success'],
-                'execution_time': result.get('execution_time', 0)
-            })
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"Execution failed: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-                'output': '',
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env
+            )
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=self.max_execution_time)
+            execution_time = (datetime.now() - start_time).total_seconds()
+            result = {
+                'success': process.returncode == 0,
+                'output': stdout.decode('utf-8', errors='replace'),
+                'error': stderr.decode('utf-8', errors='replace'),
+                'return_code': process.returncode,
+                'execution_time': execution_time,
                 'execution_id': execution_id
             }
-    
-    async def _execute_subprocess(
-        self,
-        code: str,
-        language: str,
-        environment: Optional[Dict[str, str]],
-        files: Optional[Dict[str, str]],
-        execution_id: str
-    ) -> Dict[str, Any]:
-        """Execute code using subprocess with isolation"""
-        
-        # Create temporary directory for this execution
-        with tempfile.TemporaryDirectory(dir=self.sandbox_dir / "scripts") as tmpdir:
-            tmpdir_path = Path(tmpdir)
-            
-            # Write additional files if provided
-            if files:
-                for filename, content in files.items():
-                    file_path = tmpdir_path / filename
-                    file_path.parent.mkdir(parents=True, exist_ok=True)
-                    with open(file_path, 'w') as f:
-                        f.write(content)
-            
-            # Determine script file and command
-            if language == "python":
-                script_file = tmpdir_path / "script.py"
-                cmd = [sys.executable, str(script_file)]
-            elif language == "javascript":
-                script_file = tmpdir_path / "script.js"
-                cmd = ["node", str(script_file)]
-            elif language == "bash":
-                script_file = tmpdir_path / "script.sh"
-                cmd = ["bash", str(script_file)]
-            else:
-                return {
-                    'success': False,
-                    'error': f"Unsupported language: {language}",
-                    'output': ''
-                }
-            
-            # Write the script
-            with open(script_file, 'w') as f:
-                f.write(code)
-            
-            # Make bash scripts executable
-            if language == "bash":
-                os.chmod(script_file, 0o755)
-            
-            # Prepare environment
-            env = os.environ.copy()
-            if environment:
-                env.update(environment)
-            
-            # Restrict environment for security
-            env['HOME'] = str(tmpdir_path)
-            env['TMPDIR'] = str(tmpdir_path)
-            env['PATH'] = '/usr/local/bin:/usr/bin:/bin'
-            
-            # Execute with timeout
-            start_time = datetime.now()
-            
+        except asyncio.TimeoutError:
+            result = {
+                'success': False,
+                'error': f"Execution timeout ({self.max_execution_time}s)",
+                'output': '',
+                'execution_time': self.max_execution_time,
+                'execution_id': execution_id
+            }
+        finally:
             try:
-                process = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    cwd=str(tmpdir_path),
-                    env=env
-                )
-                
-                # Wait with timeout
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(),
-                    timeout=self.max_execution_time
-                )
-                
-                execution_time = (datetime.now() - start_time).total_seconds()
-                
-                # Save output
-                output_file = self.sandbox_dir / "outputs" / f"{execution_id}.json"
-                output_data = {
-                    'stdout': stdout.decode('utf-8', errors='replace'),
-                    'stderr': stderr.decode('utf-8', errors='replace'),
-                    'return_code': process.returncode,
-                    'execution_time': execution_time
-                }
-                
-                with open(output_file, 'w') as f:
-                    json.dump(output_data, f)
-                
-                return {
-                    'success': process.returncode == 0,
-                    'output': output_data['stdout'],
-                    'error': output_data['stderr'],
-                    'return_code': process.returncode,
-                    'execution_time': execution_time,
-                    'execution_id': execution_id
-                }
-                
-            except asyncio.TimeoutError:
-                # Kill the process
-                try:
-                    process.kill()
-                    await process.wait()
-                except:
-                    pass
-                
-                return {
-                    'success': False,
-                    'error': f"Execution timeout ({self.max_execution_time}s)",
-                    'output': '',
-                    'execution_time': self.max_execution_time
-                }
+                os.unlink(script_path)
+            except Exception:
+                pass
+        
+        # Save to history
+        self.execution_history.append(result)
+        return result
     
-    async def _execute_docker(
-        self,
-        code: str,
-        language: str,
-        environment: Optional[Dict[str, str]],
-        files: Optional[Dict[str, str]],
-        execution_id: str
-    ) -> Dict[str, Any]:
+    async def _execute_docker(self, code: str, language: str, environment: Optional[Dict[str, str]], files: Optional[Dict[str, str]], execution_id: str) -> Dict[str, Any]:
         """Execute code in Docker container"""
         
         # Docker images for different languages
@@ -302,13 +185,7 @@ class SandboxExecutor:
                     'execution_time': self.max_execution_time
                 }
     
-    async def execute_safe_function(
-        self,
-        function_code: str,
-        function_name: str,
-        args: List[Any] = None,
-        kwargs: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    async def execute_safe_function(self, function_code: str, function_name: str, args: List[Any] = None, kwargs: Dict[str, Any] = None) -> Dict[str, Any]:
         """Execute a function with arguments in sandbox"""
         
         args = args or []
@@ -350,21 +227,140 @@ except Exception as e:
         else:
             return result
     
-    def get_execution_history(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """Get recent execution history"""
-        return self.execution_history[-limit:]
+    # ------------------ Tool Runner Additions ------------------
+    def _tool_response(self, *, tool: str, ok: bool, content: Any = None, error: Optional[str] = None, meta: Optional[Dict[str, Any]] = None, started_at: Optional[datetime] = None, finished_at: Optional[datetime] = None) -> Dict[str, Any]:
+        """Build a standardized tool response envelope for telemetry & planning."""
+        meta = meta or {}
+        if started_at and finished_at:
+            meta = {**meta, 'latency_ms': int((finished_at - started_at).total_seconds() * 1000)}
+        return {
+            'tool': tool,
+            'success': ok,
+            'content': content,
+            'error': error,
+            'metadata': meta
+        }
     
+    async def run_fs_ls(self, path: str) -> Dict[str, Any]:
+        """List directory contents with Python first, sandboxed fallback."""
+        start = datetime.now()
+        try:
+            p = Path(path) if path else Path.cwd()
+            if not p.exists():
+                return self._tool_response(tool='fs.ls', ok=False, error=f"Path not found: {p}", started_at=start, finished_at=datetime.now())
+            items = []
+            for it in p.iterdir():
+                try:
+                    stat = it.stat()
+                    items.append({
+                        'name': it.name,
+                        'type': 'dir' if it.is_dir() else 'file',
+                        'size': stat.st_size if it.is_file() else 0,
+                        'modified': datetime.fromtimestamp(stat.st_mtime).isoformat()
+                    })
+                except Exception as e:
+                    items.append({'name': it.name, 'type': 'unknown', 'error': str(e)})
+            return self._tool_response(tool='fs.ls', ok=True, content=items, meta={'path': str(p)}, started_at=start, finished_at=datetime.now())
+        except Exception as e:
+            # Fallback via sandboxed Python snippet
+            code = f"""
+import os, json, pathlib, time
+_path = {path!r}
+p = pathlib.Path(_path) if _path else pathlib.Path.cwd()
+if not p.exists():
+    print(json.dumps({'success': False, 'error': f'Path not found: {str(p)}'}))
+else:
+    out=[]
+    for it in p.iterdir():
+        try:
+            st = it.stat()
+            out.append({'name': it.name, 'type': 'dir' if it.is_dir() else 'file', 'size': st.st_size if it.is_file() else 0, 'modified': __import__('datetime').datetime.fromtimestamp(st.st_mtime).isoformat()})
+        except Exception as ex:
+            out.append({'name': it.name, 'type': 'unknown', 'error': str(ex)})
+    print(json.dumps({'success': True, 'result': out}))
+"""
+            finished = datetime.now()
+            res = await self.execute(code, 'python')
+            ok = res.get('success') and res.get('output')
+            payload = None
+            err = res.get('error')
+            if ok:
+                try:
+                    j = json.loads(res['output'].strip())
+                    ok = j.get('success', False)
+                    payload = j.get('result')
+                    err = j.get('error')
+                except Exception as parse_e:
+                    ok = False
+                    err = f"Parse error: {parse_e}"
+            return self._tool_response(tool='fs.ls', ok=bool(ok), content=payload, error=err, meta={'path': path}, started_at=start, finished_at=finished)
+    
+    async def run_fs_cat(self, path: str, encoding: str = 'utf-8') -> Dict[str, Any]:
+        """Read a file with safe size handling."""
+        start = datetime.now()
+        try:
+            p = Path(path)
+            if not p.exists() or not p.is_file():
+                return self._tool_response(tool='fs.cat', ok=False, error=f"File not found: {p}", started_at=start, finished_at=datetime.now())
+            data = p.read_text(encoding=encoding, errors='replace')
+            meta = {'path': str(p), 'size': len(data)}
+            # Limit content to avoid flooding
+            content = data if len(data) <= 200_000 else data[:200_000]
+            return self._tool_response(tool='fs.cat', ok=True, content=content, meta=meta, started_at=start, finished_at=datetime.now())
+        except Exception as e:
+            return self._tool_response(tool='fs.cat', ok=False, error=str(e), meta={'path': path}, started_at=start, finished_at=datetime.now())
+    
+    async def run_fs_write(self, path: str, content: str, encoding: str = 'utf-8', overwrite: bool = True) -> Dict[str, Any]:
+        """Write text content to a file with optional overwrite."""
+        start = datetime.now()
+        try:
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if p.exists() and not overwrite:
+                return self._tool_response(tool='fs.write', ok=False, error=f"File exists: {p}")
+            p.write_text(content, encoding=encoding)
+            return self._tool_response(tool='fs.write', ok=True, meta={'path': str(p), 'bytes': len(content)}, started_at=start, finished_at=datetime.now())
+        except Exception as e:
+            return self._tool_response(tool='fs.write', ok=False, error=str(e), meta={'path': path}, started_at=start, finished_at=datetime.now())
+    
+    async def run_fs_mkdir(self, path: str, exist_ok: bool = True) -> Dict[str, Any]:
+        """Create a directory path recursively."""
+        start = datetime.now()
+        try:
+            p = Path(path)
+            p.mkdir(parents=True, exist_ok=exist_ok)
+            return self._tool_response(tool='fs.mkdir', ok=True, meta={'path': str(p)}, started_at=start, finished_at=datetime.now())
+        except Exception as e:
+            return self._tool_response(tool='fs.mkdir', ok=False, error=str(e), meta={'path': path}, started_at=start, finished_at=datetime.now())
+    
+    async def run_fs_find(self, pattern: str, root: Optional[str] = None, limit: int = 200) -> Dict[str, Any]:
+        """Find files by glob pattern under root."""
+        start = datetime.now()
+        try:
+            base = Path(root) if root else Path.cwd()
+            matches = []
+            for m in base.rglob(pattern):
+                matches.append(str(m))
+                if len(matches) >= limit:
+                    break
+            return self._tool_response(tool='fs.find', ok=True, content=matches, meta={'root': str(base), 'pattern': pattern, 'count': len(matches)}, started_at=start, finished_at=datetime.now())
+        except Exception as e:
+            return self._tool_response(tool='fs.find', ok=False, error=str(e), meta={'root': root, 'pattern': pattern}, started_at=start, finished_at=datetime.now())
+
+    def get_execution_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Return the most recent execution records (for observability)."""
+        return self.execution_history[-limit:]
+
     async def cleanup(self):
-        """Clean up sandbox resources"""
-        
-        # Clean old execution outputs
-        outputs_dir = self.sandbox_dir / "outputs"
-        if outputs_dir.exists():
-            for file in outputs_dir.iterdir():
-                if file.is_file():
-                    # Delete files older than 24 hours
-                    age = datetime.now().timestamp() - file.stat().st_mtime
-                    if age > 86400:  # 24 hours
-                        file.unlink()
-        
+        """Clean up sandbox resources (retain behavior expected by assistant)."""
+        try:
+            outputs_dir = self.sandbox_dir / "outputs"
+            if outputs_dir.exists():
+                for file in outputs_dir.iterdir():
+                    if file.is_file():
+                        age = datetime.now().timestamp() - file.stat().st_mtime
+                        if age > 86400:  # 24 hours
+                            file.unlink()
+        except Exception as e:
+            logger.warning(f"Sandbox cleanup encountered an issue: {e}")
         logger.info("Sandbox cleanup completed")

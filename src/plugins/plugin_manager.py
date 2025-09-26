@@ -34,10 +34,12 @@ class Plugin(ABC):
 class PluginManager:
     """Manages loading and execution of plugins"""
     
-    def __init__(self, plugins_dir: Path):
+    def __init__(self, plugins_dir: Path, assistant=None):
         self.plugins_dir = plugins_dir
         self.plugins: Dict[str, Plugin] = {}
         self.command_map: Dict[str, str] = {}  # command -> plugin_name
+        # Store assistant reference so plugins can receive it on initialize
+        self.assistant = assistant
     
     async def load_plugins(self):
         """Load all plugins from the plugins directory"""
@@ -67,14 +69,18 @@ class PluginManager:
             FileManagerPlugin,
             WebSearchPlugin,
             TaskManagerPlugin,
-            SystemInfoPlugin
+            SystemInfoPlugin,
+            CustomToolsPlugin,
+            MCPToolsPlugin
         )
         
         builtin_plugins = [
             FileManagerPlugin(),
             WebSearchPlugin(),
             TaskManagerPlugin(),
-            SystemInfoPlugin()
+            SystemInfoPlugin(),
+            CustomToolsPlugin(),
+            MCPToolsPlugin()
         ]
         
         for plugin in builtin_plugins:
@@ -107,8 +113,8 @@ class PluginManager:
         """Register a plugin"""
         
         try:
-            # Initialize the plugin
-            await plugin.initialize(None)  # Pass assistant reference when available
+            # Initialize the plugin (pass assistant reference when available)
+            await plugin.initialize(self.assistant)
             
             # Register plugin
             self.plugins[plugin.name] = plugin

@@ -343,3 +343,1449 @@
 2025-07-11 04:18:06,963 - src.learning.consciousness_field - INFO - Restoring normal evolution mode
 2025-07-11 04:18:06,963 - src.learning.evolution_triggers - INFO - Exited crisis evolution mode
 2025-07-11 04:18:28,723 - src.core.llm_interface - INFO - Generating with prompt length: 1178
+2025-09-17 11:23:07,525 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-09-17 11:23:07,525 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-17 11:23:07,525 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-17 11:23:07,589 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-17 11:23:07,592 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-17 11:23:07,613 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-17 11:23:07,613 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-17 11:23:07,613 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-17 11:23:07,613 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-17 11:23:07,613 - src.learning.file_discovery - INFO - Starting command discovery through exploration...
+2025-09-17 11:23:07,613 - src.learning.file_discovery - INFO - Already know 0 commands from previous sessions
+2025-09-17 11:23:07,613 - src.learning.file_discovery - INFO - Testing 517 new candidates (skipping 0 known)
+2025-09-17 11:23:10,379 - src.learning.knowledge_accumulator - INFO - Discovery session complete: 0 new, 0 rediscovered
+2025-09-17 11:23:10,379 - src.learning.file_discovery - INFO - Knowledge stats: 0 total commands, trend: saturating
+2025-09-17 11:23:10,380 - src.learning.file_discovery - INFO - Saved 0 commands to cache
+2025-09-17 11:23:10,380 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-17 11:23:10,391 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-17 11:23:10,391 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-17 11:23:10,391 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-17 11:23:10,391 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-17 11:23:10,391 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-17 11:23:10,392 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-17 11:23:10,392 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': [], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 0, 'total_successful_patterns': 0, 'total_discovery_sessions': 1, 'average_new_discoveries_per_session': 0.0, 'knowledge_growth_trend': 'saturating'}}
+2025-09-17 11:23:10,392 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-17 11:23:10,392 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-09-17 11:23:10,393 - __main__ - ERROR - Fatal error: name 'readline' is not defined
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 159, in <module>
+    asyncio.run(main())
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\base_events.py", line 650, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 154, in main
+    await runner.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 64, in initialize
+    await self.interface.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\ui\cli_interface.py", line 34, in initialize
+    readline.parse_and_bind('tab: complete')
+    ^^^^^^^^
+NameError: name 'readline' is not defined
+2025-09-17 11:23:58,057 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-09-17 11:23:58,057 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-17 11:23:58,058 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-17 11:23:58,063 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-17 11:23:58,077 - src.learning.file_discovery - INFO - Loaded 0 cached commands
+2025-09-17 11:23:58,077 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-17 11:23:58,086 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-17 11:23:58,086 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-17 11:23:58,086 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-17 11:23:58,086 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-17 11:23:58,087 - src.learning.file_discovery - INFO - Starting command discovery through exploration...
+2025-09-17 11:23:58,087 - src.learning.file_discovery - INFO - Already know 0 commands from previous sessions
+2025-09-17 11:23:58,087 - src.learning.file_discovery - INFO - Testing 517 new candidates (skipping 0 known)
+2025-09-17 11:24:00,782 - src.learning.knowledge_accumulator - INFO - Discovery session complete: 0 new, 0 rediscovered
+2025-09-17 11:24:00,782 - src.learning.file_discovery - INFO - Knowledge stats: 0 total commands, trend: saturating
+2025-09-17 11:24:00,782 - src.learning.file_discovery - INFO - Saved 0 commands to cache
+2025-09-17 11:24:00,782 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-17 11:24:00,793 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-17 11:24:00,793 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-17 11:24:00,794 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-17 11:24:00,794 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-17 11:24:00,794 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-17 11:24:00,794 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-17 11:24:00,794 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': [], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 0, 'total_successful_patterns': 0, 'total_discovery_sessions': 2, 'average_new_discoveries_per_session': 0.0, 'knowledge_growth_trend': 'saturating'}}
+2025-09-17 11:24:00,794 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-17 11:24:00,794 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-09-17 11:24:00,795 - __main__ - INFO - Assistant ready!
+2025-09-17 11:24:39,632 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-09-17 11:24:39,632 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-17 11:24:39,632 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-17 11:24:39,646 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-17 11:24:39,704 - src.learning.file_discovery - INFO - Loaded 0 cached commands
+2025-09-17 11:24:39,707 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-17 11:24:39,740 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-17 11:24:39,740 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-17 11:24:39,740 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-17 11:24:39,740 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-17 11:24:39,742 - src.learning.file_discovery - INFO - Starting command discovery through exploration...
+2025-09-17 11:24:39,742 - src.learning.file_discovery - INFO - Already know 0 commands from previous sessions
+2025-09-17 11:24:39,744 - src.learning.file_discovery - INFO - Testing 517 new candidates (skipping 0 known)
+2025-09-17 11:24:46,431 - src.learning.knowledge_accumulator - INFO - Discovery session complete: 0 new, 0 rediscovered
+2025-09-17 11:24:46,432 - src.learning.file_discovery - INFO - Knowledge stats: 0 total commands, trend: saturating
+2025-09-17 11:24:46,432 - src.learning.file_discovery - INFO - Saved 0 commands to cache
+2025-09-17 11:24:46,432 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-17 11:24:46,458 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-17 11:24:46,459 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-17 11:24:46,459 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-17 11:24:46,459 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-17 11:24:46,459 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-17 11:24:46,459 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-17 11:24:46,459 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': [], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 0, 'total_successful_patterns': 0, 'total_discovery_sessions': 3, 'average_new_discoveries_per_session': 0.0, 'knowledge_growth_trend': 'saturating'}}
+2025-09-17 11:24:46,461 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-17 11:24:46,461 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-09-17 11:24:46,462 - __main__ - INFO - Assistant ready!
+2025-09-17 11:24:56,482 - src.core.assistant - INFO - Starting project discovery...
+2025-09-17 11:24:56,482 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-17 11:24:56,482 - src.learning.project_discovery - INFO - Already know 0 projects from previous sessions
+2025-09-17 11:24:57,037 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\EmbeddingGemma
+2025-09-17 11:25:11,650 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\MCPS\linkedin-mcp-server
+2025-09-17 11:25:16,193 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\pipecat-realtime-demo
+2025-09-17 11:25:23,062 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\Project_manager\Achieve
+2025-09-17 11:25:26,591 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\Pyhsics
+2025-09-17 11:25:29,895 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\sakana-desktop-assistant
+2025-09-17 11:25:34,788 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\test
+2025-09-17 11:25:39,206 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\trae_integration\unity-ai-platform-clean
+2025-09-17 11:25:42,620 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Downloads
+2025-09-17 11:25:47,446 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\AppData\Local\SquirrelTemp
+2025-09-17 11:25:56,803 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User
+2025-09-17 11:38:06,590 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User
+2025-09-17 11:45:10,956 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\autogen_tooling_agent\lang-scope
+2025-09-17 11:45:17,220 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\MCPS\mcp-server-cloudflare
+2025-09-17 11:45:20,675 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\autogen_tooling_agent\lang-scope
+2025-09-17 11:45:26,170 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\MCPS\mcp-server-cloudflare
+2025-09-17 11:45:33,746 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\MCPS\linkedin-mcp-server
+2025-09-17 11:45:37,622 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\Project_manager
+2025-09-17 11:45:45,511 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\test
+2025-09-17 11:45:48,899 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\trae_integration\unity-ai-platform-clean
+2025-09-17 11:45:52,431 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Downloads
+2025-09-17 11:45:58,327 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\autogen_tooling_agent
+2025-09-17 11:46:06,305 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\test
+2025-09-17 11:46:10,104 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Downloads
+2025-09-17 11:46:15,209 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\Project_manager
+2025-09-17 11:46:33,101 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\autogen_tooling_agent
+2025-09-17 11:46:42,602 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\test
+2025-09-17 11:46:46,736 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Downloads
+2025-09-17 11:46:52,481 - src.learning.project_discovery - INFO - Analyzing project at: C:\Users\User\Desktop\trae_integration\unity-ai-platform-clean
+2025-09-17 13:32:20,757 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:EmbeddingGemma
+2025-09-17 13:32:20,795 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:linkedin-mcp-server
+2025-09-17 13:32:20,797 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:pipecat-realtime-demo
+2025-09-17 13:32:20,800 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:Achieve
+2025-09-17 13:32:20,804 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:Pyhsics
+2025-09-17 13:32:20,809 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:sakana-desktop-assistant
+2025-09-17 13:32:20,814 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:test
+2025-09-17 13:32:20,818 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:unity-ai-platform-clean
+2025-09-17 13:32:20,822 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:Downloads
+2025-09-17 13:32:20,825 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:SquirrelTemp
+2025-09-17 13:32:20,827 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:User
+2025-09-17 13:32:20,838 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:lang-scope
+2025-09-17 13:32:20,844 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:mcp-server-cloudflare
+2025-09-17 13:32:20,858 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:Project_manager
+2025-09-17 13:32:20,869 - src.learning.knowledge_accumulator - INFO - NEW PERMANENT DISCOVERY: project:autogen_tooling_agent
+2025-09-17 13:32:20,898 - src.learning.project_discovery - INFO - Discovered 29 new projects
+2025-09-17 13:32:20,905 - src.core.assistant - INFO - Project discovery complete: found 29 projects
+2025-09-18 12:52:38,527 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 12:52:38,527 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 12:52:38,528 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 12:52:38,541 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 12:52:38,542 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 12:52:38,543 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 12:52:38,545 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 12:52:38,546 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 12:52:38,548 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 12:52:38,559 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 12:52:38,559 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 12:52:38,560 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 12:52:38,560 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 12:52:38,561 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 12:52:38,561 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 12:52:38,574 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 12:52:38,575 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 12:52:38,575 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 12:52:38,575 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 12:52:38,575 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 12:52:38,575 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 12:52:38,576 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 12:52:38,576 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 12:52:38,576 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-09-18 12:52:38,576 - __main__ - INFO - Assistant ready!
+2025-09-18 12:52:48,582 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 12:52:48,582 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 12:52:48,582 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 12:52:48,710 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 12:52:48,710 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 14:11:09,212 - __main__ - INFO - Received signal 2
+2025-09-18 14:11:09,218 - __main__ - INFO - Shutting down assistant...
+2025-09-18 14:11:09,219 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-18 14:11:53,161 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 14:11:53,161 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 14:11:53,161 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 14:11:53,167 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 14:11:53,180 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 14:11:53,192 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 14:11:53,216 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 14:11:53,231 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 14:11:53,234 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 14:11:53,255 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 14:11:53,255 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 14:11:53,255 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 14:11:53,256 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 14:11:53,258 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 14:11:53,258 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 14:11:53,275 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 14:11:53,276 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 14:11:53,276 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 14:11:53,276 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 14:11:53,276 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 14:11:53,277 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 14:11:53,277 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 14:11:53,277 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 14:11:53,277 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-09-18 14:11:53,278 - __main__ - INFO - Assistant ready!
+2025-09-18 14:12:03,283 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 14:12:03,283 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 14:12:03,284 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 14:12:03,410 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 14:12:03,410 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 14:31:26,388 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 14:31:26,389 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 14:31:26,395 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 14:31:26,398 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 14:31:26,398 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 14:31:26,400 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 14:31:26,401 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 14:31:26,404 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 14:31:26,405 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 14:31:26,405 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 14:31:26,405 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 14:31:26,405 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 14:31:26,406 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 14:31:26,407 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 14:31:26,439 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 14:31:26,440 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 14:31:26,441 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 14:31:26,441 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 14:31:26,441 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 14:31:26,442 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 14:31:26,442 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 14:31:26,443 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 14:31:36,463 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 14:31:36,464 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 14:31:36,465 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 14:31:36,615 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 14:31:36,615 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 14:43:08,650 - __main__ - INFO - Received signal 2
+2025-09-18 14:43:08,654 - __main__ - INFO - Shutting down assistant...
+2025-09-18 14:43:08,654 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-18 15:03:35,318 - __main__ - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 15:03:35,318 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 15:03:35,318 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 15:03:35,323 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 15:03:35,324 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 15:03:35,325 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 15:03:35,326 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 15:03:35,327 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 15:03:35,328 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 15:03:35,334 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 15:03:35,334 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 15:03:35,334 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 15:03:35,334 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 15:03:35,335 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 15:03:35,335 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 15:03:35,347 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 15:03:35,347 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 15:03:35,348 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 15:03:35,348 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 15:03:35,348 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 15:03:35,349 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 15:03:35,349 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 15:03:35,350 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 15:03:35,350 - __main__ - INFO - GUI not yet implemented, using CLI
+2025-09-18 15:03:35,350 - __main__ - INFO - Assistant ready!
+2025-09-18 15:03:45,364 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 15:03:45,365 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 15:03:45,365 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 15:03:45,647 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 15:03:45,647 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 15:17:25,461 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 15:17:25,461 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 15:17:25,464 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 15:17:25,465 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 15:17:25,466 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 15:17:25,467 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 15:17:25,468 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 15:17:25,469 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 15:17:25,469 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 15:17:25,470 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 15:17:25,470 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 15:17:25,470 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 15:17:25,471 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 15:17:25,471 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 15:17:25,482 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 15:17:25,483 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 15:17:25,483 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 15:17:25,483 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 15:17:25,484 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 15:17:25,484 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 15:17:25,484 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 15:17:25,484 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 15:17:35,489 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 15:17:35,489 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 15:17:35,490 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 15:17:35,801 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 15:17:35,801 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 15:19:09,048 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 15:19:09,048 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 15:19:09,051 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 15:19:09,052 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 15:19:09,052 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 15:19:09,053 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 15:19:09,053 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 15:19:09,054 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 15:19:09,054 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 15:19:09,055 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 15:19:09,055 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 15:19:09,055 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 15:19:09,056 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 15:19:09,056 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 15:19:09,067 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 15:19:09,067 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 15:19:09,067 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 15:19:09,068 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 15:19:09,068 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 15:19:09,068 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 15:19:09,068 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 15:19:09,069 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 15:19:19,072 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 15:19:19,072 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 15:19:19,072 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 15:19:19,190 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 15:19:19,191 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 15:20:02,883 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 15:20:02,883 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 15:20:02,888 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 15:20:02,889 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 15:20:02,889 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 15:20:02,890 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 15:20:02,891 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 15:20:02,893 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 15:20:02,893 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 15:20:02,893 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 15:20:02,893 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 15:20:02,893 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 15:20:02,894 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 15:20:02,894 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 15:20:02,910 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 15:20:02,911 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 15:20:02,911 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 15:20:02,911 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 15:20:02,911 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 15:20:02,912 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 15:20:02,912 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 15:20:02,912 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 15:20:12,921 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 15:20:12,921 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 15:20:12,921 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 15:20:13,068 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 15:20:13,068 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 15:21:05,917 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 15:21:05,918 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 15:21:05,923 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 15:21:05,925 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 15:21:05,926 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 15:21:05,927 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 15:21:05,928 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 15:21:05,930 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 15:21:05,930 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 15:21:05,930 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 15:21:05,931 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 15:21:05,931 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 15:21:05,932 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 15:21:05,932 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 15:21:05,946 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 15:21:05,946 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 15:21:05,947 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 15:21:05,947 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 15:21:05,947 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 15:21:05,947 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 15:21:05,948 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 15:21:05,948 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 15:21:15,952 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 15:21:15,955 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 15:21:15,955 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 15:21:16,175 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 15:21:16,176 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 19:07:22,230 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 19:07:22,237 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 19:07:22,302 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 19:07:22,330 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 19:07:22,351 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 19:07:22,394 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 19:07:22,426 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 19:07:22,432 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 19:07:22,434 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 19:07:22,438 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 19:07:22,438 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 19:07:22,438 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 19:07:22,442 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 19:07:22,447 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 19:07:22,510 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 19:07:22,514 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 19:07:22,519 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 19:07:22,519 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 19:07:22,521 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 19:07:22,521 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 19:07:22,523 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 19:07:22,524 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 19:07:32,531 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 19:07:32,532 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 19:07:32,533 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 19:07:32,712 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 19:07:32,712 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 19:08:29,258 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 19:08:29,259 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 19:08:29,265 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 19:08:29,267 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 19:08:29,267 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 19:08:29,268 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 19:08:29,269 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 19:08:29,270 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 19:08:29,270 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 19:08:29,270 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 19:08:29,271 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 19:08:29,271 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 19:08:29,271 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 19:08:29,272 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 19:08:29,287 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 19:08:29,287 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 19:08:29,287 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 19:08:29,287 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 19:08:29,288 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 19:08:29,288 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 19:08:29,288 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 19:08:29,289 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 19:08:39,300 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 19:08:39,300 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 19:08:39,300 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 19:08:39,564 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 19:08:39,565 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 19:08:51,725 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 19:08:51,725 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 19:08:51,733 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 19:08:51,734 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 19:08:51,735 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 19:08:51,735 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 19:08:51,737 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 19:08:51,738 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 19:08:51,739 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 19:08:51,739 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 19:08:51,739 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 19:08:51,739 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 19:08:51,740 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 19:08:51,740 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 19:08:51,759 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 19:08:51,759 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 19:08:51,760 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 19:08:51,760 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 19:08:51,761 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 19:08:51,761 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 19:08:51,761 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 19:08:51,762 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 19:09:01,779 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 19:09:01,779 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 19:09:01,779 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 19:09:01,952 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 19:09:01,953 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-18 19:18:57,146 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-18 19:18:57,147 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-18 19:18:57,153 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-18 19:18:57,155 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-18 19:18:57,155 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-18 19:18:57,157 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-18 19:18:57,158 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-18 19:18:57,159 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-18 19:18:57,159 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-18 19:18:57,159 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-18 19:18:57,160 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-18 19:18:57,160 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-18 19:18:57,161 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-18 19:18:57,161 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-18 19:18:57,181 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-18 19:18:57,182 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-18 19:18:57,182 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-18 19:18:57,183 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-18 19:18:57,183 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-18 19:18:57,183 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-18 19:18:57,184 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-18 19:18:57,184 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-18 19:19:07,198 - src.core.assistant - INFO - Starting project discovery...
+2025-09-18 19:19:07,199 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-18 19:19:07,200 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-18 19:19:07,397 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-18 19:19:07,397 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-19 11:46:01,490 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-19 11:46:01,495 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-19 11:46:01,637 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-19 11:46:01,653 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-19 11:46:01,666 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-19 11:46:01,688 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-19 11:46:01,701 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-19 11:46:01,705 - src.execution.sandbox_executor - INFO - Sandbox initialized. Using Docker: False
+2025-09-19 11:46:01,706 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-19 11:46:01,706 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-19 11:46:01,706 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-19 11:46:01,706 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-19 11:46:01,707 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-19 11:46:01,708 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-19 11:46:01,726 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-19 11:46:01,727 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-19 11:46:01,727 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-19 11:46:01,727 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-19 11:46:01,727 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-19 11:46:01,728 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-19 11:46:01,728 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-19 11:46:01,729 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-19 11:46:11,730 - src.core.assistant - INFO - Starting project discovery...
+2025-09-19 11:46:11,731 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-19 11:46:11,732 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-19 11:46:11,993 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-19 11:46:11,993 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-19 15:45:36,163 - __main__ - ERROR - Fatal error: 'AssistantRunner' object has no attribute 'logger'
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 56, in initialize
+    self.logger.info("GUI interface initialized; open http://127.0.0.1:8765/")
+    ^^^^^^^^^^^
+AttributeError: 'AssistantRunner' object has no attribute 'logger'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 161, in <module>
+    asyncio.run(main())
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\base_events.py", line 650, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 156, in main
+    await runner.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 59, in initialize
+    self.logger.error(f"Failed to initialize GUI: {e}. Falling back to CLI.")
+    ^^^^^^^^^^^
+AttributeError: 'AssistantRunner' object has no attribute 'logger'
+2025-09-19 15:46:48,124 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-19 15:46:48,126 - __main__ - ERROR - Failed to initialize GUI: [WinError 10013] Der Zugriff auf einen Socket war aufgrund der Zugriffsrechte des Sockets unzulässig. Falling back to CLI.
+2025-09-19 15:46:48,126 - __main__ - INFO - CLI interface initialized
+2025-09-19 15:46:48,127 - __main__ - INFO - Assistant ready!
+2025-09-19 15:47:45,331 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 15:48:00,901 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 15:48:51,394 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 15:49:06,144 - __main__ - INFO - Received signal 2
+2025-09-19 15:49:06,144 - __main__ - INFO - Shutting down assistant...
+2025-09-19 15:49:06,144 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-19 15:49:06,145 - src.core.assistant - INFO - Assistant shutdown complete
+2025-09-19 15:49:06,145 - __main__ - INFO - Shutdown complete
+2025-09-19 15:49:08,710 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-19 15:49:08,712 - src.ui.gui_interface - WARNING - Port 8765 unavailable for GUI ([WinError 10013] Der Zugriff auf einen Socket war aufgrund der Zugriffsrechte des Sockets unzulässig), trying next...
+2025-09-19 15:49:08,726 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-19 15:49:08,726 - __main__ - INFO - Assistant ready!
+2025-09-19 15:49:08,727 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8766/
+2025-09-19 15:51:42,212 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 15:51:47,965 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 15:51:54,958 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 15:52:05,081 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 16:04:33,020 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 16:54:02,238 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 16:55:18,744 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:06:12,211 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:13:55,903 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:15:00,733 - __main__ - INFO - Received signal 2
+2025-09-19 17:15:00,743 - __main__ - INFO - Shutting down assistant...
+2025-09-19 17:15:00,745 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-19 17:18:29,029 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:19:28,391 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:19:33,794 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-19 17:19:33,797 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-19 17:19:33,834 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-19 17:19:33,852 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-19 17:19:33,865 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-19 17:19:33,885 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-19 17:19:33,897 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-19 17:19:33,904 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-19 17:19:33,947 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-19 17:19:33,948 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-19 17:19:33,949 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-19 17:19:33,949 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-19 17:19:33,949 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-19 17:19:33,953 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-19 17:19:33,953 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-19 17:19:33,972 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-19 17:19:33,972 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-19 17:19:33,973 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-19 17:19:33,973 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-19 17:19:33,973 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-19 17:19:33,973 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-19 17:19:33,974 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-19 17:19:33,975 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-19 17:19:43,985 - src.core.assistant - INFO - Starting project discovery...
+2025-09-19 17:19:43,985 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-19 17:19:43,985 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-19 17:19:44,109 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-19 17:19:44,109 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-19 17:31:09,584 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:33:51,187 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:34:59,198 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:37:49,273 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:38:00,929 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:38:16,934 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 17:57:26,169 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-19 18:32:01,715 - src.core.assistant - ERROR - Error processing request: 'NoneType' object has no attribute 'store_memory'
+2025-09-20 08:16:44,416 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 08:16:44,417 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 08:16:44,429 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 08:16:44,440 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 08:16:44,449 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 08:16:44,463 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 08:16:44,473 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 08:16:44,474 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 08:16:44,489 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 08:16:44,490 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 08:16:44,490 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 08:16:44,490 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 08:16:44,490 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 08:16:44,491 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 08:16:44,491 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 08:16:44,505 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 08:16:44,505 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 08:16:44,505 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 08:16:44,505 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 08:16:44,506 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 08:16:44,506 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 08:16:44,506 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 08:16:44,506 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 08:16:44,507 - __main__ - ERROR - Failed to initialize GUI: attempted relative import with no known parent package. Falling back to CLI.
+2025-09-20 08:16:44,507 - __main__ - INFO - CLI interface initialized
+2025-09-20 08:16:44,507 - __main__ - INFO - Assistant ready!
+2025-09-20 08:16:54,516 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 08:16:54,516 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 08:16:54,517 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 08:16:54,620 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 08:16:54,620 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 08:16:54,620 - src.core.assistant - ERROR - Error in project discovery initialization: cannot access local variable 'memory' where it is not associated with a value
+2025-09-20 08:18:52,346 - __main__ - INFO - Received signal 2
+2025-09-20 08:18:52,346 - __main__ - INFO - Shutting down assistant...
+2025-09-20 08:18:52,347 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-20 08:18:54,990 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 08:18:54,991 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 08:18:54,995 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 08:18:54,995 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 08:18:54,996 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 08:18:54,997 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 08:18:54,997 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 08:18:54,999 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 08:18:55,010 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 08:18:55,010 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 08:18:55,010 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 08:18:55,010 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 08:18:55,011 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 08:18:55,011 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 08:18:55,011 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 08:18:55,024 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 08:18:55,025 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 08:18:55,025 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 08:18:55,025 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 08:18:55,025 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 08:18:55,026 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 08:18:55,026 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 08:18:55,026 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 08:18:55,041 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 08:18:55,057 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 08:18:55,057 - __main__ - INFO - Assistant ready!
+2025-09-20 08:18:55,058 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 08:19:05,030 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 08:19:05,030 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 08:19:05,030 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 08:19:05,160 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 08:19:05,161 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 08:19:05,161 - src.core.assistant - ERROR - Error in project discovery initialization: cannot access local variable 'memory' where it is not associated with a value
+2025-09-20 08:24:02,967 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 08:24:02,967 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 08:24:02,974 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 08:24:02,975 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 08:24:02,975 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 08:24:02,975 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 08:24:02,977 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 08:24:02,978 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 08:24:02,988 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 08:24:02,988 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 08:24:02,988 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 08:24:02,988 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 08:24:02,988 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 08:24:02,989 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 08:24:02,989 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 08:24:03,001 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 08:24:03,002 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 08:24:03,002 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 08:24:03,002 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 08:24:03,002 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 08:24:03,002 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 08:24:03,002 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 08:24:03,003 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 08:24:03,012 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 08:24:03,022 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 08:24:03,022 - __main__ - INFO - Assistant ready!
+2025-09-20 08:24:03,024 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 08:24:12,994 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 08:24:12,994 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 08:24:12,994 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 08:24:13,103 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 08:24:13,103 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 08:24:13,103 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 08:35:40,443 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 08:35:40,444 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 08:35:40,451 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 08:35:40,452 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 08:35:40,454 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 08:35:40,454 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 08:35:40,455 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 08:35:40,457 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 08:35:40,473 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 08:35:40,474 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 08:35:40,474 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 08:35:40,474 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 08:35:40,474 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 08:35:40,475 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 08:35:40,475 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 08:35:40,485 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 08:35:40,485 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 08:35:40,485 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 08:35:40,485 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 08:35:40,487 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 08:35:40,487 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 08:35:40,487 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 08:35:40,487 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 08:35:40,498 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 08:35:40,506 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 08:35:40,507 - __main__ - INFO - Assistant ready!
+2025-09-20 08:35:40,507 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 08:35:50,491 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 08:35:50,491 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 08:35:50,492 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 08:35:50,602 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 08:35:50,602 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 08:35:50,602 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 08:43:41,294 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for document_summarization
+2025-09-20 08:46:04,956 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 08:46:04,957 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 08:46:04,962 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 08:46:04,963 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 08:46:04,963 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 08:46:04,964 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 08:46:04,964 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 08:46:04,966 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 08:46:04,974 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 08:46:04,974 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 08:46:04,974 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 08:46:04,974 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 08:46:04,974 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 08:46:04,975 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 08:46:04,975 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 08:46:04,987 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 08:46:04,987 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 08:46:04,987 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 08:46:04,987 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 08:46:04,987 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 08:46:04,988 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 08:46:04,988 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 08:46:04,988 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 08:46:04,999 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 08:46:05,011 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 08:46:05,011 - __main__ - INFO - Assistant ready!
+2025-09-20 08:46:05,012 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 08:46:14,989 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 08:46:14,989 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 08:46:14,990 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 08:46:15,091 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 08:46:15,091 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 08:46:15,091 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 09:40:03,933 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 09:40:03,933 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 09:40:03,938 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 09:40:03,939 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 09:40:03,939 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 09:40:03,940 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 09:40:03,941 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 09:40:03,943 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 09:40:03,954 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 09:40:03,954 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 09:40:03,954 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 09:40:03,954 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 09:40:03,954 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 09:40:03,955 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 09:40:03,955 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 09:40:03,964 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 09:40:03,964 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 09:40:03,965 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 09:40:03,965 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 09:40:03,965 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 09:40:03,965 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 09:40:03,965 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 09:40:03,966 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 09:40:03,979 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 09:40:03,989 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 09:40:03,989 - __main__ - INFO - Assistant ready!
+2025-09-20 09:40:03,991 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 09:40:13,964 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 09:40:13,964 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 09:40:13,964 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 09:40:14,060 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 09:40:14,060 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 09:40:14,061 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 10:26:07,274 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 10:26:07,274 - src.core.llm_interface - WARNING - Model not found: C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, using mock LLM for testing
+2025-09-20 10:26:07,279 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 10:26:07,279 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 10:26:07,281 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 10:26:07,281 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 10:26:07,282 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 10:26:07,283 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 10:26:07,292 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 10:26:07,292 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 10:26:07,292 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 10:26:07,292 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 10:26:07,293 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 10:26:07,293 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 10:26:07,293 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 10:26:07,304 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 10:26:07,304 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 10:26:07,305 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 10:26:07,305 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 10:26:07,305 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 10:26:07,305 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 10:26:07,305 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 10:26:07,306 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 10:26:07,315 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 10:26:07,324 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 10:26:07,324 - __main__ - INFO - Assistant ready!
+2025-09-20 10:26:07,325 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 10:26:17,324 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 10:26:17,324 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 10:26:17,325 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 10:26:17,421 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 10:26:17,421 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 10:26:17,421 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 10:55:59,313 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-09-20 10:55:59,321 - src.learning.evolutionary_learner - INFO - Generation 0 - Best fitness: 104.345
+2025-09-20 10:55:59,327 - src.learning.evolutionary_learner - INFO - Generation 1 - Best fitness: 104.345
+2025-09-20 10:55:59,331 - src.learning.evolutionary_learner - INFO - Generation 2 - Best fitness: 104.345
+2025-09-20 10:55:59,335 - src.learning.evolutionary_learner - INFO - Generation 3 - Best fitness: 104.345
+2025-09-20 10:55:59,340 - src.learning.evolutionary_learner - INFO - Generation 4 - Best fitness: 104.345
+2025-09-20 10:55:59,341 - src.core.assistant - INFO - Completed evolutionary improvement cycle 1
+2025-09-20 10:58:56,570 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-09-20 10:58:56,572 - src.learning.evolutionary_learner - INFO - Generation 5 - Best fitness: 108.136
+2025-09-20 10:58:56,573 - src.learning.evolutionary_learner - INFO - Generation 6 - Best fitness: 108.136
+2025-09-20 10:58:56,576 - src.learning.evolutionary_learner - INFO - Generation 7 - Best fitness: 108.136
+2025-09-20 10:58:56,578 - src.learning.evolutionary_learner - INFO - Generation 8 - Best fitness: 108.136
+2025-09-20 10:58:56,581 - src.learning.evolutionary_learner - INFO - Generation 9 - Best fitness: 108.136
+2025-09-20 10:58:56,581 - src.core.assistant - INFO - Completed evolutionary improvement cycle 2
+2025-09-20 10:59:32,583 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for general
+2025-09-20 10:59:43,698 - src.core.assistant - INFO - Negative feedback detected, triggering evolution for document_summarization
+2025-09-20 11:02:08,594 - src.learning.evolution_triggers - CRITICAL - HALLUCINATION CRISIS DETECTED - Triggering emergency evolution
+2025-09-20 11:02:08,595 - src.learning.consciousness_field - CRITICAL - === ENTERING CRISIS EVOLUTION MODE ===
+2025-09-20 11:02:08,595 - src.learning.consciousness_field - CRITICAL - Crisis evolution settings: {'evolution_mode': 'CRISIS', 'mutation_rate': 0.8999999999999999, 'exploration_depth': 2, 'population_size': 40, 'verification_required': True, 'max_generations': 50, 'elite_pressure': 0.1, 'innovation_bonus': 2.0, 'reality_check_weight': 10.0}
+2025-09-20 11:02:08,595 - src.core.assistant - CRITICAL - CRISIS MODE: Hallucination detected for document_summarization
+2025-09-20 11:02:08,595 - src.learning.evolution_triggers - INFO - Triggering evolution for task type: document_summarization
+2025-09-20 11:02:08,596 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-09-20 11:02:08,597 - src.learning.evolutionary_learner - INFO - Generation 10 - Best fitness: 40.000
+2025-09-20 11:02:08,599 - src.learning.evolutionary_learner - INFO - Generation 11 - Best fitness: 40.000
+2025-09-20 11:02:08,601 - src.learning.evolutionary_learner - INFO - Generation 12 - Best fitness: 40.000
+2025-09-20 11:02:08,609 - src.learning.evolutionary_learner - INFO - Generation 13 - Best fitness: 40.000
+2025-09-20 11:02:08,612 - src.learning.evolutionary_learner - INFO - Generation 14 - Best fitness: 40.000
+2025-09-20 11:02:08,613 - src.learning.evolutionary_learner - INFO - Generation 15 - Best fitness: 40.000
+2025-09-20 11:02:08,616 - src.learning.evolutionary_learner - INFO - Generation 16 - Best fitness: 40.000
+2025-09-20 11:02:08,618 - src.learning.evolutionary_learner - INFO - Generation 17 - Best fitness: 40.000
+2025-09-20 11:02:08,621 - src.learning.evolutionary_learner - INFO - Generation 18 - Best fitness: 40.000
+2025-09-20 11:02:08,623 - src.learning.evolutionary_learner - INFO - Generation 19 - Best fitness: 40.000
+2025-09-20 11:02:08,623 - src.learning.evolution_triggers - INFO - Crisis evolution generation 10, best fitness: 108.13619723323718
+2025-09-20 11:02:08,624 - src.learning.evolution_triggers - INFO - BREAKTHROUGH! Exiting crisis mode early
+2025-09-20 11:02:08,624 - src.learning.evolution_triggers - INFO - Applying evolved behavior for document_summarization: {'temperature': 0.7, 'max_tokens': 2048, 'learning_rate': 0.01, 'pattern_threshold': 0.7}
+2025-09-20 11:02:08,632 - src.learning.consciousness_field - INFO - Restoring normal evolution mode
+2025-09-20 11:02:08,633 - src.learning.evolution_triggers - INFO - Exited crisis evolution mode
+2025-09-20 11:21:46,646 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-09-20 11:21:46,648 - src.learning.evolutionary_learner - INFO - Generation 20 - Best fitness: 113.009
+2025-09-20 11:21:46,650 - src.learning.evolutionary_learner - INFO - Generation 21 - Best fitness: 113.009
+2025-09-20 11:21:46,652 - src.learning.evolutionary_learner - INFO - Generation 22 - Best fitness: 113.009
+2025-09-20 11:21:46,654 - src.learning.evolutionary_learner - INFO - Generation 23 - Best fitness: 113.009
+2025-09-20 11:21:46,656 - src.learning.evolutionary_learner - INFO - Generation 24 - Best fitness: 113.009
+2025-09-20 11:21:46,656 - src.core.assistant - INFO - Completed evolutionary improvement cycle 3
+2025-09-20 11:24:59,980 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-09-20 11:24:59,983 - src.learning.evolutionary_learner - INFO - Generation 25 - Best fitness: 119.667
+2025-09-20 11:24:59,985 - src.learning.evolutionary_learner - INFO - Generation 26 - Best fitness: 119.667
+2025-09-20 11:24:59,987 - src.learning.evolutionary_learner - INFO - Generation 27 - Best fitness: 119.667
+2025-09-20 11:24:59,990 - src.learning.evolutionary_learner - INFO - Generation 28 - Best fitness: 119.667
+2025-09-20 11:24:59,992 - src.learning.evolutionary_learner - INFO - Generation 29 - Best fitness: 119.667
+2025-09-20 11:24:59,992 - src.core.assistant - INFO - Completed evolutionary improvement cycle 4
+2025-09-20 11:26:09,283 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 11:26:09,283 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 11:26:12,249 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 11:26:12,254 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 11:26:12,263 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 11:26:12,272 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 11:26:12,287 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 11:26:12,296 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 11:26:12,297 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 11:26:12,312 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 11:26:12,312 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 11:26:12,312 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 11:26:12,312 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 11:26:12,312 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 11:26:12,313 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 11:26:12,313 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 11:26:12,322 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 11:26:12,322 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 11:26:12,322 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 11:26:12,324 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 11:26:12,324 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 11:26:12,324 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 11:26:12,324 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 11:26:12,325 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 11:26:12,338 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 11:26:12,348 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 11:26:12,348 - __main__ - INFO - Assistant ready!
+2025-09-20 11:26:12,350 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 11:26:20,320 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:26:20,325 - src.core.llm_interface - INFO - Generating with prompt length: 390
+2025-09-20 11:26:22,295 - src.core.llm_interface - INFO - Generated response length: 70
+2025-09-20 11:26:22,334 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 11:26:22,335 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 11:26:22,336 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 11:26:22,581 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 11:26:22,595 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 11:26:22,599 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 11:27:50,125 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:27:50,168 - src.core.llm_interface - INFO - Generating with prompt length: 600
+2025-09-20 11:27:52,309 - src.core.llm_interface - INFO - Generated response length: 121
+2025-09-20 11:29:04,579 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:29:04,686 - src.core.llm_interface - INFO - Generating with prompt length: 832
+2025-09-20 11:29:09,997 - src.core.llm_interface - INFO - Generated response length: 65
+2025-09-20 11:29:27,154 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:30:03,438 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:30:21,335 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:30:22,840 - src.core.llm_interface - INFO - Generating with prompt length: 4155
+2025-09-20 11:30:57,215 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:30:58,652 - src.core.llm_interface - INFO - Generating with prompt length: 4190
+2025-09-20 11:31:15,255 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 11:31:15,255 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 11:31:19,811 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 11:31:19,818 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 11:31:19,820 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 11:31:19,821 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 11:31:19,824 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 11:31:19,825 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 11:31:19,828 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 11:31:19,847 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 11:31:19,848 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 11:31:19,848 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 11:31:19,848 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 11:31:19,848 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 11:31:19,849 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 11:31:19,850 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 11:31:19,869 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 11:31:19,870 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 11:31:19,870 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 11:31:19,870 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 11:31:19,871 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 11:31:19,871 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 11:31:19,871 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 11:31:19,872 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 11:31:19,892 - src.ui.gui_interface - INFO - Initializing GUI interface on http://127.0.0.1:8765/
+2025-09-20 11:31:19,909 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 11:31:19,909 - __main__ - INFO - Assistant ready!
+2025-09-20 11:31:19,911 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-20 11:31:26,387 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:31:27,788 - src.core.llm_interface - INFO - Generating with prompt length: 393
+2025-09-20 11:31:29,891 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 11:31:29,895 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 11:31:29,896 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 11:31:30,158 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 11:31:30,164 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 11:31:30,164 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 11:31:38,687 - src.core.llm_interface - INFO - Generated response length: 222
+2025-09-20 11:32:07,325 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:32:34,972 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:34:43,685 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:35:20,968 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:35:59,447 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:36:00,319 - src.core.llm_interface - INFO - Generating with prompt length: 731
+2025-09-20 11:36:03,606 - src.core.llm_interface - INFO - Generated response length: 66
+2025-09-20 11:36:28,547 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:36:29,422 - src.core.llm_interface - INFO - Generating with prompt length: 734
+2025-09-20 11:36:33,779 - src.core.llm_interface - INFO - Generated response length: 86
+2025-09-20 11:36:56,619 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 11:36:57,702 - src.core.llm_interface - INFO - Generating with prompt length: 820
+2025-09-20 11:37:03,569 - src.core.llm_interface - INFO - Generated response length: 86
+2025-09-20 12:16:23,740 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:16:23,741 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:16:23,769 - __main__ - ERROR - Fatal error: llama-cpp-python not installed
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\llm_interface.py", line 38, in __init__
+    from llama_cpp import Llama
+ModuleNotFoundError: No module named 'llama_cpp'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 169, in <module>
+    asyncio.run(main())
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\base_events.py", line 650, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 164, in main
+    await runner.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 51, in initialize
+    await self.assistant.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\assistant.py", line 70, in initialize
+    self.llm = LLMFactory.create(self.config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\llm_interface.py", line 259, in create
+    return LocalLLM(
+           ^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\llm_interface.py", line 63, in __init__
+    raise ImportError("llama-cpp-python not installed")
+ImportError: llama-cpp-python not installed
+2025-09-20 12:17:05,762 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:17:05,763 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:17:05,767 - __main__ - ERROR - Fatal error: llama-cpp-python not installed
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\llm_interface.py", line 38, in __init__
+    from llama_cpp import Llama
+ModuleNotFoundError: No module named 'llama_cpp'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 169, in <module>
+    asyncio.run(main())
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\base_events.py", line 650, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 164, in main
+    await runner.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 51, in initialize
+    await self.assistant.initialize()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\assistant.py", line 70, in initialize
+    self.llm = LLMFactory.create(self.config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\llm_interface.py", line 259, in create
+    return LocalLLM(
+           ^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\core\llm_interface.py", line 63, in __init__
+    raise ImportError("llama-cpp-python not installed")
+ImportError: llama-cpp-python not installed
+2025-09-20 12:17:35,668 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:17:35,669 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:17:47,894 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 12:17:47,922 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 12:17:47,956 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 12:17:47,978 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 12:17:48,014 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 12:17:48,020 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 12:17:48,027 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 12:17:48,085 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 12:17:48,088 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 12:17:48,091 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 12:17:48,094 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 12:17:48,095 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 12:17:48,100 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 12:17:48,102 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 12:17:48,159 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 12:17:48,167 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 12:17:48,175 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 12:17:48,180 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 12:17:48,187 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 12:17:48,195 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 12:17:48,199 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 12:17:48,205 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 12:17:48,247 - __main__ - ERROR - Failed to initialize GUI: cannot import name 'GUIInterface' from 'src.ui.gui_interface' (C:\Users\User\Desktop\sakana-desktop-assistant\src\ui\gui_interface.py). Falling back to CLI.
+2025-09-20 12:17:48,249 - __main__ - INFO - CLI interface initialized
+2025-09-20 12:17:48,249 - __main__ - INFO - Assistant ready!
+2025-09-20 12:17:51,731 - __main__ - INFO - Received signal 2
+2025-09-20 12:17:51,733 - __main__ - INFO - Shutting down assistant...
+2025-09-20 12:17:51,735 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-20 12:19:28,587 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:19:28,587 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:19:37,193 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 12:19:37,204 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 12:19:37,206 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 12:19:37,208 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 12:19:37,209 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 12:19:37,212 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 12:19:37,217 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 12:19:37,243 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 12:19:37,245 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 12:19:37,246 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 12:19:37,247 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 12:19:37,247 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 12:19:37,249 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 12:19:37,249 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 12:19:37,284 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 12:19:37,285 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 12:19:37,286 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 12:19:37,287 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 12:19:37,287 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 12:19:37,288 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 12:19:37,288 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 12:19:37,290 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 12:19:37,317 - __main__ - ERROR - Failed to initialize GUI: cannot import name 'GUIInterface' from 'src.ui.gui_interface' (C:\Users\User\Desktop\sakana-desktop-assistant\src\ui\gui_interface.py). Falling back to CLI.
+2025-09-20 12:19:37,318 - __main__ - INFO - CLI interface initialized
+2025-09-20 12:19:37,319 - __main__ - INFO - Assistant ready!
+2025-09-20 12:19:47,299 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 12:19:47,300 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 12:19:47,302 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 12:19:47,570 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 12:19:47,570 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 12:19:47,570 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 12:26:14,953 - __main__ - INFO - Received signal 2
+2025-09-20 12:26:14,954 - __main__ - INFO - Shutting down assistant...
+2025-09-20 12:26:14,954 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-20 12:26:17,371 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:26:17,371 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:26:19,992 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 12:26:19,995 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 12:26:19,998 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 12:26:19,998 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 12:26:19,999 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 12:26:20,000 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 12:26:20,002 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 12:26:20,010 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 12:26:20,011 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 12:26:20,011 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 12:26:20,011 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 12:26:20,011 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 12:26:20,012 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 12:26:20,012 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 12:26:20,023 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 12:26:20,023 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 12:26:20,023 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 12:26:20,024 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 12:26:20,024 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 12:26:20,024 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 12:26:20,024 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 12:26:20,025 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 12:26:20,051 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 12:26:20,051 - __main__ - INFO - Assistant ready!
+2025-09-20 12:26:30,038 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 12:26:30,038 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 12:26:30,038 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 12:26:30,151 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 12:26:30,151 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 12:26:30,151 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 12:31:54,286 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:31:54,287 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:31:57,027 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 12:31:57,031 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 12:31:57,033 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 12:31:57,034 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 12:31:57,035 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 12:31:57,036 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 12:31:57,038 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 12:31:57,050 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 12:31:57,050 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 12:31:57,051 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 12:31:57,051 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 12:31:57,051 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 12:31:57,052 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 12:31:57,052 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 12:31:57,065 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 12:31:57,066 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 12:31:57,066 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 12:31:57,066 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 12:31:57,067 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 12:31:57,067 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 12:31:57,067 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 12:31:57,068 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 12:31:57,090 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 12:31:57,090 - __main__ - INFO - Assistant ready!
+2025-09-20 12:32:07,083 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 12:32:07,083 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 12:32:07,084 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 12:32:07,193 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 12:32:07,193 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 12:32:07,193 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 12:34:10,598 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 12:34:10,598 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 12:34:13,253 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 12:34:13,257 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 12:34:13,257 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 12:34:13,258 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 12:34:13,258 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 12:34:13,259 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 12:34:13,261 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 12:34:13,268 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 12:34:13,268 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 12:34:13,268 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 12:34:13,268 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 12:34:13,268 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 12:34:13,269 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 12:34:13,269 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 12:34:13,280 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 12:34:13,280 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 12:34:13,281 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 12:34:13,282 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 12:34:13,282 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 12:34:13,282 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 12:34:13,282 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 12:34:13,282 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 12:34:13,303 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 12:34:13,304 - __main__ - INFO - Assistant ready!
+2025-09-20 12:34:23,289 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 12:34:23,290 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 12:34:23,290 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 12:34:23,416 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 12:34:23,416 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 12:34:23,416 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 12:56:41,172 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:56:41,724 - src.core.llm_interface - INFO - Generating with prompt length: 391
+2025-09-20 12:56:43,481 - src.core.llm_interface - INFO - Generated response length: 34
+2025-09-20 12:57:25,380 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:57:25,893 - src.core.llm_interface - INFO - Generating with prompt length: 560
+2025-09-20 12:57:27,357 - src.core.llm_interface - INFO - Generated response length: 57
+2025-09-20 12:57:36,660 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:57:37,219 - src.core.llm_interface - INFO - Generating with prompt length: 757
+2025-09-20 12:57:37,837 - src.core.llm_interface - INFO - Generated response length: 4
+2025-09-20 12:57:37,943 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:57:38,429 - src.core.llm_interface - INFO - Generating with prompt length: 729
+2025-09-20 12:57:39,770 - src.core.llm_interface - INFO - Generated response length: 60
+2025-09-20 12:57:54,799 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:57:55,321 - src.core.llm_interface - INFO - Generating with prompt length: 728
+2025-09-20 12:57:56,295 - src.core.llm_interface - INFO - Generated response length: 15
+2025-09-20 12:58:41,496 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:58:41,995 - src.core.llm_interface - INFO - Generating with prompt length: 741
+2025-09-20 12:58:42,802 - src.core.llm_interface - INFO - Generated response length: 4
+2025-09-20 12:59:16,601 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 12:59:17,110 - src.core.llm_interface - INFO - Generating with prompt length: 704
+2025-09-20 12:59:24,064 - src.core.llm_interface - INFO - Generated response length: 325
+2025-09-20 12:59:39,500 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:14:52,534 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:14:53,117 - src.core.llm_interface - INFO - Generating with prompt length: 965
+2025-09-20 13:14:55,550 - src.core.llm_interface - INFO - Generated response length: 74
+2025-09-20 13:22:03,428 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:22:04,245 - src.learning.evolutionary_learner - INFO - Initialized population with 20 individuals
+2025-09-20 13:22:04,254 - src.learning.evolutionary_learner - INFO - Generation 0 - Best fitness: 99.638
+2025-09-20 13:22:04,262 - src.learning.evolutionary_learner - INFO - Generation 1 - Best fitness: 99.638
+2025-09-20 13:22:04,265 - src.learning.evolutionary_learner - INFO - Generation 2 - Best fitness: 99.638
+2025-09-20 13:22:04,268 - src.learning.evolutionary_learner - INFO - Generation 3 - Best fitness: 99.638
+2025-09-20 13:22:04,272 - src.learning.evolutionary_learner - INFO - Generation 4 - Best fitness: 99.638
+2025-09-20 13:22:04,273 - src.core.assistant - INFO - Completed evolutionary improvement cycle 1
+2025-09-20 13:22:21,854 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:22:54,687 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:23:27,086 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:23:28,160 - src.core.llm_interface - INFO - Generating with prompt length: 4209
+2025-09-20 13:23:45,690 - src.core.llm_interface - INFO - Generated response length: 253
+2025-09-20 13:24:23,844 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:24:25,108 - src.core.llm_interface - INFO - Generating with prompt length: 4455
+2025-09-20 13:24:44,003 - src.core.llm_interface - INFO - Generated response length: 261
+2025-09-20 13:25:09,878 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:25:37,761 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:25:39,008 - src.core.llm_interface - INFO - Generating with prompt length: 996
+2025-09-20 13:25:41,628 - src.core.llm_interface - INFO - Generated response length: 101
+2025-09-20 13:26:23,235 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 13:26:24,597 - src.core.llm_interface - INFO - Generating with prompt length: 817
+2025-09-20 13:26:25,712 - src.core.llm_interface - INFO - Generated response length: 13
+2025-09-20 15:21:10,252 - __main__ - INFO - Received signal 2
+2025-09-20 15:21:10,263 - __main__ - INFO - Shutting down assistant...
+2025-09-20 15:21:10,794 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-20 15:21:21,500 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-20 15:21:21,500 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-20 15:21:28,465 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-20 15:21:28,500 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-20 15:21:28,517 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-20 15:21:28,529 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-20 15:21:28,547 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-20 15:21:28,551 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-20 15:21:28,554 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-20 15:21:28,593 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-20 15:21:28,593 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-20 15:21:28,593 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-20 15:21:28,593 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-20 15:21:28,593 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-20 15:21:28,593 - src.plugins.plugin_manager - INFO - Loaded plugin: MCPTools v0.1.0
+2025-09-20 15:21:28,594 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-20 15:21:28,594 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-20 15:21:28,620 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-20 15:21:28,622 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-20 15:21:28,622 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-20 15:21:28,623 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-20 15:21:28,623 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-20 15:21:28,623 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-20 15:21:28,623 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-20 15:21:28,625 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-20 15:21:28,678 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-20 15:21:28,678 - __main__ - INFO - Assistant ready!
+2025-09-20 15:21:38,637 - src.core.assistant - INFO - Starting project discovery...
+2025-09-20 15:21:38,638 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-20 15:21:38,638 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-20 15:21:38,740 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-20 15:21:38,740 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-20 15:21:38,741 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-20 15:24:18,622 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 15:24:19,149 - src.core.llm_interface - INFO - Generating with prompt length: 413
+2025-09-20 15:24:22,690 - src.core.llm_interface - INFO - Generated response length: 174
+2025-09-20 15:24:52,409 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 15:25:35,878 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 15:26:41,671 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3, while dim <= 2 is required by check_pairwise_arrays.
+2025-09-20 15:50:27,604 - __main__ - INFO - Received signal 2
+2025-09-20 15:50:27,605 - __main__ - INFO - Shutting down assistant...
+2025-09-20 15:50:27,918 - src.core.assistant - INFO - Shutting down Sakana Assistant...
+2025-09-25 18:12:11,164 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-25 18:12:11,164 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-25 18:12:16,804 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-25 18:12:16,829 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-25 18:12:16,848 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-25 18:12:16,864 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-25 18:12:16,890 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-25 18:12:16,903 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-25 18:12:16,906 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-25 18:12:16,922 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-25 18:12:16,922 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-25 18:12:16,923 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-25 18:12:16,923 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-25 18:12:16,923 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-25 18:12:16,923 - src.plugins.plugin_manager - INFO - Loaded plugin: MCPTools v0.1.0
+2025-09-25 18:12:16,924 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-25 18:12:16,924 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-25 18:12:16,942 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-25 18:12:16,942 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-25 18:12:16,943 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-25 18:12:16,943 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-25 18:12:16,943 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-25 18:12:16,944 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-25 18:12:16,944 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-25 18:12:16,945 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-25 18:12:16,975 - __main__ - ERROR - Failed to initialize GUI: name '_GUIRequestHandler' is not defined. Falling back to CLI.
+2025-09-25 18:12:16,976 - __main__ - INFO - CLI interface initialized
+2025-09-25 18:12:16,976 - __main__ - INFO - Assistant ready!
+2025-09-25 18:12:26,956 - src.core.assistant - INFO - Starting project discovery...
+2025-09-25 18:12:26,956 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-25 18:12:26,956 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-25 18:12:27,166 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-25 18:12:27,168 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-25 18:12:27,168 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-25 18:46:02,358 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-25 18:46:02,359 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-25 18:46:08,813 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-25 18:46:08,820 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-25 18:46:08,823 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-25 18:46:08,826 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-25 18:46:08,829 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-25 18:46:08,830 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-25 18:46:08,834 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-25 18:46:08,867 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-25 18:46:08,869 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-25 18:46:08,870 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-25 18:46:08,870 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-25 18:46:08,870 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-25 18:46:08,871 - src.plugins.plugin_manager - INFO - Loaded plugin: MCPTools v0.1.0
+2025-09-25 18:46:08,872 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-25 18:46:08,873 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-25 18:46:08,902 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-25 18:46:08,903 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-25 18:46:08,904 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-25 18:46:08,904 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-25 18:46:08,904 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-25 18:46:08,905 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-25 18:46:08,905 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-25 18:46:08,906 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-25 18:46:08,965 - src.ui.gui_interface - INFO - Auto-reload watcher started for: C:\Users\User\Desktop\sakana-desktop-assistant\src, C:\Users\User\Desktop\sakana-desktop-assistant\plugins, C:\Users\User\Desktop\sakana-desktop-assistant\src\ui
+2025-09-25 18:46:08,965 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-25 18:46:08,965 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-25 18:46:08,966 - __main__ - INFO - Assistant ready!
+2025-09-25 18:46:08,968 - __main__ - INFO - Shutting down assistant...
+2025-09-25 18:46:08,969 - __main__ - ERROR - Fatal error: 'GUIInterface' object has no attribute 'shutdown'
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 97, in run
+    await self.interface.run()
+          ^^^^^^^^^^^^^^^^^^
+AttributeError: 'GUIInterface' object has no attribute 'run'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 169, in <module>
+    asyncio.run(main())
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.pyenv\pyenv-win\versions\3.11.0\Lib\asyncio\base_events.py", line 650, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 165, in main
+    await runner.run()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 101, in run
+    await self.shutdown()
+  File "C:\Users\User\Desktop\sakana-desktop-assistant\src\main.py", line 113, in shutdown
+    await self.interface.shutdown()
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'GUIInterface' object has no attribute 'shutdown'
+2025-09-26 09:36:33,403 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-26 09:36:33,403 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-26 09:36:38,645 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-26 09:36:38,650 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-26 09:36:38,652 - src.learning.knowledge_accumulator - INFO - Loaded 6 permanent commands
+2025-09-26 09:36:38,653 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-26 09:36:38,656 - src.learning.file_discovery - INFO - Loaded 6 cached commands
+2025-09-26 09:36:38,657 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-26 09:36:38,660 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-26 09:36:38,687 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-26 09:36:38,687 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-26 09:36:38,688 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-26 09:36:38,688 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-26 09:36:38,688 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-26 09:36:38,688 - src.plugins.plugin_manager - INFO - Loaded plugin: MCPTools v0.1.0
+2025-09-26 09:36:38,689 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-26 09:36:38,689 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-26 09:36:38,701 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-26 09:36:38,701 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-26 09:36:38,702 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-26 09:36:38,702 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-26 09:36:38,702 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-26 09:36:38,703 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-26 09:36:38,703 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 6, 'total_successful_patterns': 1, 'total_discovery_sessions': 7, 'average_new_discoveries_per_session': 0.8571428571428571, 'knowledge_growth_trend': 'saturating'}}
+2025-09-26 09:36:38,703 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-26 09:36:38,741 - src.ui.gui_interface - INFO - Auto-reload watcher started for: C:\Users\User\Desktop\sakana-desktop-assistant\src, C:\Users\User\Desktop\sakana-desktop-assistant\plugins, C:\Users\User\Desktop\sakana-desktop-assistant\src\ui
+2025-09-26 09:36:38,742 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-26 09:36:38,742 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-26 09:36:38,742 - __main__ - INFO - Assistant ready!
+2025-09-26 09:36:48,712 - src.core.assistant - INFO - Starting project discovery...
+2025-09-26 09:36:48,712 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-26 09:36:48,712 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-26 09:36:48,825 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-26 09:36:48,825 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-26 09:36:48,826 - src.core.assistant - INFO - No projects discovered; skipping memory store
