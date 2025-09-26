@@ -26,6 +26,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, Tuple
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from pathlib import Path
+from mimetypes import guess_type
 
 logger = logging.getLogger(__name__)
 
@@ -266,6 +268,23 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                     self.server.sse_queues.remove(q)  # type: ignore[attr-defined]
                 except Exception:
                     pass
+            return
+        if self.path.startswith("/mcp/playwright"):
+            rel = self.path[len("/mcp/playwright"):]
+            if not rel or rel == "/":
+                rel = "/index.html"
+            public_dir = Path(__file__).parent.parent / "MCP PLUGINS" / "servers" / "playwright" / "public"
+            file_path = public_dir / rel.lstrip("/")
+            if file_path.is_file():
+                ctype = guess_type(str(file_path))[0] or "application/octet-stream"
+                data = file_path.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            self.send_error(404)
             return
         if self.path == "/api/plugins":
             try:
@@ -573,10 +592,10 @@ class GUIInterface:
         # NOTE: Keep dependencies minimal; no external assets for portability.
         return f"""
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-<meta charset=\"utf-8\" />
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sakana Desktop Assistant</title>
 <style>
   body {{ font-family: system-ui, Arial, sans-serif; margin: 0; background: #0b1f2a; color: #e6f1ff; }}
@@ -586,6 +605,7 @@ class GUIInterface:
   .row {{ display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }}
   input[type=text] {{ flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #28536b; background: #0c2230; color: #e6f1ff; }}
   button {{ padding: 10px 14px; border-radius: 6px; border: 1px solid #28536b; background: #133349; color: #e6f1ff; cursor: pointer; }}
+  button.active {{ background: #1a4a65; }}
   button:hover {{ background: #16425a; }}
   pre {{ background: #0c2230; padding: 12px; border-radius: 8px; border: 1px solid #28536b; white-space: pre-wrap; }}
   .status {{ font-size: 12px; opacity: 0.8; }}
@@ -594,17 +614,37 @@ class GUIInterface:
 <body>
 <header>
   <h1>🐟 Sakana Desktop Assistant</h1>
-  <div class=\"status\">GUI connected to http://{self.host}:{self.port}/</div>
+  <div class="status">GUI connected to http://{self.host}:{self.port}</div>
 </header>
 <main>
-  <div class=\"row\">
-    <input id=\"msg\" type=\"text\" placeholder=\"Ask me anything...\" />
-    <button id=\"send\">Send</button>
-    <button id=\"plugins\">Plugins</button>
+  <div class="row">
+    <input id="chat-input" type="text" placeholder="Type a message…" />
+    <button id="send-btn">Send</button>
   </div>
-  <pre id=\"out\">Ready.</pre>
+  <div id="chat-log"></div>
+  <nav>
+    <button id="tab-chat" class="active">Chat</button>
+    <button id="tab-playwright">Playwright</button>
+  </nav>
+  <div id="content-chat"></div>
+  <div id="content-playwright" style="display:none;">
+    <iframe id="playwright-frame" src="/mcp/playwright" style="width:100%; height:70vh; border:none;"></iframe>
+  </div>
 </main>
 <script>
+  document.getElementById('tab-chat').onclick = () => {{
+    document.getElementById('content-chat').style.display = '';
+    document.getElementById('content-playwright').style.display = 'none';
+    document.getElementById('tab-chat').classList.add('active');
+    document.getElementById('tab-playwright').classList.remove('active');
+  }};
+  document.getElementById('tab-playwright').onclick = () => {{
+    document.getElementById('content-chat').style.display = 'none';
+    document.getElementById('content-playwright').style.display = '';
+    document.getElementById('tab-chat').classList.remove('active');
+    document.getElementById('tab-playwright').classList.add('active');
+  }};
+
 // --- Simple helper for JSON POST ---
 async function postJSON(path, payload) {{
   const res = await fetch(path, {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payload) }});
