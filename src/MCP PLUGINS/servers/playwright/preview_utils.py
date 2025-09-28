@@ -226,6 +226,16 @@ class PreviewManager:
                 if img_bytes:
                     self.event_server.set_channel_image(img_bytes, mime or 'image/png', channel='default')
                     self.event_server.last_image_ts = time.time()
+                    # Also update preview.png for UIHandler consumers
+                    # Clear comments for easy debug; only set when PNG data is available
+                    try:
+                        fmt = (mime or 'image/png')
+                        if fmt.lower() == 'image/png':
+                            b64 = base64.b64encode(img_bytes).decode('ascii')
+                            self.event_server.set_preview_png(b64)
+                    except Exception:
+                        # Never raise from preview update
+                        pass
             except Exception:
                 pass
             # Mark browser open if previously closed

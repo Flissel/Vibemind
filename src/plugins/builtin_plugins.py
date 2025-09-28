@@ -507,7 +507,13 @@ class MCPToolsPlugin(Plugin):
         self.name = "MCPTools"
         self.description = "Scaffold for MCP tool calls: travliy.search, desktop.cmd, ctx7.search"
         self.version = "0.1.0"
-    
+        # Keep an internal registry of dynamically discovered commands to avoid duplicates
+        self._discovered_commands = set()
+        # Cache of parsed servers.json for potential future transport use
+        self._mcp_server_configs = {}
+        # Track active servers by name for quick lookup
+        self._active_server_names = set()
+
     async def initialize(self, assistant):
         # Store assistant so we can use config, metrics, memory_manager
         self.assistant = assistant
@@ -515,6 +521,12 @@ class MCPToolsPlugin(Plugin):
         self.register_command("travliy.search", self.travliy_search)
         self.register_command("desktop.cmd", self.desktop_cmd)
         self.register_command("ctx7.search", self.ctx7_search)
+        # Dynamically discover additional MCP tool namespaces and register lightweight handlers
+        try:
+            await self._discover_and_register_mcp_tools()
+        except Exception:
+            # Defensive: do not break plugin init if discovery fails
+            pass
 
     async def handle_command(self, command: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Dispatch MCP commands based on the first token."""
@@ -526,7 +538,7 @@ class MCPToolsPlugin(Plugin):
             handler = self.commands[cmd]
             return await handler(parts[1:] if len(parts) > 1 else [], context)
         return None
-    
+
     def _record_tool_metrics(self, tool_name: str, ok: bool, latency_ms: int = 0):
         # Follow the same metrics persistence pattern as other plugins
         try:
@@ -554,7 +566,7 @@ class MCPToolsPlugin(Plugin):
                 pass
         except Exception:
             pass
-    
+
     async def _record_pattern(self, tool: str, args: Any, ok: bool, extra: Optional[Dict[str, Any]] = None):
         # Store usage patterns into memory for the learning system
         try:
@@ -573,7 +585,288 @@ class MCPToolsPlugin(Plugin):
             await mm.detect_pattern('tool_usage', payload)
         except Exception:
             pass
-    
+
+    # --- Dynamic MCP discovery helpers ----------------------------------------------------------
+    async def _discover_and_register_mcp_tools(self):
+        """Discover MCP tool namespaces from the on-disk scaffold and register handlers.
+        
+        Sources considered:
+        - Folders under src/MCP PLUGINS/servers (e.g., travliy.search, desktop.cmd, ctx7.search)
+        - servers.json for server runtime metadata (parsed and cached for future use)
+        
+        Notes:
+        - This only wires lightweight scaffold handlers. Actual MCP transport is intentionally
+          out of scope here and will be added later to call real servers.
+        """
+        # Resolve servers root path using the assistant's configured base_dir
+        try:
+            base_dir: Path = getattr(self.assistant.config, 'base_dir', None)
+            if base_dir is None:
+                # Fallback: infer from this file's location
+                base_dir = Path(__file__).parent.parent
+        except Exception:
+            base_dir = Path(__file__).parent.parent
+        servers_root = base_dir / 'src' / 'MCP PLUGINS' / 'servers'
+
+        # Parse servers.json if available (cache only; not used for filtering yet)
+        servers_json = servers_root / 'servers.json'
+        if servers_json.exists():
+            try:
+                with open(servers_json, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                servers_list = data.get('servers', []) or []
+                for s in servers_list:
+                    name = str(s.get('name', '')).strip()
+                    if name:
+                        self._mcp_server_configs[name] = s
+                        # Maintain active set to enable subprocess smoke-run for these entries
+                        if bool(s.get('active', True)):
+                            self._active_server_names.add(name)
+            except Exception:
+                # Keep going even if JSON is malformed
+                pass
+
+        # Scan subdirectories to discover tool namespaces
+        if servers_root.exists() and servers_root.is_dir():
+            try:
+                for child in servers_root.iterdir():
+                    if not child.is_dir():
+                        continue
+                    cmd_name = child.name.strip()
+                    # Skip obvious non-tools
+                    if not cmd_name:
+                        continue
+                    # Avoid duplicate registration and avoid clobbering explicit handlers
+                    if cmd_name in self.commands or cmd_name in self._discovered_commands:
+                        continue
+                    # Prefer recognizable namespaces like foo.bar, but also allow underscores
+                    # to match existing folder naming. This scaffolds a generic handler.
+                    self.register_command(cmd_name, self._make_dynamic_handler(cmd_name))
+                    self._discovered_commands.add(cmd_name)
+            except Exception:
+                # Do not interrupt initialization due to discovery issues
+                pass
+
+    def _make_dynamic_handler(self, command_name: str):
+        """Create a handler for a dynamically discovered MCP tool.
+        If the command matches an active servers.json entry, run a safe subprocess smoke test.
+        Otherwise, return the original scaffold response. Clear comments for easy debug.
+        """
+        async def _run_server_smoke(server_cfg: Dict[str, Any], user_args: Any) -> Dict[str, Any]:
+            # Compose command list: base command + configured args + optional user args (strings only)
+            try:
+                base_cmd = str(server_cfg.get('command') or '').strip()
+                cfg_args = server_cfg.get('args', []) or []
+                timeout_sec = int(server_cfg.get('read_timeout_seconds', 120))
+                if not base_cmd:
+                    return {'content': 'Invalid servers.json: missing command', 'type': 'error'}
+
+                # Normalize args to str list; append user tokens safely
+                cmd: List[str] = [base_cmd] + [str(a) for a in cfg_args]
+                extra: List[str] = []
+                if isinstance(user_args, list):
+                    # Only include alphanumeric/safe tokens to avoid injection; keep minimal
+                    for tok in user_args:
+                        try:
+                            s = str(tok)
+                            # Basic safety filter: allow flags/words, reject dangerous chars
+                            if s and all(c.isalnum() or c in ['-', '_', '.', '/'] for c in s):
+                                extra.append(s)
+                        except Exception:
+                            continue
+                elif isinstance(user_args, str):
+                    # Split on whitespace, apply same filter
+                    for s in user_args.split():
+                        if s and all(c.isalnum() or c in ['-', '_', '.', '/'] for c in s):
+                            extra.append(s)
+                # Final command
+                cmd = cmd + extra
+
+                # Async subprocess with bounded capture and safe teardown
+                start_ts = datetime.now()
+                try:
+                    proc = await asyncio.create_subprocess_exec(
+                        *cmd,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                except Exception as e:
+                    # Failed to start process (missing runtime, network issues, etc.)
+                    return {
+                        'content': f"Failed to start server '{server_cfg.get('name')}': {e}",
+                        'type': 'error',
+                        'metadata': {
+                            'command': command_name,
+                            'mode': 'subprocess_smoke',
+                            'cmd': cmd,
+                        }
+                    }
+
+                # Collect output for up to timeout_sec, then terminate
+                max_bytes = 64 * 1024  # cap capture to 64KB to prevent memory blow
+                captured_out: bytes = b''
+                captured_err: bytes = b''
+
+                async def _read_stream(reader: asyncio.StreamReader) -> bytes:
+                    buf = b''
+                    try:
+                        while True:
+                            chunk = await reader.read(4096)
+                            if not chunk:
+                                break
+                            buf += chunk
+                            if len(buf) >= max_bytes:
+                                break
+                    except Exception:
+                        pass
+                    return buf
+
+                try:
+                    # Wait a short grace period to let server bootstrap; then terminate
+                    try:
+                        await asyncio.wait_for(asyncio.sleep(min(2, max(0, timeout_sec // 10))), timeout=min(3, timeout_sec))
+                    except Exception:
+                        pass
+
+                    # Concurrently read for the remaining time budget
+                    read_budget = max(1, timeout_sec - 2)
+                    try:
+                        captured_out, captured_err = await asyncio.wait_for(
+                            asyncio.gather(
+                                _read_stream(proc.stdout),  # type: ignore[arg-type]
+                                _read_stream(proc.stderr),  # type: ignore[arg-type]
+                            ),
+                            timeout=read_budget
+                        )
+                    except asyncio.TimeoutError:
+                        # Reached read timeout; proceed to terminate
+                        pass
+                    except Exception:
+                        pass
+
+                    # Prepare metrics and response on success
+                    end_ts = datetime.now()
+                    dt_ms = int((end_ts - start_ts).total_seconds() * 1000)
+                    self._record_tool_metrics(command_name, True, dt_ms)
+                    await self._record_pattern(command_name, {'args': extra, 'cmd': cmd}, True, extra={'dynamic': True, 'mode': 'subprocess_smoke'})
+
+                    # Prepare text output with truncation indicators
+                    out_text = (captured_out or b'').decode('utf-8', errors='replace')
+                    err_text = (captured_err or b'').decode('utf-8', errors='replace')
+                    if len(out_text) > 4000:
+                        out_text = out_text[:4000] + "\n... (truncated)"
+                    if len(err_text) > 4000:
+                        err_text = err_text[:4000] + "\n... (truncated)"
+
+                    return {
+                        'content': "\n".join([
+                            f"[MCP subprocess] Ran: {' '.join(cmd)}",
+                            "--- stdout ---",
+                            out_text or "(no stdout)",
+                            "--- stderr ---",
+                            err_text or "(no stderr)",
+                        ]),
+                        'type': 'mcp_action',
+                        'metadata': {
+                            'command': command_name,
+                            'cmd': cmd,
+                            'mode': 'subprocess_smoke',
+                            'timeout_sec': timeout_sec,
+                            'duration_ms': dt_ms,
+                        }
+                    }
+                except Exception as e:
+                    # Fallback on any unexpected failure within smoke-run setup/teardown
+                    try:
+                        end_ts = datetime.now()
+                        dt_ms = int((end_ts - start_ts).total_seconds() * 1000)
+                    except Exception:
+                        dt_ms = 0
+                    self._record_tool_metrics(command_name, False, dt_ms)
+                    try:
+                        await self._record_pattern(command_name, {'args': user_args, 'error': str(e)}, False, extra={'dynamic': True, 'mode': 'subprocess_smoke'})
+                    except Exception:
+                        pass
+                    return {
+                        'content': f"Unexpected error during MCP subprocess smoke-run: {e}",
+                        'type': 'error',
+                        'metadata': {
+                            'command': command_name,
+                            'mode': 'subprocess_smoke',
+                        }
+                    }
+                finally:
+                    # Attempt graceful termination, then force kill if needed
+                    try:
+                        if proc.returncode is None:
+                            proc.terminate()
+                    except Exception:
+                        try:
+                            proc.kill()
+                        except Exception:
+                            pass
+                    # Ensure process actually ends
+                    try:
+                        await asyncio.wait_for(proc.wait(), timeout=5)
+                    except Exception:
+                        pass
+
+            except Exception as e:
+                # Outer safeguard for any unexpected errors in smoke-run orchestration.
+                # Clear comments for easy debug and consistent metrics recording.
+                try:
+                    end_ts = datetime.now()
+                    dt_ms = int((end_ts - start_ts).total_seconds() * 1000)  # type: ignore[name-defined]
+                except Exception:
+                    dt_ms = 0
+                self._record_tool_metrics(command_name, False, dt_ms)
+                try:
+                    await self._record_pattern(
+                        command_name,
+                        {'args': user_args, 'error': str(e)},
+                        False,
+                        extra={'dynamic': True, 'mode': 'subprocess_smoke'}
+                    )
+                except Exception:
+                    pass
+                return {
+                    'content': f"Unexpected outer error during MCP subprocess smoke-run: {e}",
+                    'type': 'error',
+                    'metadata': {'command': command_name, 'mode': 'subprocess_smoke'}
+                }
+
+        async def handler(args: Any, context: Dict[str, Any]) -> Dict[str, Any]:
+            # If this command maps to an active server entry, attempt real subprocess smoke-run
+            try:
+                if command_name in self._active_server_names:
+                    cfg = self._mcp_server_configs.get(command_name) or {}
+                    return await _run_server_smoke(cfg, args)
+            except Exception:
+                # Fall back to scaffold on any unexpected error
+                pass
+
+            # Original scaffold behavior for non-active or unknown servers
+            arg_str = ' '.join(args) if isinstance(args, list) else (args or '')
+            meta = {
+                'command': command_name,
+                'args': args if isinstance(args, list) else [str(args)] if args else [],
+                'mode': 'scaffold',
+            }
+            is_search = command_name.endswith('.search')
+            try:
+                self._record_tool_metrics(command_name, True, 0)
+                await self._record_pattern(command_name, {'args': arg_str}, True, extra={'dynamic': True})
+                return {
+                    'content': f"[MCP scaffold] {command_name} would execute with: {arg_str}",
+                    'type': 'search_results' if is_search else 'mcp_action',
+                    'metadata': meta,
+                }
+            except Exception as e:
+                self._record_tool_metrics(command_name, False, 0)
+                await self._record_pattern(command_name, {'args': arg_str, 'error': str(e)}, False, extra={'dynamic': True})
+                return {'content': f"Error executing {command_name}: {e}", 'type': 'error'}
+        return handler
+
     async def travliy_search(self, args: Any, context: Dict[str, Any]) -> Dict[str, Any]:
         """Placeholder for Travliy Search via MCP.
         Usage: travliy.search <query>

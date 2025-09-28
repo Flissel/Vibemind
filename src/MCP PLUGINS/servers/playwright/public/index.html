@@ -60,9 +60,9 @@
         };
         add('Bootstrapping viewer...', 'ok');
         var s = document.createElement('script');
-        s.src = '/app.js';
+        s.src = '/mcp/playwright/app.js';
         s.defer = true;
-        s.onerror = function(){ add('Failed to load /app.js. SSE viewer fallback may not run.', 'err'); };
+        s.onerror = function(){ add('Failed to load /mcp/playwright/app.js. SSE viewer fallback may not run.', 'err'); };
         document.body.appendChild(s);
       }catch(e){}
     })();

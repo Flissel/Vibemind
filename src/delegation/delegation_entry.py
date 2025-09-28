@@ -1,13 +1,21 @@
 import asyncio
 import importlib.util
 from typing import List, Dict, Any
+from pathlib import Path
 
 from ..core.config import Config
 from ..core.assistant import SakanaAssistant
 
 
 async def _ensure_assistant() -> SakanaAssistant:
-    cfg = Config()
+    # Lade zentrale Konfiguration aus config.yaml (falls vorhanden),
+    # damit Delegation denselben Provider/Modell nutzt wie die Haupt-App.
+    base_dir = Path(__file__).parent.parent.parent
+    cfg_path = base_dir / "config.yaml"
+    if cfg_path.exists():
+        cfg = Config.from_yaml(cfg_path)
+    else:
+        cfg = Config()
     assistant = SakanaAssistant(cfg)
     await assistant.initialize()
     return assistant

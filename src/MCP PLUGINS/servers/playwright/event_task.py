@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from threading import Thread, Lock
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 # Allow running as a standalone module or as part of the package
 try:
@@ -26,6 +26,8 @@ except Exception:
 class Event:
     type: str
     value: Any
+    # Monotonic sequence ID for polling fallback
+    seq: int = 0
 
 
 class EventServer:
@@ -41,6 +43,8 @@ class EventServer:
         self._clients: List = []  # list of wfile objects
         self._latest_preview_png_b64: Optional[str] = None
         self._lock = Lock()
+        # Global increasing sequence for events
+        self._seq: int = 0
         # --- Compatibility state (used by legacy agent code) ---
         self.browser_open_last_state: Optional[bool] = None
         self.screenshot_skip_last_log_ts: float = 0.0
@@ -64,8 +68,11 @@ class EventServer:
         except Exception:
             value_out = str(value)
 
-        evt = Event(type=type_, value=value_out)
         with self._lock:
+            # assign next sequence id
+            self._seq += 1
+            evt = Event(type=type_, value=value_out, seq=self._seq)
+            # buffer maintenance
             self._buffer.append(evt)
             if len(self._buffer) > self._max_buffer:
                 self._buffer = self._buffer[-self._max_buffer :]
@@ -84,6 +91,18 @@ class EventServer:
                     self._clients.remove(s)
                 except ValueError:
                     pass
+
+    def get_events_since(self, since: int) -> Tuple[int, List[Dict[str, Any]]]:
+        """Return (last_seq, items) where items are events with seq > since.
+        Items are shaped for polling UI: {type, payload, seq}.
+        """
+        with self._lock:
+            last_seq = self._seq
+            items: List[Dict[str, Any]] = []
+            for e in self._buffer:
+                if e.seq > since:
+                    items.append({"type": e.type, "payload": e.value, "seq": e.seq})
+            return last_seq, items
 
     def set_preview_png(self, png_b64: str) -> None:
         self._latest_preview_png_b64 = png_b64
@@ -125,6 +144,8 @@ class UIHandler(BaseHTTPRequestHandler):
             return self._serve_index()
         if path == "/events":
             return self._serve_events()
+        if path == "/events.json":
+            return self._serve_events_json(parsed.query)
         if path == "/preview.png":
             return self._serve_preview_png()
         if path == "/health":
@@ -223,6 +244,33 @@ setInterval(()=>{ const img=document.getElementById('preview'); img.src='/previe
         self.end_headers()
         # register client and replay buffer
         self.event_server._register_client(self.wfile)
+
+    def _serve_events_json(self, query_str: str) -> None:
+        """Polling fallback endpoint: returns JSON events since a sequence ID.
+        Response shape: { since: <last_seq>, items: [ {type, payload, seq}, ... ] }
+        """
+        try:
+            qs = parse_qs(query_str or "")
+            raw = (qs.get("since", ["0"]) or ["0"])[0]
+            try:
+                since = int(raw)
+            except Exception:
+                since = 0
+            last_seq, items = self.event_server.get_events_since(max(0, since))
+            body = {"since": last_seq, "items": items}
+            data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+            self._set_headers(200, "application/json; charset=utf-8")
+            try:
+                self.wfile.write(data)
+            except Exception:
+                pass
+        except Exception as e:
+            # Ensure robust error handling for easier debugging
+            self._set_headers(500, "application/json; charset=utf-8")
+            try:
+                self.wfile.write(json.dumps({"error": f"events.json failed: {e}"}).encode("utf-8"))
+            except Exception:
+                pass
 
     def _serve_preview_png(self) -> None:
         png_b64 = self.event_server.get_preview_png()

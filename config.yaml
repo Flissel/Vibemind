@@ -2,7 +2,7 @@
 
 # LLM Settings
 llm_provider: "openai"
-model_name: "gpt-4.1"
+model_name: "gpt-4o"
 temperature: 0.7
 max_tokens: 256
 
@@ -21,5 +21,5 @@ sandbox_enabled: true
 max_execution_time: 30
 
 # UI Settings
-enable_gui: false
+enable_gui: true
 enable_voice: false

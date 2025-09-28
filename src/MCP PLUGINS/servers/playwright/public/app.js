@@ -6,6 +6,18 @@
   var $events = byId('eventlog');
   var $img = byId('browserimg');
   var $badge = byId('connstatus');
+  
+  // Notify parent window once when first activity is detected (for auto-switching tabs)
+  var _postedPlaywrightActivity = false;
+  function _notifyParentActivity(){
+    if (_postedPlaywrightActivity) return;
+    try {
+      if (window && window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'mcp_playwright_activity' }, '*');
+        _postedPlaywrightActivity = true;
+      }
+    } catch(_e){}
+  }
 
   function setBadge(state, text){
     if(!$badge) return;
@@ -61,13 +73,14 @@
       if(kind === 'chunk') return append($stream, payload, '');
       if(kind === 'status') return append($events, payload, 'ok');
       if(kind === 'error') return append($events, payload, 'err');
-      if(kind === 'tool') return append($events, payload, 'tool');
+      if(kind === 'tool') { var r = append($events, payload, 'tool'); _notifyParentActivity(); return r; }
       if(kind === 'browser' && payload){
         // Support data_uri, url, or raw base64 data
         if(payload.data_uri){ if($img) $img.src = payload.data_uri; }
         else if(payload.url){ if($img) $img.src = payload.url; }
         else if(payload.data){ if($img) $img.src = 'data:image/png;base64,' + String(payload.data); }
         if(payload.text) append($events, payload.text, 'tool');
+        _notifyParentActivity();
         return;
       }
       if(kind === 'content') return append($stream, payload, '');

@@ -4,8 +4,10 @@
       "name": "playwright",
       "active": true,
       "type": "stdio",
-      "command": "npx",
+      "command": "C:\\Windows\\System32\\cmd.exe",
       "args": [
+        "/c",
+        "npx",
         "--yes",
         "@playwright/mcp@latest",
         "--browser=msedge",

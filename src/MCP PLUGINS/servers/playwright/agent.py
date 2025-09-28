@@ -5,7 +5,7 @@ import threading
 import time
 import queue
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 import base64
 import re
 import urllib.parse
@@ -61,10 +61,10 @@ MODEL_CONFIG_PATH = os.path.join(MODELS_DIR, "model.json")
 
 # ========== Defaults (written if missing) ==========
 DEFAULT_SYSTEM_PROMPT = (
-    "You are an AutoGen Assistant wired to an MCP server.\n"
+    "You are an AutoGen Assistant wired to an MCP server with browser automation tools (e.g., browser_*).\n"
     "Follow the TOOL USAGE contract strictly and call only the exposed tool names.\n"
     "Dynamic event hint: {MCP_EVENT}.\n"
-    "Keep tool calls minimal; if blocked by bot checks or CAPTCHAs, switch sources.\n"
+    "For any browser-related task: navigate safely, wait for relevant selectors, avoid unnecessary actions, and minimize data extraction.\n"
 )
 
 DEFAULT_TASK_PROMPT = (
@@ -635,7 +635,7 @@ def _broadcast(server, kind: str, text: str):
     else:
         print(text)
 
-async def run():
+async def run(task_override: Optional[str] = None, system_override: Optional[str] = None):
     # Start UI early using new EventServer/start_ui_server so the user sees status even if model init fails
     event_server = EventServer()
     httpd, t = start_ui_server(event_server, DEFAULT_UI_HOST, DEFAULT_UI_PORT)
@@ -709,7 +709,7 @@ async def run():
         tool_names = [getattr(t, "name", "") for t in tools]
         _broadcast(event_server, "status", f"Playwright tools: {tool_names}")
 
-    # Heuristically pick a screenshot tool and tabs tool, if available
+        # Heuristically pick a screenshot tool and tabs tool, if available
         screenshot_tool = next((n for n in tool_names if isinstance(n, str) and 'screenshot' in n.lower()), None)
         tabs_tool_name = next((n for n in tool_names if isinstance(n, str) and 'tabs' in n.lower()), 'browser_tabs')
 
@@ -717,20 +717,38 @@ async def run():
         event_server.screenshot_tool_name = screenshot_tool  # type: ignore
         event_server.tabs_tool_name = tabs_tool_name  # type: ignore
 
-    # Compose dynamic system message
+    # Compose dynamic system message (supports override via arg/env)
+    # Clear comments for easy debug and maintenance
     try:
-        with open(SYSTEM_PROMPT_PATH, "r", encoding="utf-8") as f:
-            sys_tmpl = f.read()
+        # Highest priority: explicit override passed into run()
+        sys_override_val = system_override
+        # Next: environment-based overrides
+        if not sys_override_val:
+            sys_override_val = os.getenv("MCP_SYSTEM_PROMPT") or os.getenv("SYSTEM_PROMPT")
+        if sys_override_val and isinstance(sys_override_val, str) and sys_override_val.strip():
+            sys_tmpl = sys_override_val
+        else:
+            with open(SYSTEM_PROMPT_PATH, "r", encoding="utf-8") as f:
+                sys_tmpl = f.read()
     except Exception:
         sys_tmpl = DEFAULT_SYSTEM_PROMPT
     sys_msg = sys_tmpl.replace("{MCP_EVENT}", "playwright")
 
-    # Compose task prompt
+    # Compose task prompt (supports dynamic assignment via arg/env)
     try:
         with open(TASK_PROMPT_PATH, "r", encoding="utf-8") as f:
             task_msg = f.read()
     except Exception:
         task_msg = DEFAULT_TASK_PROMPT
+
+    # Determine goal override from args/env and build final task
+    goal_override = task_override or os.getenv("MCP_TASK") or os.getenv("TASK")
+    if isinstance(goal_override, str) and goal_override.strip():
+        # Combine generic task instructions with the dynamic user goal
+        task = task_msg + "\nGoal: " + goal_override.strip()
+    else:
+        # No dynamic goal provided; use base task prompt only
+        task = task_msg
 
     # Run agent with workbench
     async with McpWorkbench(params) as mcp:
@@ -741,14 +759,6 @@ async def run():
             reflect_on_tool_use=True,
             model_client_stream=True,
             system_message=sys_msg,
-        )
-
-        # Example task updated: navigate to AutoGen docs and list conversation patterns
-        task = (
-            task_msg
-            + "\nGoal: Navigate to the official AutoGen documentation and find the 'Conversation Patterns' page."
-            + " Extract the list of all conversation patterns (names only), and output them here in chat as a bulleted list."
-            + " If site search returns 404 or fails, directly open https://microsoft.github.io/autogen/0.2/docs/tutorial/conversation-patterns/ or https://microsoft.github.io/autogen/docs/tutorial/conversation-patterns/ and extract the patterns."
         )
 
         _broadcast(event_server, "status", "Agent started. Streaming...")
@@ -794,9 +804,38 @@ async def run():
             except Exception as e:
                 _broadcast(event_server, "error", f"Source capture failed: {e}")
 
+        async def ensure_initial_preview():
+            """Perform a safe initial navigation and screenshot to populate /preview.png.
+            This helps GUI proxy consumers avoid 404 'No preview yet' on first load.
+            """
+            try:
+                # If no screenshot tool is available, nothing to do.
+                if not screenshot_tool:
+                    return
+                # Navigate to a safe, simple page to ensure the browser opens.
+                try:
+                    await mcp.call_tool('browser_navigate', { 'url': 'https://example.com' })
+                    event_server.broadcast('log', 'Initial navigate: example.com')
+                except Exception as e:
+                    _broadcast(event_server, 'error', f'Initial navigate failed: {e}')
+                # Give the page a moment to settle before capturing.
+                try:
+                    await asyncio.sleep(1.5)
+                except Exception:
+                    pass
+                # Attempt an initial screenshot; PreviewManager will persist PNG bytes.
+                try:
+                    await preview_mgr.maybe_capture_screenshot()
+                except Exception as e:
+                    _broadcast(event_server, 'error', f'Initial screenshot failed: {e}')
+            except Exception:
+                # Never raise from bootstrap path.
+                pass
+
         # Try initial preview
         try:
             asyncio.create_task(maybe_capture_screenshot())
+            asyncio.create_task(ensure_initial_preview())
         except Exception:
             pass
 
@@ -1039,5 +1078,21 @@ async def run():
             except Exception:
                 pass
 
+        # Keep the UI server running after the agent finishes so that the GUI proxy
+        # can continue to access /preview.png and other endpoints.
+        # This helps avoid transient 502s from the GUI proxy when the upstream server
+        # exits immediately after completing the task. Clear, explicit keepalive for debug.
+        try:
+            while True:
+                await asyncio.sleep(3600)
+        except asyncio.CancelledError:
+            pass
+
 if __name__ == "__main__":
-    asyncio.run(run())
+    # Support dynamic overrides from CLI for easy integration/testing
+    import argparse
+    parser = argparse.ArgumentParser(description="Playwright MCP Agent runner")
+    parser.add_argument("--task", dest="task", help="Goal for the browser agent (e.g., 'Open example.com and read the title')")
+    parser.add_argument("--system", dest="system", help="Override system prompt text (optional)")
+    args = parser.parse_args()
+    asyncio.run(run(task_override=args.task, system_override=args.system))

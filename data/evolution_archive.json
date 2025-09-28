@@ -61,6 +61,116 @@
       "learning_rate": 0.01,
       "pattern_threshold": 0.7
     },
+    "fitness": 117.24900484385971,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 117.24900484385971,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 117.24900484385971,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 117.24900484385971,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 117.24900484385971,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 115.42270155342547,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 115.42270155342547,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 115.42270155342547,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 115.42270155342547,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
+    "fitness": 115.42270155342547,
+    "generation": 0,
+    "mutations": []
+  },
+  {
+    "genome": {
+      "temperature": 0.7,
+      "max_tokens": 2048,
+      "learning_rate": 0.01,
+      "pattern_threshold": 0.7
+    },
     "fitness": 113.00851152812285,
     "generation": 0,
     "mutations": []
@@ -666,116 +776,6 @@
       "verification_strategy": "prove_access"
     },
     "fitness": 40.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
-    "generation": 0,
-    "mutations": []
-  },
-  {
-    "genome": {
-      "general_approach": "exploratory",
-      "learning_rate": 0.1,
-      "creativity": 0.5,
-      "persistence": 0.8
-    },
-    "fitness": 0.0,
     "generation": 0,
     "mutations": []
   }
