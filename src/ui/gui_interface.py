@@ -1165,18 +1165,6 @@ class GUIInterface:
   </nav>
   <div id="content-chat"></div>
   <div id="content-playwright" style="display:none;">
-    <!-- Live Preview component for real-time debugging -->
-    <section id="live-preview" style="margin: 10px 0;">
-      <div style="display:flex; gap:12px; align-items:flex-start;">
-        <div style="flex:1;">
-          <img id="live-preview-img" src="" alt="Live Preview" style="width:100%; max-height:30vh; object-fit:contain; border:1px solid #ddd; border-radius:4px; background:#fafafa;" />
-        </div>
-        <div style="width:280px;">
-          <div id="playwright-status" style="font-family: monospace; font-size: 12px; white-space: pre-line;">Status: initializing…</div>
-          <button id="live-preview-toggle">Pause Preview</button>
-        </div>
-      </div>
-    </section>
     <iframe id="playwright-frame" src="/mcp/playwright" style="width:100%; height:70vh; border:none;"></iframe>
   </div>
 </main>
@@ -1187,14 +1175,13 @@ class GUIInterface:
     document.getElementById('content-playwright').style.display = 'none';
     document.getElementById('tab-chat').classList.add('active');
     document.getElementById('tab-playwright').classList.remove('active');
-    try { stopLivePreviewPolling(); } catch(e){}
+    // No live preview polling anymore; simply switch tabs
   };
   document.getElementById('tab-playwright').onclick = () => {
     document.getElementById('content-chat').style.display = 'none';
     document.getElementById('content-playwright').style.display = '';
     document.getElementById('tab-chat').classList.remove('active');
     document.getElementById('tab-playwright').classList.add('active');
-    try { startLivePreviewPolling(); } catch(e){}
   };
 
   // Helper to programmatically switch to the Playwright tab
@@ -1416,65 +1403,6 @@ class GUIInterface:
     } catch(_e) {}
   });
 
-  // --- NEW: Live Preview polling and health status (clear comments for easy debug) ---
-  const previewImg = document.getElementById('live-preview-img');
-  const statusEl = document.getElementById('playwright-status');
-  const toggleBtn = document.getElementById('live-preview-toggle');
-  let previewTimer = null;
-  let healthTimer = null;
-  let previewPaused = false;
-
-  function setStatus(text) {
-    try { statusEl.textContent = text; } catch(_e) {}
-  }
-
-  function pollPreviewOnce() {
-    if (previewPaused) return;
-    try {
-      // Use cache-busting timestamp to force refresh
-      previewImg.src = '/mcp/playwright/preview.png?ts=' + Date.now();
-    } catch(_e) {}
-  }
-
-  async function checkHealthOnce() {
-    try {
-      const res = await fetch('/mcp/playwright/health', { cache: 'no-store' });
-      const ok = res.ok;
-      let j = null;
-      try { j = await res.json(); } catch(_e) {}
-      if (ok && j && j.available) {
-        const ms = (j.latency_ms != null) ? (j.latency_ms + 'ms') : 'n/a';
-        setStatus(`Status: available\nLatency: ${ms}\nSince: ${j.since ?? 'n/a'}`);
-      } else {
-        const code = res.status;
-        const err = (j && (j.error || j.detail)) ? JSON.stringify(j.error || j.detail) : '';
-        setStatus(`Status: unavailable (HTTP ${code})\n${err ? ('Error: ' + err) : ''}`);
-      }
-    } catch(e) {
-      setStatus(`Status: unavailable\nError: ${e}`);
-    }
-  }
-
-  function startLivePreviewPolling() {
-    try { stopLivePreviewPolling(); } catch(_e) {}
-    previewPaused = false;
-    if (toggleBtn) { toggleBtn.textContent = 'Pause Preview'; }
-    pollPreviewOnce();
-    checkHealthOnce();
-    previewTimer = setInterval(pollPreviewOnce, 1000);      // 1s image refresh for responsiveness
-    healthTimer = setInterval(checkHealthOnce, 2000);       // 2s health check for status
-  }
-
-  function stopLivePreviewPolling() {
-    previewPaused = true;
-    if (toggleBtn) { toggleBtn.textContent = 'Resume Preview'; }
-    try { if (previewTimer) { clearInterval(previewTimer); previewTimer = null; } } catch(_e) {}
-    try { if (healthTimer) { clearInterval(healthTimer); healthTimer = null; } } catch(_e) {}
-  }
-
-  if (toggleBtn) toggleBtn.addEventListener('click', () => {
-    if (previewPaused) startLivePreviewPolling(); else stopLivePreviewPolling();
-  });
 
 </script>
 </body>

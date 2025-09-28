@@ -3557,3 +3557,44 @@ SyntaxError: expected 'except' or 'finally' block
 2025-09-27 23:53:38,575 - src.learning.project_discovery - INFO - Discovered 0 new projects
 2025-09-27 23:53:38,576 - src.core.assistant - INFO - Project discovery complete: found 0 projects
 2025-09-27 23:53:38,576 - src.core.assistant - INFO - No projects discovered; skipping memory store
+2025-09-28 07:39:09,426 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3. check_pairwise_arrays expected <= 2.
+2025-09-28 07:39:09,432 - src.core.llm_interface - INFO - Generating with prompt length: 391
+2025-09-28 07:39:12,232 - src.memory.memory_manager - WARNING - Query embedding failed; falling back to type/time-based retrieval: Found array with dim 3. check_pairwise_arrays expected <= 2.
+2025-09-28 07:39:12,242 - src.core.llm_interface - INFO - Generating with prompt length: 391
+2025-09-28 07:46:54,470 - src.core.assistant - INFO - Initializing Sakana Desktop Assistant...
+2025-09-28 07:46:54,471 - src.core.llm_interface - INFO - LLM provider selected: local, model=llama-3.2-3b, path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf
+2025-09-28 07:46:55,903 - src.core.llm_interface - INFO - Local LLM configured: model_path=C:\Users\User\Desktop\sakana-desktop-assistant\models\llama-3.2-3b.gguf, temperature=0.7, max_tokens=2048, context_size=4096, threads=8, gpu_layers=0
+2025-09-28 07:46:55,908 - src.learning.evolutionary_learner - INFO - Loaded 50 individuals from archive
+2025-09-28 07:46:55,908 - src.learning.knowledge_accumulator - INFO - Loaded 7 permanent commands
+2025-09-28 07:46:55,909 - src.learning.knowledge_accumulator - INFO - Loaded 1 known successful patterns
+2025-09-28 07:46:55,911 - src.learning.file_discovery - INFO - Loaded 7 cached commands
+2025-09-28 07:46:55,911 - src.learning.knowledge_accumulator - INFO - Loaded 15 permanent commands
+2025-09-28 07:46:55,913 - src.execution.sandbox_executor - INFO - Sandbox initialized at C:\Users\User\AppData\Local\Temp\sakana_sandbox
+2025-09-28 07:46:55,925 - src.plugins.plugin_manager - INFO - Loaded plugin: FileManager v1.0.0
+2025-09-28 07:46:55,926 - src.plugins.plugin_manager - INFO - Loaded plugin: WebSearch v1.0.0
+2025-09-28 07:46:55,926 - src.plugins.plugin_manager - INFO - Loaded plugin: TaskManager v1.0.0
+2025-09-28 07:46:55,926 - src.plugins.plugin_manager - INFO - Loaded plugin: SystemInfo v1.0.0
+2025-09-28 07:46:55,926 - src.plugins.plugin_manager - INFO - Loaded plugin: CustomTools v1.0.0
+2025-09-28 07:46:55,928 - src.plugins.plugin_manager - INFO - Loaded plugin: MCPTools v0.1.0
+2025-09-28 07:46:55,929 - src.learning.file_discovery - INFO - Using cached command discoveries
+2025-09-28 07:46:55,929 - src.learning.file_discovery - INFO - Exploring environment to learn file structure...
+2025-09-28 07:46:55,939 - src.learning.file_discovery - INFO - Discovered valid path: /
+2025-09-28 07:46:55,939 - src.learning.file_discovery - INFO - Discovered valid path: C:\
+2025-09-28 07:46:55,939 - src.learning.file_discovery - INFO - Discovered valid path: C:\Users
+2025-09-28 07:46:55,940 - src.learning.file_discovery - INFO - Discovered valid path: ~
+2025-09-28 07:46:55,940 - src.learning.file_discovery - INFO - Discovered valid path: .
+2025-09-28 07:46:55,940 - src.learning.file_discovery - INFO - Discovered valid path: ..
+2025-09-28 07:46:55,940 - src.core.assistant - INFO - File discovery initialized: {'discovered_commands': ['find.exe', 'where', 'more', 'where.exe', 'find', 'gc', 'sc'], 'successful_patterns': 0, 'known_paths': ['/', 'C:\\', 'C:\\Users', '~', '.', '..'], 'total_explorations': 0, 'best_commands': [], 'knowledge_stats': {'total_permanent_commands': 7, 'total_successful_patterns': 1, 'total_discovery_sessions': 9, 'average_new_discoveries_per_session': 0.7777777777777778, 'knowledge_growth_trend': 'saturating'}}
+2025-09-28 07:46:55,940 - src.core.assistant - INFO - Assistant initialized successfully
+2025-09-28 07:46:55,981 - src.execution.scheduler - INFO - MCP Scheduler started
+2025-09-28 07:46:55,981 - src.ui.gui_interface - INFO - Scheduler started for MCP jobs
+2025-09-28 07:46:55,983 - src.ui.gui_interface - INFO - Auto-reload watcher started for: C:\Users\User\Desktop\sakana-desktop-assistant\src, C:\Users\User\Desktop\sakana-desktop-assistant\plugins, C:\Users\User\Desktop\sakana-desktop-assistant\src\ui
+2025-09-28 07:46:55,983 - src.ui.gui_interface - INFO - GUI server started at http://127.0.0.1:8765/
+2025-09-28 07:46:55,984 - __main__ - INFO - GUI interface initialized; open http://127.0.0.1:8765/
+2025-09-28 07:46:55,984 - __main__ - INFO - Assistant ready!
+2025-09-28 07:47:05,945 - src.core.assistant - INFO - Starting project discovery...
+2025-09-28 07:47:05,945 - src.learning.project_discovery - INFO - Starting project discovery in: C:\Users\User
+2025-09-28 07:47:05,945 - src.learning.project_discovery - INFO - Already know 15 projects from previous sessions
+2025-09-28 07:47:06,053 - src.learning.project_discovery - INFO - Discovered 0 new projects
+2025-09-28 07:47:06,054 - src.core.assistant - INFO - Project discovery complete: found 0 projects
+2025-09-28 07:47:06,054 - src.core.assistant - INFO - No projects discovered; skipping memory store
