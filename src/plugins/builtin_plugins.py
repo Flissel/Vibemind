@@ -606,7 +606,7 @@ class MCPToolsPlugin(Plugin):
                 base_dir = Path(__file__).parent.parent
         except Exception:
             base_dir = Path(__file__).parent.parent
-        servers_root = base_dir / 'src' / 'MCP PLUGINS' / 'servers'
+        servers_root = base_dir / 'src' / 'mcp plugins' / 'servers'
 
         # Parse servers.json if available (cache only; not used for filtering yet)
         servers_json = servers_root / 'servers.json'

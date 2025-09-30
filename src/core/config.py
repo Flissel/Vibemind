@@ -51,6 +51,14 @@ class Config:
     
     # UI Settings
     enable_gui: bool = True
+    # --- NEW: React UI migration flags ---
+    # Clear comments for easy debug; when enabled, the HTTP server will serve the React build from react_ui_dist_dir.
+    react_ui_enabled: bool = False
+    # Default dist directory where `npm run build` outputs the SPA assets
+    react_ui_dist_dir: Path = Path(__file__).parent.parent.parent / "src" / "ui" / "webapp" / "dist"
+
+    # Duplicate from_yaml/to_yaml removed; see single canonical implementations above.
+    pass
     enable_voice: bool = False
     theme: str = "dark"
 
@@ -109,9 +117,18 @@ class Config:
     
     @classmethod
     def from_yaml(cls, path: Path) -> "Config":
-        """Load configuration from YAML file"""
-        with open(path, 'r') as f:
+        """Load configuration from YAML file
+        Note: Coerce known path-like fields to Path for consistency.
+        """
+        with open(path, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
+        
+        # Convert path-like fields to Path objects
+        path_fields = ['models_dir', 'plugins_dir', 'logs_dir', 'sessions_dir', 'tmp_dir', 'memory_db_path', 'react_ui_dist_dir']
+        for field in path_fields:
+            if field in data and data[field] is not None:
+                data[field] = Path(data[field])
+        
         return cls(**data)
     
     def to_yaml(self, path: Path):

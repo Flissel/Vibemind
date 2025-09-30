@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import threading
 import os
 import time
@@ -27,11 +28,67 @@ from typing import Any, Dict, Tuple
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from pathlib import Path
+import pathlib
 from mimetypes import guess_type
 import urllib.request
+import urllib.parse
 from urllib.parse import urlparse, parse_qs
+import subprocess
+import sys
 
 logger = logging.getLogger(__name__)
+
+# Data directory configuration - will be set by main.py
+DATA_DIR = None
+LOGS_DIR = None
+SESSIONS_DIR = None
+TMP_DIR = None
+
+
+def set_data_directories(data_dir, logs_dir, sessions_dir, tmp_dir):
+    """Set the data directory paths for use by GUI components."""
+    global DATA_DIR, LOGS_DIR, SESSIONS_DIR, TMP_DIR
+    DATA_DIR = data_dir
+    LOGS_DIR = logs_dir
+    SESSIONS_DIR = sessions_dir
+    TMP_DIR = tmp_dir
+
+
+def setup_session_logging(session_id: str) -> logging.Logger:
+    """Setup per-session logging under data/logs/sessions/"""
+    if not LOGS_DIR:
+        # Fallback if not configured
+        return logger
+    
+    session_logs_dir = LOGS_DIR / 'sessions'
+    session_logs_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create session-specific logger
+    session_logger = logging.getLogger(f'gui.session.{session_id}')
+    
+    # Avoid duplicate handlers
+    if session_logger.handlers:
+        return session_logger
+    
+    # Create rotating file handler for this session
+    session_log_file = session_logs_dir / f'{session_id}.log'
+    file_handler = RotatingFileHandler(
+        session_log_file,
+        maxBytes=10 * 1024 * 1024,  # 10MB per session log
+        backupCount=5,
+        encoding='utf-8'
+    )
+    
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    file_handler.setFormatter(formatter)
+    
+    session_logger.addHandler(file_handler)
+    session_logger.setLevel(logging.INFO)
+    
+    return session_logger
 
 
 async def _gather_learning_insights(assistant) -> Dict[str, Any]:
@@ -143,10 +200,13 @@ async def _gather_learning_insights(assistant) -> Dict[str, Any]:
 class _AssistantHTTPServer(ThreadingHTTPServer):
     """HTTP server that holds references to assistant and its event loop."""
 
-    def __init__(self, server_address: Tuple[str, int], RequestHandlerClass, assistant, loop: asyncio.AbstractEventLoop):
+    def __init__(self, server_address: Tuple[str, int], RequestHandlerClass, assistant, loop: asyncio.AbstractEventLoop, react_ui_enabled: bool = False, react_ui_dist_dir: Path | None = None):
         super().__init__(server_address, RequestHandlerClass)
         self.assistant = assistant
         self.loop = loop
+        # React UI configuration passed from GUIInterface
+        self._react_ui_enabled = react_ui_enabled
+        self._react_ui_dist_dir = react_ui_dist_dir
         # Queues for Server-Sent Events clients to receive reload notifications
         # Using simple Queue per client to avoid locking complexity across threads
         #TODO : FUNGUS SIMULATIONS QUEUE use the formular to produce queue events based on knowlegde with is in the fungus search. (RAG-sytem)
@@ -157,6 +217,22 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
         self._event_seq: int = 0
         self._event_buffer: list[str] = []  # store JSON strings to avoid re-encoding later
         self._event_buffer_max: int = 1000  # cap to prevent unbounded growth
+        
+        # --- NEW: Multi-session Playwright management ---
+        # Track multiple independent Playwright sessions for easy debug
+        self._playwright_sessions: Dict[str, Dict[str, Any]] = {}
+        self._playwright_sessions_lock = threading.Lock()
+        
+        # --- LEGACY: Single session support for backward compatibility ---
+        # Attach this GUI to a running Playwright EventServer for a specific session.
+        # Clear comments for easy debug; enables dynamic session switching.
+        self._playwright_event_host: str | None = None
+        self._playwright_event_port: int | None = None
+        self._playwright_session_id: str | None = None
+        self._playwright_agent_proc: subprocess.Popen | None = None  # type: ignore[assignment]
+        self._playwright_connected: bool = False
+
+
 
     def broadcast_reload(self):
         """Notify all connected SSE clients to reload the page."""
@@ -231,6 +307,515 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
         except Exception:
             return [], 0
 
+    # --- NEW: Playwright session management helpers ---
+    def set_playwright_session_upstream(self, session_id: str, host: str, port: int) -> Dict[str, Any]:
+        """Attach this GUI to a specific Playwright EventServer instance.
+        Clear comments for easy debug; updates upstream host/port/session and broadcasts attach event.
+        """
+        try:
+            self._playwright_session_id = str(session_id)
+            self._playwright_event_host = str(host)
+            self._playwright_event_port = int(port)
+            self._playwright_connected = True
+            
+            # Setup per-session logging
+            session_logger = setup_session_logging(session_id)
+            session_logger.info(f"Playwright session attached: {session_id} at {host}:{port}")
+            
+            self.broadcast_event('playwright.session.attached', {
+                'session_id': self._playwright_session_id,
+                'host': self._playwright_event_host,
+                'port': self._playwright_event_port,
+            })
+            return {
+                'success': True,
+                'connected': self._playwright_connected,
+                'session_id': self._playwright_session_id,
+                'host': self._playwright_event_host,
+                'port': self._playwright_event_port,
+            }
+        except Exception as e:
+            logger.error(f"Failed to attach Playwright session {session_id}: {e}")
+            self._playwright_connected = False
+            return {'success': False, 'error': f'Attach failed: {e}'}
+
+    def get_playwright_session_status(self) -> Dict[str, Any]:
+        """Return session connection and agent process status for observability."""
+        try:
+            # Setup session logging if we have a session ID
+            session_logger = logger
+            if hasattr(self, '_playwright_session_id') and self._playwright_session_id:
+                session_logger = setup_session_logging(self._playwright_session_id)
+            
+            proc = getattr(self, '_playwright_agent_proc', None)
+            running = bool(proc and (proc.poll() is None))
+            
+            status = {
+                'connected': bool(self._playwright_connected),
+                'session_id': self._playwright_session_id,
+                'host': self._playwright_event_host,
+                'port': self._playwright_event_port,
+                'agent_pid': (proc.pid if proc else None),
+                'agent_running': running,
+            }
+            
+            session_logger.debug(f"Playwright session status check: {status}")
+            return status
+        except Exception as e:
+            logger.error(f"Error getting Playwright session status: {e}")
+            return {'connected': False, 'error': str(e)}
+
+    def stop_playwright_session_agent(self) -> Dict[str, Any]:
+        """Stop the spawned Playwright agent process and detach upstream."""
+        try:
+            # Setup session logging if we have a session ID
+            session_logger = logger
+            if hasattr(self, '_playwright_session_id') and self._playwright_session_id:
+                session_logger = setup_session_logging(self._playwright_session_id)
+            
+            proc = getattr(self, '_playwright_agent_proc', None)
+            if proc and (proc.poll() is None):
+                session_logger.info(f"Stopping Playwright agent process (PID: {proc.pid})")
+                try:
+                    proc.terminate()
+                except Exception:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+                try:
+                    proc.wait(timeout=5)
+                except Exception:
+                    pass
+            # Clear state
+            self._playwright_agent_proc = None
+            was_session = self._playwright_session_id
+            self._playwright_connected = False
+            
+            session_logger.info(f"Playwright session stopped: {was_session}")
+            self.broadcast_event('playwright.session.detached', {
+                'session_id': was_session,
+            })
+            # Do not clear host/port to allow UI to see last-known upstream
+            return {
+                'success': True,
+                'stopped': True,
+                'session_id': was_session,
+            }
+        except Exception as e:
+            logger.error(f"Error stopping Playwright session: {e}")
+            return {'success': False, 'error': f'Stop failed: {e}'}
+
+    def spawn_playwright_session_agent(self, session_id: str | None = None, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True) -> Dict[str, Any]:
+        """Spawn Playwright agent subprocess and auto-attach on SESSION_ANNOUNCE.
+        - Reads stdout lines and broadcasts playwright.session.log events
+        - Parses SESSION_ANNOUNCE JSON to set upstream host/port/session
+        """
+        try:
+            # Resolve agent script path: src/MCP PLUGINS/servers/playwright/agent.py
+            base = Path(__file__).resolve().parents[1]
+            agent_path = base / 'MCP PLUGINS' / 'servers' / 'playwright' / 'agent.py'
+            if not agent_path.is_file():
+                return {'success': False, 'error': f'Agent not found: {agent_path}'}
+            # Prepare args
+            sid = session_id or str(int(time.time() * 1000))
+            
+            # Setup session logging
+            session_logger = setup_session_logging(sid)
+            session_logger.info(f"Spawning Playwright agent with session ID: {sid}")
+            
+            args = [sys.executable, '-u', str(agent_path), '--session-id', sid]
+            if keepalive:
+                args.append('--keepalive')
+            if ui_host:
+                args.extend(['--ui-host', str(ui_host)])
+            if ui_port is not None:
+                args.extend(['--ui-port', str(int(ui_port))])
+            
+            session_logger.info(f"Launching Playwright agent: {' '.join(args)}")
+            
+            # Launch subprocess
+            proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            self._playwright_agent_proc = proc
+            
+            session_logger.info(f"Playwright agent started with PID: {proc.pid}")
+            self.broadcast_event('playwright.session.started', {'session_id': sid, 'pid': proc.pid})
+
+            def _reader():
+                try:
+                    for line in iter(proc.stdout.readline, ''):  # type: ignore[union-attr]
+                        ln = line.strip()
+                        if not ln:
+                            continue
+                        
+                        # Log agent output to session log
+                        session_logger.info(f"Agent output: {ln}")
+                        
+                        # Broadcast logs for easy debug
+                        try:
+                            self.broadcast_event('playwright.session.log', {'session_id': sid, 'line': ln})
+                        except Exception:
+                            pass
+                        # Detect SESSION_ANNOUNCE prefix and parse JSON
+                        try:
+                            if ln.startswith('SESSION_ANNOUNCE '):
+                                session_logger.info(f"Received SESSION_ANNOUNCE: {ln}")
+                                try:
+                                    payload = json.loads(ln[len('SESSION_ANNOUNCE '):])
+                                except Exception:
+                                    payload = {}
+                                host = str(payload.get('host') or os.getenv('MCP_UI_HOST', '127.0.0.1'))
+                                try:
+                                    port = int(payload.get('port') or int(os.getenv('MCP_UI_PORT', '8787')))
+                                except Exception:
+                                    port = 8787
+                                sid2 = str(payload.get('session_id') or sid)
+                                session_logger.info(f"Auto-attaching to upstream: {host}:{port} (session: {sid2})")
+                                try:
+                                    # Update multi-session dictionary with host/port for proper session management
+                                    result = self.set_playwright_session_upstream_by_id(sid2, host, port)
+                                    session_logger.info(f"Upstream setting result: {result}")
+                                except Exception as e:
+                                    session_logger.error(f"Failed to set upstream for session {sid2}: {e}")
+                                    pass
+                        except Exception:
+                            pass
+                except Exception as e:
+                    session_logger.error(f"Error reading agent output: {e}")
+            # Start reader thread
+            t = threading.Thread(target=_reader, name=f'PlaywrightAgentReader-{sid}', daemon=True)
+            t.start()
+            return {'success': True, 'session_id': sid, 'pid': proc.pid}
+        except Exception as e:
+            # Try to log to session if we have a session ID
+            if 'sid' in locals():
+                session_logger = setup_session_logging(sid)
+                session_logger.error(f"Failed to spawn Playwright agent: {e}")
+            else:
+                logger.error(f"Failed to spawn Playwright agent: {e}")
+            self.broadcast_event('playwright.session.failed', {'error': str(e), 'session_id': session_id})
+            return {'success': False, 'error': f'Spawn failed: {e}'}
+
+    # Backward-compat alias used by older routes
+    def start_playwright_session_agent(self):
+        return self.spawn_playwright_session_agent()
+
+    # --- NEW: Multi-session Playwright management methods ---
+    def create_playwright_session(self, name: str, model: str = "gpt-4", tools: list = None) -> Dict[str, Any]:
+        """Create a new Playwright session entry for tracking multiple sessions."""
+        try:
+            if tools is None:
+                tools = ["playwright"]
+            
+            # Generate unique session ID
+            import uuid
+            session_id = str(uuid.uuid4())
+            
+            with self._playwright_sessions_lock:
+                # Initialize session state for easy debug
+                self._playwright_sessions[session_id] = {
+                    'session_id': session_id,
+                    'name': name,
+                    'model': model,
+                    'tools': tools,
+                    'status': 'stopped',  # stopped, starting, running
+                    'connected': False,
+                    'host': None,
+                    'port': None,
+                    'agent_proc': None,
+                    'agent_pid': None,
+                    'agent_running': False,
+                    'created_at': time.time(),
+                }
+                
+                session_logger = setup_session_logging(session_id)
+                session_logger.info(f"Created new Playwright session: {session_id} (name: {name}, model: {model}, tools: {tools})")
+                
+                self.broadcast_event('playwright.session.created', {
+                    'session_id': session_id,
+                    'name': name,
+                    'model': model,
+                    'tools': tools,
+                })
+                
+                return {
+                    'success': True, 
+                    'session': {
+                        'session_id': session_id,
+                        'name': name,
+                        'model': model,
+                        'tools': tools,
+                        'status': 'stopped'
+                    }
+                }
+        except Exception as e:
+            logger.error(f"Failed to create Playwright session: {e}")
+            return {'success': False, 'error': f'Create failed: {e}'}
+
+    def get_playwright_session_status_by_id(self, session_id: str) -> Dict[str, Any]:
+        """Get status for a specific Playwright session."""
+        try:
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                session = self._playwright_sessions[session_id]
+                proc = session.get('agent_proc')
+                running = bool(proc and (proc.poll() is None))
+                
+                # Update running status for easy debug
+                session['agent_running'] = running
+                if not running and proc:
+                    session['agent_proc'] = None
+                    session['agent_pid'] = None
+                
+                status = {
+                    'session_id': session_id,
+                    'connected': session['connected'],
+                    'host': session['host'],
+                    'port': session['port'],
+                    'agent_pid': session['agent_pid'],
+                    'agent_running': running,
+                }
+                
+                return {'success': True, **status}
+        except Exception as e:
+            logger.error(f"Error getting status for session {session_id}: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def spawn_playwright_session_by_id(self, session_id: str, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True) -> Dict[str, Any]:
+        """Spawn Playwright agent for a specific session."""
+        try:
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                session = self._playwright_sessions[session_id]
+                
+                # Check if already running for easy debug
+                proc = session.get('agent_proc')
+                if proc and (proc.poll() is None):
+                    return {'success': False, 'error': f'Session {session_id} already running'}
+            
+            # Use existing spawn method but track in session
+            result = self.spawn_playwright_session_agent(session_id, ui_host, ui_port, keepalive)
+            
+            if result.get('success'):
+                with self._playwright_sessions_lock:
+                    session = self._playwright_sessions[session_id]
+                    session['agent_proc'] = self._playwright_agent_proc
+                    session['agent_pid'] = result.get('pid')
+                    session['agent_running'] = True
+                    
+                    session_logger = setup_session_logging(session_id)
+                    session_logger.info(f"Spawned Playwright agent for session {session_id}")
+            
+            return result
+        except Exception as e:
+            logger.error(f"Failed to spawn session {session_id}: {e}")
+            return {'success': False, 'error': f'Spawn failed: {e}'}
+
+    def stop_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
+        """Stop Playwright agent for a specific session."""
+        try:
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                session = self._playwright_sessions[session_id]
+                proc = session.get('agent_proc')
+                
+                if not proc or proc.poll() is not None:
+                    return {'success': False, 'error': f'Session {session_id} not running'}
+                
+                session_logger = setup_session_logging(session_id)
+                session_logger.info(f"Stopping Playwright agent for session {session_id} (PID: {proc.pid})")
+                
+                try:
+                    proc.terminate()
+                except Exception:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+                try:
+                    proc.wait(timeout=5)
+                except Exception:
+                    pass
+                
+                # Update session state for easy debug
+                session['agent_proc'] = None
+                session['agent_pid'] = None
+                session['agent_running'] = False
+                session['connected'] = False
+                session['status'] = 'stopped'
+                
+                session_logger.info(f"Stopped Playwright agent for session {session_id}")
+                
+                self.broadcast_event('playwright.session.stopped', {
+                    'session_id': session_id,
+                })
+                
+                return {'success': True, 'session_id': session_id}
+        except Exception as e:
+            logger.error(f"Failed to stop session {session_id}: {e}")
+            return {'success': False, 'error': f'Stop failed: {e}'}
+
+    def start_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
+        """Start Playwright agent for a specific session."""
+        try:
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                session = self._playwright_sessions[session_id]
+                
+                # Check if already running for easy debug
+                proc = session.get('agent_proc')
+                if proc and (proc.poll() is None):
+                    return {'success': False, 'error': f'Session {session_id} already running'}
+                
+                # Update status to starting
+                session['status'] = 'starting'
+            
+            # Use existing spawn method but track in session
+            result = self.spawn_playwright_session_agent(session_id)
+            
+            if result.get('success'):
+                with self._playwright_sessions_lock:
+                    session = self._playwright_sessions[session_id]
+                    session['agent_proc'] = self._playwright_agent_proc
+                    session['agent_pid'] = result.get('pid')
+                    session['agent_running'] = True
+                    session['status'] = 'running'
+                    
+                    session_logger = setup_session_logging(session_id)
+                    session_logger.info(f"Started Playwright agent for session {session_id}")
+                    
+                    self.broadcast_event('playwright.session.started', {
+                        'session_id': session_id,
+                    })
+            else:
+                with self._playwright_sessions_lock:
+                    session = self._playwright_sessions[session_id]
+                    session['status'] = 'stopped'
+            
+            return result
+        except Exception as e:
+            logger.error(f"Failed to start session {session_id}: {e}")
+            with self._playwright_sessions_lock:
+                if session_id in self._playwright_sessions:
+                    self._playwright_sessions[session_id]['status'] = 'stopped'
+            return {'success': False, 'error': f'Start failed: {e}'}
+
+    def delete_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
+        """Delete a specific Playwright session (stops agent if running)."""
+        try:
+            # First stop the session if running
+            stop_result = self.stop_playwright_session_by_id(session_id)
+            
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                del self._playwright_sessions[session_id]
+                
+                session_logger = setup_session_logging(session_id)
+                session_logger.info(f"Deleted Playwright session: {session_id}")
+                
+                self.broadcast_event('playwright.session.deleted', {
+                    'session_id': session_id,
+                })
+                
+                return {'success': True, 'session_id': session_id}
+        except Exception as e:
+            logger.error(f"Failed to delete session {session_id}: {e}")
+            return {'success': False, 'error': f'Delete failed: {e}'}
+
+    def set_playwright_session_upstream_by_id(self, session_id: str, host: str, port: int) -> Dict[str, Any]:
+        """Set upstream connection for a specific session."""
+        try:
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                session = self._playwright_sessions[session_id]
+                session['host'] = str(host)
+                session['port'] = int(port)
+                session['connected'] = True
+                
+                session_logger = setup_session_logging(session_id)
+                session_logger.info(f"Set upstream for session {session_id}: {host}:{port}")
+                
+                self.broadcast_event('playwright.session.upstream_set', {
+                    'session_id': session_id,
+                    'host': host,
+                    'port': port,
+                })
+                
+                return {'success': True, 'session_id': session_id, 'host': host, 'port': port}
+        except Exception as e:
+            logger.error(f"Failed to set upstream for session {session_id}: {e}")
+            return {'success': False, 'error': f'Set upstream failed: {e}'}
+
+    def get_all_playwright_sessions(self) -> Dict[str, Any]:
+        """Get status of all Playwright sessions."""
+        try:
+            with self._playwright_sessions_lock:
+                sessions = []
+                for session_id, session in self._playwright_sessions.items():
+                    proc = session.get('agent_proc')
+                    running = bool(proc and (proc.poll() is None))
+                    
+                    # Update running status for easy debug
+                    session['agent_running'] = running
+                    if not running and proc:
+                        session['agent_proc'] = None
+                        session['agent_pid'] = None
+                    
+                    sessions.append({
+                        'session_id': session_id,
+                        'name': session.get('name', f'Session {session_id[:8]}'),
+                        'model': session.get('model', 'Unknown'),
+                        'tools': session.get('tools', []),
+                        'status': session.get('status', 'stopped'),
+                        'connected': session['connected'],
+                        'host': session['host'],
+                        'port': session['port'],
+                        'agent_pid': session['agent_pid'],
+                        'agent_running': running,
+                        'created_at': session['created_at'],
+                    })
+                
+                return {'success': True, 'sessions': sessions}
+        except Exception as e:
+            logger.error(f"Error getting all sessions: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def delete_playwright_session(self, session_id: str) -> Dict[str, Any]:
+        """Delete a Playwright session (stops agent if running)."""
+        try:
+            # First stop the session if running
+            stop_result = self.stop_playwright_session_by_id(session_id)
+            
+            with self._playwright_sessions_lock:
+                if session_id not in self._playwright_sessions:
+                    return {'success': False, 'error': f'Session {session_id} not found'}
+                
+                del self._playwright_sessions[session_id]
+                
+                session_logger = setup_session_logging(session_id)
+                session_logger.info(f"Deleted Playwright session: {session_id}")
+                
+                self.broadcast_event('playwright.session.deleted', {
+                    'session_id': session_id,
+                })
+                
+                return {'success': True, 'session_id': session_id}
+        except Exception as e:
+            logger.error(f"Failed to delete session {session_id}: {e}")
+            return {'success': False, 'error': f'Delete failed: {e}'}
+
 class _ReloadEventHandler(FileSystemEventHandler):
     """Watchdog handler that broadcasts reload events on file changes.
 
@@ -278,6 +863,24 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args) -> None:  # reduce console noise
         logger.debug("GUI HTTP: " + format, *args)
+
+    # --- NEW: Suppress benign client disconnect errors at server level ---
+    def handle_error(self, request, client_address):
+        try:
+            exc_type, exc_value, _ = sys.exc_info()
+            if exc_type in (ConnectionAbortedError, BrokenPipeError):
+                try:
+                    logger.debug("GUI HTTP: suppressed client disconnect from %s: %s", client_address, exc_value)
+                except Exception:
+                    pass
+                return
+        except Exception:
+            pass
+        # Fallback to default behavior
+        try:
+            return super().handle_error(request, client_address)
+        except Exception:
+            pass
 
     def _json(self, status: int, data: Dict[str, Any]):
         # Robust JSON writer: tolerate client-aborted connections and serialization failures
@@ -356,13 +959,108 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
         raise RuntimeError("Upstream fetch failed without specific exception")
 
     def do_GET(self):  # noqa: N802
-        if self.path == "/":
+        import logging
+        logging.error(f"[DEBUG] *** do_GET called for path: {self.path} ***")
+        # --- NEW: Serve React SPA (static assets + index.html fallback) when enabled ---
+        try:
+            srv = getattr(self, 'server', None)
+            react_enabled = bool(getattr(srv, '_react_ui_enabled', False))
+            dist_dir = getattr(srv, '_react_ui_dist_dir', None)
+        except Exception:
+            react_enabled = False
+            dist_dir = None
+        # Use path without query string to ensure root routing works reliably
+        # e.g., "/?foo=bar" should be treated as "/"
+        # IMPORTANT: avoid referencing 'urllib' here because later in-function
+        # imports like `import urllib.request` make 'urllib' a local symbol,
+        # causing UnboundLocalError if used before those imports.
+        # Parse the path manually to strip the query string without imports.
+        clean_path = (self.path.split("?", 1)[0] if self.path else "/")
+        if react_enabled and dist_dir:
+            try:
+                dist_root = pathlib.Path(dist_dir).resolve()
+                req_path = clean_path or '/'
+                # Allow API and special endpoints to bypass SPA handling
+                def _is_api_path(p: str) -> bool:
+                    return p.startswith('/api/') or p.startswith('/events') or p.startswith('/mcp/')
+                if req_path == '/' or req_path.startswith('/index.html'):
+                    index_fp = dist_root / 'index.html'
+                    if index_fp.is_file():
+                        body = index_fp.read_bytes()
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/html; charset=utf-8")
+                        self.send_header("Content-Length", str(len(body)))
+                        self.end_headers()
+                        try:
+                            self.wfile.write(body)
+                        except Exception:
+                            pass
+                        return
+                elif not _is_api_path(req_path):
+                    # Try to serve static asset from dist
+                    rel = req_path.lstrip('/')
+                    try:
+                        fs_path = (dist_root / rel).resolve()
+                        if str(fs_path).startswith(str(dist_root)) and fs_path.is_file():
+                            body = fs_path.read_bytes()
+                            ctype = guess_type(str(fs_path))[0] or "application/octet-stream"
+                            self.send_response(200)
+                            self.send_header("Content-Type", ctype)
+                            self.send_header("Content-Length", str(len(body)))
+                            self.end_headers()
+                            try:
+                                self.wfile.write(body)
+                            except Exception:
+                                pass
+                            return
+                    except Exception:
+                        pass
+                    # SPA fallback: serve index.html for client-side routing
+                    index_fp = dist_root / 'index.html'
+                    if index_fp.is_file():
+                        body = index_fp.read_bytes()
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/html; charset=utf-8")
+                        self.send_header("Content-Length", str(len(body)))
+                        self.end_headers()
+                        try:
+                            self.wfile.write(body)
+                        except Exception:
+                            pass
+                        return
+            except Exception:
+                # If anything goes wrong, continue to legacy inline handler
+                pass
+        # FINAL SPA FALLBACK when enabled: always serve index.html for non-API paths
+        if react_enabled and dist_dir:
+            dist_root = pathlib.Path(dist_dir).resolve()
+            req_path = clean_path or '/'
+            def _is_api_path(p: str) -> bool:
+                return p.startswith('/api/') or p.startswith('/events') or p.startswith('/mcp/')
+            if not _is_api_path(req_path):
+                index_fp = dist_root / 'index.html'
+                if index_fp.is_file():
+                    body = index_fp.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    try:
+                        self.wfile.write(body)
+                    except Exception:
+                        pass
+                    return
+        # Legacy inline UI only when React is disabled
+        if not react_enabled and clean_path == "/":
             body = (self.INDEX_HTML or "<html><body><h1>GUI</h1><p>Initialization fallback.</p></body></html>").encode("utf-8")  # Safe fallback if INDEX_HTML is None
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(body)
+            try:
+                self.wfile.write(body)
+            except Exception:
+                pass
             return
 
         # --- NEW: Health check endpoint for embedded viewers
@@ -403,6 +1101,9 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                             # Heartbeat
                             try:
                                 self.wfile.write(b":heartbeat\n\n"); self.wfile.flush()
+                            except (ConnectionAbortedError, BrokenPipeError):
+                                # Client disconnected; stop streaming to avoid noisy server errors
+                                break
                             except Exception:
                                 break
                             continue
@@ -422,6 +1123,9 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                                 self.wfile.flush()
                             else:
                                 self.wfile.write(b":unknown\n\n"); self.wfile.flush()
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            # Client disconnected; stop streaming loop cleanly
+                            break
                         except Exception:
                             break
                 finally:
@@ -465,16 +1169,16 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                 self.send_header("Cache-Control", "no-cache")
                 self.send_header("Connection", "keep-alive")
                 self.end_headers()
-                # Resolve target host/port
-                host = os.getenv("MCP_UI_HOST", "127.0.0.1")
+                # Resolve target host/port using session-scoped upstream when available; fallback to legacy env
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
                 try:
-                    port = int(os.getenv("MCP_UI_PORT", "8787"))
+                    session_port = int(getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787")))
                 except Exception:
-                    port = 8787
+                    session_port = 8787
                 # Stream from Playwright server and pipe through to client
                 try:
                     import http.client
-                    conn = http.client.HTTPConnection(host, port, timeout=10)
+                    conn = http.client.HTTPConnection(session_host, session_port, timeout=10)
                     conn.request("GET", "/events", headers={
                         "Accept": "text/event-stream",
                         "Cache-Control": "no-cache",
@@ -502,14 +1206,27 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                             self.wfile.write(chunk)
                             try:
                                 self.wfile.flush()
+                            except (ConnectionAbortedError, BrokenPipeError):
+                                # Client disconnected; stop forwarding
+                                break
                             except Exception:
+                                # Ignore non-fatal flush errors
                                 pass
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            break
                         except Exception:
                             break
-                except Exception as e:
+                except Exception:
+                    # Upstream proxy stream error; ignore and proceed to cleanup
+                    pass
+                finally:
+                    # Always close upstream response/connection
                     try:
-                        self.wfile.write(f"data: Proxy failed: {e}\n\n".encode("utf-8"))
-                        self.wfile.flush()
+                        resp.close()
+                    except Exception:
+                        pass
+                    try:
+                        conn.close()
                     except Exception:
                         pass
                 return
@@ -525,11 +1242,36 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                     import urllib.request, urllib.error
                 except Exception:
                     urlparse = None  # type: ignore
-                host = os.getenv("MCP_UI_HOST", "127.0.0.1")
+                # Resolve target host/port using session-scoped upstream when available; fallback to legacy env
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
                 try:
-                    port = int(os.getenv("MCP_UI_PORT", "8787"))
+                    session_port = int(getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787")))
                 except Exception:
-                    port = 8787
+                    session_port = 8787
+                # --- DEPRECATION NOTICE: legacy env-based upstream ---
+                try:
+                    env_used = ('MCP_UI_HOST' in os.environ) or ('MCP_UI_PORT' in os.environ)
+                    if env_used and not getattr(self.server, '_mcp_playwright_legacy_env_warned', False):  # type: ignore[attr-defined]
+                        try:
+                            setattr(self.server, '_mcp_playwright_legacy_env_warned', True)  # type: ignore[attr-defined]
+                        except Exception:
+                            pass
+                        try:
+                            sid = getattr(self.server, '_playwright_session_id', None)  # type: ignore[attr-defined]
+                            self.broadcast_event('playwright.session.log', {
+                                'session_id': sid,
+                                'line': '[DEPRECATED] Legacy /mcp/playwright/* using MCP_UI_HOST/MCP_UI_PORT. Migrate to /api/playwright/session/attach and /mcp/playwright/session/*.'
+                            })
+                        except Exception:
+                            pass
+                        try:
+                            logger.warning(
+                                "DEPRECATED: Environment-based legacy Playwright proxy in use (MCP_UI_HOST=%s, MCP_UI_PORT=%s). Use session-scoped routes.",
+                                os.getenv("MCP_UI_HOST"), os.getenv("MCP_UI_PORT"))
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
                 # Preserve query string
                 upstream_path = "/events.json"
                 try:
@@ -537,7 +1279,7 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                         upstream_path += ("?" + urlparse(self.path).query)
                 except Exception:
                     pass
-                url = f"http://{host}:{port}{upstream_path}"
+                url = f"http://{session_host}:{session_port}{upstream_path}"
                 try:
                     req = urllib.request.Request(url, headers={"Accept": "application/json"})
                     # Use the same retry/backoff strategy as preview.png for resilience
@@ -596,12 +1338,37 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/mcp/playwright/health":
             try:
                 import urllib.request, urllib.error
-                host = os.getenv("MCP_UI_HOST", "127.0.0.1")
+                # Resolve target host/port using session-scoped upstream when available; fallback to legacy env
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
                 try:
-                    port = int(os.getenv("MCP_UI_PORT", "8787"))
+                    session_port = int(getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787")))
                 except Exception:
-                    port = 8787
-                url = f"http://{host}:{port}/health"
+                    session_port = 8787
+                # --- DEPRECATION NOTICE: legacy env-based upstream ---
+                try:
+                    env_used = ('MCP_UI_HOST' in os.environ) or ('MCP_UI_PORT' in os.environ)
+                    if env_used and not getattr(self.server, '_mcp_playwright_legacy_env_warned', False):  # type: ignore[attr-defined]
+                        try:
+                            setattr(self.server, '_mcp_playwright_legacy_env_warned', True)  # type: ignore[attr-defined]
+                        except Exception:
+                            pass
+                        try:
+                            sid = getattr(self.server, '_playwright_session_id', None)  # type: ignore[attr-defined]
+                            self.broadcast_event('playwright.session.log', {
+                                'session_id': sid,
+                                'line': '[DEPRECATED] Legacy /mcp/playwright/* using MCP_UI_HOST/MCP_UI_PORT. Migrate to /api/playwright/session/attach and /mcp/playwright/session/*.'
+                            })
+                        except Exception:
+                            pass
+                        try:
+                            logger.warning(
+                                "DEPRECATED: Environment-based legacy Playwright proxy in use (MCP_UI_HOST=%s, MCP_UI_PORT=%s). Use session-scoped routes.",
+                                os.getenv("MCP_UI_HOST"), os.getenv("MCP_UI_PORT"))
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+                url = f"http://{session_host}:{session_port}/health"
                 t0 = time.time()
                 try:
                     # Prefer plain text but accept JSON or anything
@@ -660,6 +1427,30 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                     port = int(os.getenv("MCP_UI_PORT", "8787"))
                 except Exception:
                     port = 8787
+                # --- DEPRECATION NOTICE: legacy env-based upstream ---
+                try:
+                    env_used = ('MCP_UI_HOST' in os.environ) or ('MCP_UI_PORT' in os.environ)
+                    if env_used and not getattr(self.server, '_mcp_playwright_legacy_env_warned', False):  # type: ignore[attr-defined]
+                        try:
+                            setattr(self.server, '_mcp_playwright_legacy_env_warned', True)  # type: ignore[attr-defined]
+                        except Exception:
+                            pass
+                        try:
+                            sid = getattr(self.server, '_playwright_session_id', None)  # type: ignore[attr-defined]
+                            self.broadcast_event('playwright.session.log', {
+                                'session_id': sid,
+                                'line': '[DEPRECATED] Legacy /mcp/playwright/* using MCP_UI_HOST/MCP_UI_PORT. Migrate to /api/playwright/session/attach and /mcp/playwright/session/*.'
+                            })
+                        except Exception:
+                            pass
+                        try:
+                            logger.warning(
+                                "DEPRECATED: Environment-based legacy Playwright proxy in use (MCP_UI_HOST=%s, MCP_UI_PORT=%s). Use session-scoped routes.",
+                                os.getenv("MCP_UI_HOST"), os.getenv("MCP_UI_PORT"))
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
                 # Preserve original query string from client request
                 parsed = urlparse(self.path)
                 upstream_path = "/preview.png"
@@ -723,6 +1514,545 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                     pass
                 return
 
+        # --- NEW: Session-scoped Playwright proxy routes under /mcp/playwright/session ---
+        # These routes use session-specific host/port from _AssistantHTTPServer state instead of env vars.
+        # Clear comments for easy debug; enables session switching without env changes.
+        if self.path == "/mcp/playwright/session/sse":
+            try:
+                # Prepare response headers for SSE
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "keep-alive")
+                self.end_headers()
+                # Use session-scoped host/port with fallback to env
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
+                session_port = getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787"))
+                # Stream from session Playwright server and pipe through to client
+                try:
+                    import http.client
+                    conn = http.client.HTTPConnection(session_host, session_port, timeout=10)
+                    conn.request("GET", "/events", headers={
+                        "Accept": "text/event-stream",
+                        "Cache-Control": "no-cache",
+                        "Connection": "keep-alive",
+                    })
+                    resp = conn.getresponse()
+                    if resp.status != 200:
+                        try:
+                            self.wfile.write(f"data: Session proxy upstream error HTTP {resp.status}\n\n".encode("utf-8"))
+                            self.wfile.flush()
+                        except Exception:
+                            pass
+                        return
+                    # Write an initial connected comment with session ID
+                    session_id = getattr(self.server, '_playwright_session_id', 'unknown')
+                    try:
+                        self.wfile.write(f":session-proxy-connected session_id={session_id}\n\n".encode("utf-8"))
+                        self.wfile.flush()
+                    except Exception:
+                        pass
+                    # Read small chunks and forward until upstream closes or client disconnects
+                    while True:
+                        try:
+                            chunk = resp.read(1024)
+                            if not chunk:
+                                break
+                            self.wfile.write(chunk)
+                            try:
+                                self.wfile.flush()
+                            except (ConnectionAbortedError, BrokenPipeError):
+                                # Client disconnected; stop forwarding
+                                break
+                            except Exception:
+                                # Ignore non-fatal flush errors
+                                pass
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            break
+                        except Exception:
+                            break
+                except Exception:
+                    # Upstream proxy stream error; ignore and proceed to cleanup
+                    pass
+                finally:
+                    # Always close upstream response/connection
+                    try:
+                        resp.close()
+                    except Exception:
+                        pass
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+                return
+            except Exception:
+                # On header write failure, just return
+                return
+
+        if self.path.startswith("/mcp/playwright/session/events.json"):
+            try:
+                # Proxy JSON polling to session Playwright EventServer with backoff
+                try:
+                    from urllib.parse import urlparse
+                    import urllib.request, urllib.error
+                except Exception:
+                    urlparse = None  # type: ignore
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
+                session_port = getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787"))
+                # Preserve query string
+                upstream_path = "/events.json"
+                try:
+                    if urlparse:
+                        upstream_path += ("?" + urlparse(self.path).query)
+                except Exception:
+                    pass
+                url = f"http://{session_host}:{session_port}{upstream_path}"
+                try:
+                    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+                    # Use the same retry/backoff strategy for resilience
+                    with self._fetch_with_backoff(req, timeout=2.5, attempts=4, base_delay=0.25) as r:
+                        body = r.read()
+                        ctype = r.headers.get("Content-Type", "application/json; charset=utf-8")
+                        status = getattr(r, "status", 200)
+                        self.send_response(status)
+                        self.send_header("Content-Type", ctype)
+                        self.send_header("Cache-Control", "no-store")
+                        self.send_header("Content-Length", str(len(body)))
+                        self.end_headers()
+                        try:
+                            self.wfile.write(body)
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            return
+                        except Exception:
+                            return
+                        return
+                except urllib.error.HTTPError as e:
+                    # Forward upstream HTTP error code and body
+                    try:
+                        err_body = e.read() if hasattr(e, "read") else b""
+                    except Exception:
+                        err_body = b""
+                    ctype = e.headers.get("Content-Type", "application/json; charset=utf-8") if hasattr(e, "headers") else "application/json; charset=utf-8"
+                    try:
+                        self.send_response(getattr(e, "code", 500))
+                        self.send_header("Content-Type", ctype)
+                        self.send_header("Cache-Control", "no-store")
+                        self.send_header("Content-Length", str(len(err_body)))
+                        self.end_headers()
+                        try:
+                            if err_body:
+                                self.wfile.write(err_body)
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            return
+                        except Exception:
+                            return
+                    except (ConnectionAbortedError, BrokenPipeError):
+                        return
+                    except Exception:
+                        return
+                    return
+                except Exception as e:
+                    try:
+                        self._json(502, {"error": f"Session upstream failed: {e}"})
+                    except Exception:
+                        pass
+                    return
+            except Exception as e:
+                self._json(500, {"error": f"Session proxy error: {e}"})
+            return
+
+        if self.path.startswith("/mcp/playwright/session/preview.png"):
+            try:
+                # Proxy latest preview PNG from session Playwright server
+                import urllib.request, urllib.error
+                from urllib.parse import urlparse
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
+                session_port = getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787"))
+                # Preserve original query string from client request
+                parsed = urlparse(self.path)
+                upstream_path = "/preview.png"
+                if parsed.query:
+                    upstream_path += ("?" + parsed.query)
+                url = f"http://{session_host}:{session_port}{upstream_path}"
+                try:
+                    req = urllib.request.Request(url, headers={"Accept": "image/png, */*"})
+                    with self._fetch_with_backoff(req, timeout=2.0, attempts=4, base_delay=0.25) as r:
+                        body = r.read()
+                        ctype = r.headers.get("Content-Type", "image/png")
+                        status = getattr(r, "status", 200)
+                        self.send_response(status)
+                        self.send_header("Content-Type", ctype)
+                        self.send_header("Cache-Control", "no-store")
+                        self.send_header("Content-Length", str(len(body)))
+                        self.end_headers()
+                        try:
+                            self.wfile.write(body)
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            return
+                        except Exception:
+                            return
+                except urllib.error.HTTPError as e:
+                    # Forward upstream HTTP error code and body (e.g., 404)
+                    try:
+                        err_body = e.read() if hasattr(e, "read") else b""
+                    except Exception:
+                        err_body = b""
+                    ctype = e.headers.get("Content-Type", "application/json; charset=utf-8") if hasattr(e, "headers") else "application/octet-stream"
+                    try:
+                        self.send_response(getattr(e, "code", 500))
+                        self.send_header("Content-Type", ctype)
+                        self.send_header("Cache-Control", "no-store")
+                        self.send_header("Content-Length", str(len(err_body)))
+                        self.end_headers()
+                        try:
+                            if err_body:
+                                self.wfile.write(err_body)
+                        except (ConnectionAbortedError, BrokenPipeError):
+                            return
+                        except Exception:
+                            return
+                    except (ConnectionAbortedError, BrokenPipeError):
+                        return
+                    except Exception:
+                        return
+                    return
+                except Exception as e:
+                    try:
+                        self._json(502, {"error": f"Session upstream failed: {e}"})
+                    except Exception:
+                        pass
+                    return
+            except Exception as e:
+                try:
+                    self._json(502, {"error": f"Session proxy error: {e}"})
+                except Exception:
+                    pass
+                return
+
+        if self.path == "/mcp/playwright/session/health":
+            try:
+                import urllib.request, urllib.error
+                session_host = getattr(self.server, '_playwright_event_host', None) or os.getenv("MCP_UI_HOST", "127.0.0.1")
+                session_port = getattr(self.server, '_playwright_event_port', None) or int(os.getenv("MCP_UI_PORT", "8787"))
+                url = f"http://{session_host}:{session_port}/health"
+                t0 = time.time()
+                try:
+                    req = urllib.request.Request(url, headers={"Accept": "text/plain, application/json;q=0.9, */*;q=0.8"})
+                    with self._fetch_with_backoff(req, timeout=1.5, attempts=3, base_delay=0.2) as r:
+                        _ = r.read()  # upstream usually returns "ok"; content is not needed
+                        latency_ms = int(max(0, (time.time() - t0) * 1000))
+                        session_id = getattr(self.server, '_playwright_session_id', None)
+                        self._json(200, {
+                            "available": True, 
+                            "latency_ms": latency_ms, 
+                            "session_id": session_id,
+                            "host": session_host,
+                            "port": session_port,
+                        })
+                        return
+                except urllib.error.HTTPError as e:
+                    # Forward upstream HTTP error as unavailable with same status code
+                    latency_ms = int(max(0, (time.time() - t0) * 1000))
+                    try:
+                        err_body = e.read().decode("utf-8", errors="ignore") if hasattr(e, "read") else ""
+                    except Exception:
+                        err_body = ""
+                    session_id = getattr(self.server, '_playwright_session_id', None)
+                    self._json(getattr(e, "code", 502), {
+                        "available": False, 
+                        "latency_ms": latency_ms, 
+                        "error": err_body or f"HTTP {getattr(e, 'code', 500)}",
+                        "session_id": session_id,
+                        "host": session_host,
+                        "port": session_port,
+                    })
+                    return
+                except Exception as e:
+                    latency_ms = int(max(0, (time.time() - t0) * 1000))
+                    session_id = getattr(self.server, '_playwright_session_id', None)
+                    self._json(502, {
+                        "available": False, 
+                        "latency_ms": latency_ms, 
+                        "error": str(e),
+                        "session_id": session_id,
+                        "host": session_host,
+                        "port": session_port,
+                    })
+                    return
+            except Exception as e:
+                self._json(500, {"available": False, "error": f"Session proxy error: {e}"})
+                return
+
+        # --- NEW: Session status endpoint for UI observability ---
+        if self.path == "/api/playwright/session/status":
+            try:
+                status = self.server.get_playwright_session_status()  # type: ignore[attr-defined]
+                self._json(200, status)
+            except Exception as e:
+                self._json(500, {"error": f"Status check failed: {e}"})
+            return
+
+        # --- NEW: Multi-session API endpoints ---
+        if self.path == "/api/sessions":
+            try:
+                sessions_result = self.server.get_all_playwright_sessions()  # type: ignore[attr-defined]
+                # Extract sessions array from the result
+                if isinstance(sessions_result, dict) and sessions_result.get('success') and 'sessions' in sessions_result:
+                    sessions = sessions_result['sessions']
+                else:
+                    sessions = []
+                    if isinstance(sessions_result, dict) and 'error' in sessions_result:
+                        logger.error(f"Failed to get sessions: {sessions_result['error']}")
+                self._json(200, {"sessions": sessions})
+            except Exception as e:
+                # Return empty sessions array on error to maintain frontend compatibility
+                logger.error(f"Exception getting sessions: {e}")
+                self._json(200, {"sessions": [], "error": f"Failed to get sessions: {e}"})
+            return
+
+        # Session-specific status endpoint
+        if self.path.startswith("/api/sessions/") and self.path.endswith("/status"):
+            try:
+                session_id = self.path.split("/")[3]  # Extract session_id from path
+                status = self.server.get_playwright_session_status_by_id(session_id)  # type: ignore[attr-defined]
+                self._json(200, status)
+            except Exception as e:
+                self._json(500, {"error": f"Status check failed: {e}"})
+            return
+
+        # --- Frontend compatibility endpoints ---
+        if self.path.startswith("/api/playwright/session/") and self.path.endswith("/status"):
+            # Frontend compatibility: /api/playwright/session/{session_id}/status
+            try:
+                session_id = self.path.split("/")[4]  # Extract session_id from path
+                status = self.server.get_playwright_session_status_by_id(session_id)  # type: ignore[attr-defined]
+                self._json(200, status)
+            except Exception as e:
+                self._json(500, {"error": f"Status check failed: {e}"})
+            return
+
+        # --- NEW: Session-specific MCP Playwright proxy endpoints ---
+        if self.path.startswith("/mcp/playwright/session/"):
+            # Extract session_id from path: /mcp/playwright/session/{session_id}/...
+            path_parts = self.path.split("/")
+            if len(path_parts) >= 5:
+                session_id = path_parts[4]
+                remaining_path = "/" + "/".join(path_parts[5:]) if len(path_parts) > 5 else "/"
+                print(f"[DEBUG] Session path: {self.path}, session_id: {session_id}, remaining_path: {remaining_path}")
+                
+                # Guard: if session_id looks like a static directory (e.g., 'public'),
+                # serve from the Playwright public assets directly and bypass session lookup.
+                static_dirs = {"public", "assets", "static", "css", "js", "images", "img"}
+                if session_id in static_dirs:
+                    # Use module-level imports to avoid local shadowing
+                    public_dir = pathlib.Path(__file__).parent.parent / "MCP PLUGINS" / "servers" / "playwright" / "public"
+                    logging.error(f"[DEBUG] Static-dir session_id '{session_id}' detected; serving static asset: remaining_path={remaining_path}")
+                    normalized = remaining_path.lstrip("/")
+                    if normalized.startswith("public/"):
+                        normalized = normalized[len("public/"):]
+                    file_path = public_dir / normalized
+                    if file_path.is_file():
+                        ctype = guess_type(str(file_path))[0] or "application/octet-stream"
+                        data = file_path.read_bytes()
+                        self.send_response(200)
+                        self.send_header("Content-Type", ctype)
+                        self.send_header("Content-Length", str(len(data)))
+                        self.end_headers()
+                        self.wfile.write(data)
+                        return
+                    else:
+                        # SPA fallback only for non-JS/CSS assets
+                        if not normalized.endswith(".js") and not normalized.endswith(".css"):
+                            index_path = public_dir / "index.html"
+                            if index_path.is_file():
+                                data = index_path.read_bytes()
+                                self.send_response(200)
+                                self.send_header("Content-Type", "text/html; charset=utf-8")
+                                self.send_header("Content-Length", str(len(data)))
+                                self.end_headers()
+                                self.wfile.write(data)
+                                return
+                        self.send_error(404, f"File not found: /{normalized}")
+                        return
+
+                # Get session-specific upstream configuration
+                try:
+                    sessions_result = self.server.get_all_playwright_sessions()  # type: ignore[attr-defined]
+                    if not sessions_result.get('success', False):
+                        self._json(500, {"error": f"Failed to get sessions: {sessions_result.get('error', 'Unknown error')}"})
+                        return
+                    
+                    sessions = sessions_result.get('sessions', [])
+                    session = next((s for s in sessions if s["session_id"] == session_id), None)
+                    
+                    if not session or session["status"] != "running":
+                        self._json(404, {"error": f"Session {session_id} not found or not running"})
+                        return
+                    
+                    session_host = session.get("host", "127.0.0.1")
+                    session_port = session.get("port", 8787)
+                    
+                    # Proxy the request to the session-specific Playwright server
+                    if remaining_path == "/" or remaining_path == "/index.html":
+                        remaining_path = "/index.html"
+                    
+                    # Handle static files and proxy requests
+                    if remaining_path.startswith("/events"):
+                        # Proxy SSE events
+                        try:
+                            self.send_response(200)
+                            self.send_header("Content-Type", "text/event-stream")
+                            self.send_header("Cache-Control", "no-cache")
+                            self.send_header("Connection", "keep-alive")
+                            self.end_headers()
+                            
+                            import http.client
+                            conn = http.client.HTTPConnection(session_host, session_port, timeout=10)
+                            conn.request("GET", remaining_path, headers={
+                                "Accept": "text/event-stream",
+                                "Cache-Control": "no-cache",
+                                "Connection": "keep-alive",
+                            })
+                            resp = conn.getresponse()
+                            
+                            if resp.status == 200:
+                                while True:
+                                    try:
+                                        chunk = resp.read(1024)
+                                        if not chunk:
+                                            break
+                                        self.wfile.write(chunk)
+                                        self.wfile.flush()
+                                    except (ConnectionAbortedError, BrokenPipeError):
+                                        break
+                                    except Exception:
+                                        break
+                            
+                            resp.close()
+                            conn.close()
+                        except Exception:
+                            pass
+                        return
+                    
+                    elif remaining_path.endswith(".json") or remaining_path.startswith("/preview.png") or remaining_path.startswith("/health"):
+                        # Proxy JSON/PNG/health requests
+                        try:
+                            import urllib.request, urllib.error
+                            from urllib.parse import urlparse
+                            
+                            # Preserve query string
+                            upstream_path = remaining_path
+                            try:
+                                parsed = urlparse(self.path)
+                                if parsed.query:
+                                    upstream_path += ("?" + parsed.query)
+                            except Exception:
+                                pass
+                            
+                            url = f"http://{session_host}:{session_port}{upstream_path}"
+                            req = urllib.request.Request(url)
+                            
+                            with self._fetch_with_backoff(req, timeout=2.5, attempts=4, base_delay=0.25) as r:
+                                body = r.read()
+                                ctype = r.headers.get("Content-Type", "application/octet-stream")
+                                status = getattr(r, "status", 200)
+                                self.send_response(status)
+                                self.send_header("Content-Type", ctype)
+                                self.send_header("Cache-Control", "no-store")
+                                self.send_header("Content-Length", str(len(body)))
+                                self.end_headers()
+                                self.wfile.write(body)
+                            return
+                        except Exception as e:
+                            self._json(502, {"error": f"Session proxy failed: {e}"})
+                            return
+                    
+                    else:
+                        # Serve static files from public directory
+                        public_dir = pathlib.Path(__file__).parent.parent / "MCP PLUGINS" / "servers" / "playwright" / "public"
+                        logging.error(f"[STATIC FILE HANDLER] Serving static file, original remaining_path: {remaining_path}")
+                        print(f"[STATIC FILE HANDLER] Serving static file, original remaining_path: {remaining_path}")
+                        
+                        # Normalize any /public/* path when serving from session context
+                        # Example: /mcp/playwright/session/<id>/public/app.js -> /mcp/playwright/session/<id>/app.js
+                        normalized = remaining_path.lstrip("/")
+                        if normalized.startswith("public/"):
+                            remaining_path = "/" + normalized[len("public/"):]
+                            logging.error(f"[DEBUG] Rewrote /public/* to {remaining_path} for session {session_id}")
+                        
+                        file_path = public_dir / remaining_path.lstrip("/")
+                        logging.error(f"[DEBUG] Final file_path: {file_path}, exists: {file_path.is_file()}")
+                        
+                        # Special handling for app.js - ensure it's served with correct content type
+                        if remaining_path.lstrip("/") == "app.js":
+                            app_js_path = public_dir / "app.js"
+                            logging.error(f"[DEBUG] Handling app.js, path: {app_js_path}, exists: {app_js_path.is_file()}")
+                            if app_js_path.is_file():
+                                data = app_js_path.read_bytes()
+                                self.send_response(200)
+                                self.send_header("Content-Type", "application/javascript; charset=utf-8")
+                                self.send_header("Content-Length", str(len(data)))
+                                self.end_headers()
+                                self.wfile.write(data)
+                                logging.error(f"[DEBUG] Successfully served app.js for session {session_id}")
+                                return
+                            else:
+                                # If app.js doesn't exist, return 404 instead of fallback
+                                logging.error(f"[DEBUG] app.js not found at {app_js_path}")
+                                self.send_error(404, "app.js not found")
+                                return
+                        
+                        if file_path.is_file():
+                            ctype = guess_type(str(file_path))[0] or "application/octet-stream"
+                            data = file_path.read_bytes()
+                            self.send_response(200)
+                            self.send_header("Content-Type", ctype)
+                            self.send_header("Content-Length", str(len(data)))
+                            self.end_headers()
+                            self.wfile.write(data)
+                            return
+                        else:
+                            # Only fallback to index.html for non-JS files (SPA routing)
+                            if not remaining_path.endswith(".js") and not remaining_path.endswith(".css"):
+                                index_path = public_dir / "index.html"
+                                if index_path.is_file():
+                                    data = index_path.read_bytes()
+                                    self.send_response(200)
+                                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                                    self.send_header("Content-Length", str(len(data)))
+                                    self.end_headers()
+                                    self.wfile.write(data)
+                                    return
+                            else:
+                                # For JS/CSS files, return 404 instead of fallback
+                                self.send_error(404, f"File not found: {remaining_path}")
+                                return
+                
+                except Exception as e:
+                    self._json(500, {"error": f"Session proxy error: {e}"})
+                    return
+            
+            self.send_error(404)
+            return
+
+        # --- Frontend iframe source compatibility ---
+        # Handle /mcp/playwright/{session_id} -> redirect to /mcp/playwright/session/{session_id}
+        # But exclude static files (with extensions) and static directories from this redirect
+        if self.path.startswith("/mcp/playwright/") and not self.path.startswith("/mcp/playwright/session/"):
+            # Extract session_id from path like /mcp/playwright/{session_id}
+            path_parts = self.path.split("/")
+            if len(path_parts) >= 4 and path_parts[3]:  # /mcp/playwright/{session_id}
+                session_id = path_parts[3]
+                # Don't redirect if this looks like a static file (has an extension) or static directory
+                static_dirs = {"public", "assets", "static", "css", "js", "images", "img"}
+                if "." not in session_id and session_id not in static_dirs:
+                    # Redirect to the correct session-specific path
+                    redirect_path = f"/mcp/playwright/session/{session_id}"
+                    self.send_response(302)
+                    self.send_header("Location", redirect_path)
+                    self.end_headers()
+                    return
+
         if self.path.startswith("/mcp/playwright"):
             rel = self.path[len("/mcp/playwright"):]
             if not rel or rel == "/":
@@ -732,16 +2062,7 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
             if file_path.is_file():
                 ctype = guess_type(str(file_path))[0] or "application/octet-stream"
                 data = file_path.read_bytes()
-                # For app.js, rewrite endpoints to use /mcp/playwright proxy paths
-                try:
-                    if file_path.name == "app.js":
-                        s = data.decode("utf-8", errors="ignore")
-                        s = s.replace("new EventSource('/events')", "new EventSource('/mcp/playwright/events')")
-                        s = s.replace("'/events.json?since='", "'/mcp/playwright/events.json?since='")
-                        s = s.replace("fetch('/health'", "fetch('/mcp/playwright/health'")
-                        data = s.encode("utf-8")
-                except Exception:
-                    pass
+                # No JavaScript rewriting needed - app.js already has correct paths
                 self.send_response(200)
                 self.send_header("Content-Type", ctype)
                 self.send_header("Content-Length", str(len(data)))
@@ -780,6 +2101,82 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._json(500, {"error": f"Failed to gather insights: {e}"})
             return
+
+        if self.path == "/api/playwright/session/start":
+            try:
+                res = self.server.start_playwright_session_agent()  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Spawn failed: {e}"})
+            return
+
+        if self.path == "/api/playwright/session/stop":
+            try:
+                res = self.server.stop_playwright_session_agent()  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Stop failed: {e}"})
+            return
+
+        # --- NEW: Multi-session management endpoints ---
+        if self.path == "/api/sessions":
+            # Create new session
+            try:
+                name = (data.get("name") or "").strip()
+                model = (data.get("model") or "gpt-4").strip()
+                tools = data.get("tools") or ["playwright"]
+                
+                if not name:
+                    self._json(400, {"success": False, "error": "'name' is required"})
+                    return
+                
+                session = self.server.create_playwright_session(name, model, tools)  # type: ignore[attr-defined]
+                self._json(200, {"success": True, "session": session})
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to create session: {e}"})
+            return
+
+        # Session-specific operations
+        if self.path.startswith("/api/sessions/"):
+            path_parts = self.path.split("/")
+            if len(path_parts) >= 4:
+                session_id = path_parts[3]
+                operation = path_parts[4] if len(path_parts) > 4 else None
+                
+                if operation == "start":
+                    try:
+                        ui_host = (data.get("ui_host") or "").strip() or None
+                        ui_port = data.get("ui_port")
+                        keepalive = data.get("keepalive", True)
+                        
+                        if ui_port is not None:
+                            try:
+                                ui_port = int(ui_port)
+                            except Exception:
+                                self._json(400, {"success": False, "error": "'ui_port' must be an integer"})
+                                return
+                        
+                        res = self.server.spawn_playwright_session_by_id(session_id, ui_host=ui_host, ui_port=ui_port, keepalive=bool(keepalive))  # type: ignore[attr-defined]
+                        self._json(200, res)
+                    except Exception as e:
+                        self._json(500, {"success": False, "error": f"Failed to start session: {e}"})
+                    return
+                
+                elif operation == "stop":
+                    try:
+                        res = self.server.stop_playwright_session_by_id(session_id)  # type: ignore[attr-defined]
+                        self._json(200, res)
+                    except Exception as e:
+                        self._json(500, {"success": False, "error": f"Failed to stop session: {e}"})
+                    return
+                
+                elif operation == "delete":
+                    try:
+                        res = self.server.delete_playwright_session(session_id)  # type: ignore[attr-defined]
+                        self._json(200, res)
+                    except Exception as e:
+                        self._json(500, {"success": False, "error": f"Failed to delete session: {e}"})
+                    return
 
         self._json(404, {"error": "Not found"})
 
@@ -926,6 +2323,138 @@ class _GUIRequestHandler(BaseHTTPRequestHandler):
                 self._json(500, {"success": False, "error": f"Failed to broadcast event: {e}"})
             return
 
+        # --- NEW: Playwright session control endpoints (POST) ---
+        if self.path == "/api/playwright/session/attach":
+            # Expected payload: { session_id?, host, port }
+            try:
+                host = (data.get("host") or "").strip()
+                port = data.get("port")
+                session_id = (data.get("session_id") or "").strip() or getattr(self.server, '_playwright_session_id', None)
+                if not host:
+                    self._json(400, {"success": False, "error": "'host' is required"})
+                    return
+                try:
+                    port = int(port)
+                except Exception:
+                    self._json(400, {"success": False, "error": "'port' must be an integer"})
+                    return
+                res = self.server.set_playwright_session_upstream(str(session_id or ''), host, port)  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Attach failed: {e}"})
+            return
+
+        if self.path == "/api/playwright/session/spawn":
+            # Expected payload: { session_id?, ui_host?, ui_port?, keepalive? }
+            try:
+                session_id = (data.get("session_id") or "").strip() or None
+                ui_host = (data.get("ui_host") or "").strip() or None
+                ui_port = data.get("ui_port")
+                keepalive = data.get("keepalive")
+                # Normalize types
+                if ui_port is not None:
+                    try:
+                        ui_port = int(ui_port)
+                    except Exception:
+                        self._json(400, {"success": False, "error": "'ui_port' must be an integer"})
+                        return
+                if keepalive is None:
+                    keepalive = True
+                else:
+                    keepalive = bool(keepalive)
+                res = self.server.spawn_playwright_session_agent(session_id=session_id, ui_host=ui_host, ui_port=ui_port, keepalive=keepalive)  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Spawn failed: {e}"})
+            return
+
+        if self.path == "/api/playwright/session/stop":
+            try:
+                res = self.server.stop_playwright_session_agent()  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Stop failed: {e}"})
+            return
+
+        # --- NEW: Multi-session management endpoints ---
+        if self.path == "/api/sessions":
+            # Create new session
+            try:
+                name = (data.get("name") or "").strip()
+                model = (data.get("model") or "gpt-4").strip()
+                tools = data.get("tools", ["playwright"])
+                
+                if not name:
+                    self._json(400, {"success": False, "error": "'name' is required"})
+                    return
+                
+                # Create session via server method
+                result = self.server.create_playwright_session(name=name, model=model, tools=tools)  # type: ignore[attr-defined]
+                self._json(200, result)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to create session: {e}"})
+            return
+
+        # Session-specific management endpoints
+        if self.path.startswith("/api/sessions/") and self.path.endswith("/start"):
+            try:
+                session_id = self.path.split("/")[3]  # Extract session_id from path
+                result = self.server.start_playwright_session_by_id(session_id)  # type: ignore[attr-defined]
+                self._json(200, result)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to start session: {e}"})
+            return
+
+        if self.path.startswith("/api/sessions/") and self.path.endswith("/stop"):
+            try:
+                session_id = self.path.split("/")[3]  # Extract session_id from path
+                result = self.server.stop_playwright_session_by_id(session_id)  # type: ignore[attr-defined]
+                self._json(200, result)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to stop session: {e}"})
+            return
+
+        if self.path.startswith("/api/sessions/") and self.path.endswith("/delete"):
+            try:
+                session_id = self.path.split("/")[3]  # Extract session_id from path
+                result = self.server.delete_playwright_session_by_id(session_id)  # type: ignore[attr-defined]
+                self._json(200, result)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to delete session: {e}"})
+            return
+
+        # --- Frontend compatibility endpoints for session-specific operations ---
+        if self.path.startswith("/api/playwright/session/") and "/spawn" in self.path:
+            # Frontend compatibility: /api/playwright/session/{session_id}/spawn
+            try:
+                session_id = self.path.split("/")[4]  # Extract session_id from path
+                ui_host = (data.get("ui_host") or "").strip() or None
+                ui_port = data.get("ui_port")
+                keepalive = data.get("keepalive", True)
+                
+                if ui_port is not None:
+                    try:
+                        ui_port = int(ui_port)
+                    except Exception:
+                        self._json(400, {"success": False, "error": "'ui_port' must be an integer"})
+                        return
+                
+                res = self.server.spawn_playwright_session_by_id(session_id, ui_host=ui_host, ui_port=ui_port, keepalive=bool(keepalive))  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to spawn session: {e}"})
+            return
+
+        if self.path.startswith("/api/playwright/session/") and "/stop" in self.path:
+            # Frontend compatibility: /api/playwright/session/{session_id}/stop
+            try:
+                session_id = self.path.split("/")[4]  # Extract session_id from path
+                res = self.server.stop_playwright_session_by_id(session_id)  # type: ignore[attr-defined]
+                self._json(200, res)
+            except Exception as e:
+                self._json(500, {"success": False, "error": f"Failed to stop session: {e}"})
+            return
+
         self._json(404, {"error": "Not found"})
 
 
@@ -955,6 +2484,43 @@ class GUIInterface:
 
         # Control flag for run loop
         self._running = False
+        
+        # --- React UI serving configuration (for migration) ---
+        # Clear comments for easy debug; enables serving the React webapp instead of inline HTML
+        try:
+            cfg = getattr(self.assistant, 'config', None)
+            print(f"DEBUG: Assistant config object: {cfg}")
+            print(f"DEBUG: Config type: {type(cfg)}")
+            if cfg:
+                print(f"DEBUG: Config attributes: {dir(cfg)}")
+                raw_enabled = getattr(cfg, 'react_ui_enabled', False)
+                print(f"DEBUG: Raw react_ui_enabled value: {raw_enabled}, type: {type(raw_enabled)}")
+            self._react_ui_enabled = bool(getattr(cfg, 'react_ui_enabled', False))
+            dist_dir = getattr(cfg, 'react_ui_dist_dir', None)
+            print(f"DEBUG: React UI config - enabled: {self._react_ui_enabled}, dist_dir: {dist_dir}")
+            if dist_dir:
+                try:
+                    self._react_ui_dist_dir = Path(dist_dir)
+                except Exception:
+                    self._react_ui_dist_dir = None
+            else:
+                try:
+                    self._react_ui_dist_dir = Path(__file__).resolve().parents[1] / 'ui' / 'webapp' / 'dist'
+                except Exception:
+                    self._react_ui_dist_dir = None
+            print(f"DEBUG: React UI dist_dir resolved to: {self._react_ui_dist_dir}")
+        except Exception as e:
+            # Safe defaults if config access fails
+            print(f"DEBUG: React UI config access failed: {e}")
+            self._react_ui_enabled = False
+            self._react_ui_dist_dir = None
+        
+        # Disable React UI if dist directory doesn't exist
+        if self._react_ui_dist_dir and not self._react_ui_dist_dir.exists():
+            print(f"DEBUG: React UI disabled - dist directory doesn't exist: {self._react_ui_dist_dir}")
+            self._react_ui_enabled = False
+        
+        print(f"DEBUG: Final React UI state - enabled: {self._react_ui_enabled}, dist_dir: {self._react_ui_dist_dir}")
         # --- NEW: TaskQueue and Scheduler references ---
         self._task_queue = None  # type: ignore[assignment]
         self._scheduler = None  # type: ignore[assignment]
@@ -998,7 +2564,7 @@ class GUIInterface:
         last_err = None
         for attempt in range(0, 10):
             try:
-                self._httpd = _AssistantHTTPServer((bind_host, bind_port), _GUIRequestHandler, self.assistant, self.loop)  # type: ignore[arg-type]
+                self._httpd = _AssistantHTTPServer((bind_host, bind_port), _GUIRequestHandler, self.assistant, self.loop, self._react_ui_enabled, self._react_ui_dist_dir)  # type: ignore[arg-type]
                 break
             except OSError as e:
                 last_err = e
@@ -1161,43 +2727,20 @@ class GUIInterface:
   <div id="chat-log"></div>
   <nav>
     <button id="tab-chat" class="active">Chat</button>
-    <button id="tab-playwright">Playwright</button>
   </nav>
   <div id="content-chat"></div>
-  <div id="content-playwright" style="display:none;">
-    <iframe id="playwright-frame" src="/mcp/playwright" style="width:100%; height:70vh; border:none;"></iframe>
-  </div>
 </main>
 <script>
   // --- Tabs ---
   document.getElementById('tab-chat').onclick = () => {
     document.getElementById('content-chat').style.display = '';
-    document.getElementById('content-playwright').style.display = 'none';
     document.getElementById('tab-chat').classList.add('active');
-    document.getElementById('tab-playwright').classList.remove('active');
     // No live preview polling anymore; simply switch tabs
-  };
-  document.getElementById('tab-playwright').onclick = () => {
-    document.getElementById('content-chat').style.display = 'none';
-    document.getElementById('content-playwright').style.display = '';
-    document.getElementById('tab-chat').classList.remove('active');
-    document.getElementById('tab-playwright').classList.add('active');
   };
 
   // Helper to programmatically switch to the Playwright tab
   function openPlaywrightTab() {
-    // Use the same behavior as clicking the Playwright tab button to keep logic in one place
-    const btn = document.getElementById('tab-playwright');
-    if (btn && typeof btn.click === 'function') { btn.click(); return; }
-    // Fallback in case click is unavailable
-    try {
-      document.getElementById('content-chat').style.display = 'none';
-      document.getElementById('content-playwright').style.display = '';
-      document.getElementById('tab-chat').classList.remove('active');
-      document.getElementById('tab-playwright').classList.add('active');
-      const frame = document.getElementById('playwright-frame');
-      if (frame && frame.contentWindow) frame.contentWindow.focus();
-    } catch(_e) {}
+    // Playwright tab removed; this function intentionally does nothing.
   }
 
   // --- JSON POST helper ---
@@ -1282,6 +2825,76 @@ class GUIInterface:
         cmdList.appendChild(usageBox);
         btn.addEventListener('click', async () => {
           usageBox.style.display = '';
+          // Spezialfall: MCPTools -> Playwright Integration über GUI-Session-APIs
+          // Statt eines generischen /api/tool-Usage-Calls wollen wir die vorhandene
+          // Playwright-Session im GUI starten/attachen und die UI öffnen. Dies beseitigt
+          // den hängenden "Loading usage..."-Zustand.
+          const cmdLower = (cmd || '').toLowerCase();
+          if (cmdLower === 'playwright') {
+            try {
+              usageBox.textContent = 'Loading usage...';
+              // 1) Status der Session abfragen
+              let status = {};
+              try {
+                const rs = await fetch('/api/playwright/session/status');
+                status = await rs.json();
+              } catch(e) {
+                // Status kann fehlen, wir fahren fort und versuchen zu spawnen
+                status = { connected: false };
+              }
+
+              // 2) Falls nicht verbunden, Playwright-Agent spawnen (mit Defaults)
+              if (!status || !status.connected) {
+                try {
+                  const spawnRes = await postJSON('/api/playwright/session/spawn', {});
+                  // Spawn löst Events aus; wir öffnen proaktiv den Tab für bessere UX
+                  try { openPlaywrightTab(); } catch(_e) {}
+                  // Aktualisierten Status erneut abfragen
+                  try {
+                    const rs2 = await fetch('/api/playwright/session/status');
+                    status = await rs2.json();
+                  } catch(_e) {}
+                  // Log freundliche Anzeige für Debug
+                  appendLog('[INFO] Playwright session spawn requested via MCPTools card');
+                } catch(e) {
+                  usageBox.textContent = 'Error spawning Playwright: ' + e;
+                  return;
+                }
+              } else {
+                // Bereits verbunden: Tab öffnen für schnellen Zugriff
+                try { openPlaywrightTab(); } catch(_e) {}
+              }
+
+              // 3) Usage/Status-Box rendern mit Einfügen-Button (Template)
+              const connected = !!(status && status.connected);
+              const sid = (status && status.session_id) ? String(status.session_id) : '';
+              const host = (status && status.host) ? String(status.host) : '';
+              const port = (status && status.port != null) ? String(status.port) : '';
+              const summary = connected
+                ? `Session connected (id=${escapeHtml(sid)} @ ${escapeHtml(host)}:${escapeHtml(port)})`
+                : 'Session not connected';
+              const usageText = [
+                'Usage: playwright start | playwright status | playwright stop',
+                summary
+              ].join('\n');
+              const insertBtn = '<div style="margin-top:6px;"><button id="ins-' + p.name + '-' + cmd + '">Insert template into chat</button></div>';
+            usageBox.innerHTML = '<div><strong>Playwright (MCPTools)</strong></div>'
+              + '<div style="margin-top:4px;"><code>' + escapeHtml(usageText) + '</code></div>'
+              + insertBtn;
+            const ins = usageBox.querySelector('#ins-' + CSS.escape(p.name) + '-' + CSS.escape(cmd));
+              if (ins) ins.addEventListener('click', () => {
+                // Einfaches Template ins Chatfeld einsetzen
+                let template = 'playwright status';
+                msg.value = template; msg.focus();
+              });
+              return; // WICHTIG: Spezialbehandlung beendet die Standard-Usage-Logik
+            } catch (e) {
+              usageBox.textContent = 'Error: ' + e;
+              return;
+            }
+          }
+
+          // Standardpfad: generische Usage-Abfrage über /api/tool
           usageBox.textContent = 'Loading usage...';
           try {
             // Call /api/tool with only the command; many plugins will return a Usage string

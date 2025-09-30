@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple, Optional
 import base64
 import re
 import urllib.parse
+import uuid
 
 # Load .env for environment variables like OPENAI_API_KEY
 try:
@@ -635,14 +636,54 @@ def _broadcast(server, kind: str, text: str):
     else:
         print(text)
 
-async def run(task_override: Optional[str] = None, system_override: Optional[str] = None):
+async def run(
+    task_override: Optional[str] = None,
+    system_override: Optional[str] = None,
+    ui_host: Optional[str] = None,
+    ui_port: Optional[int] = None,
+    session_id: Optional[str] = None,
+    keepalive: bool = False,
+):
     # Start UI early using new EventServer/start_ui_server so the user sees status even if model init fails
     event_server = EventServer()
-    httpd, t = start_ui_server(event_server, DEFAULT_UI_HOST, DEFAULT_UI_PORT)
+    # Resolve UI bind parameters with safe defaults; allow dynamic port assignment via 0
+    ui_bind_host = (ui_host or os.getenv("MCP_UI_HOST") or DEFAULT_UI_HOST)
+    try:
+        env_port = int(os.getenv("MCP_UI_PORT", str(DEFAULT_UI_PORT)))
+    except Exception:
+        env_port = DEFAULT_UI_PORT
+    # Prefer dynamic port assignment when no explicit port is provided.
+    # Using 0 lets the OS pick a free port, avoiding conflicts when starting multiple agents.
+    env_port = int(os.getenv("MCP_UI_PORT", "0") or "0")
+    ui_bind_port = int(ui_port) if isinstance(ui_port, int) else env_port
+    # Generate a session identifier if not provided
+    session_id = session_id or os.getenv("MCP_SESSION_ID") or str(uuid.uuid4())
 
-    preview_url = f"http://{DEFAULT_UI_HOST}:{DEFAULT_UI_PORT}/"
+    httpd, t, bound_host, bound_port = start_ui_server(event_server, ui_bind_host, ui_bind_port)
+
+    preview_url = f"http://{bound_host}:{bound_port}/"
+    # Announce session start via events and a machine-parseable stdout line
     _broadcast(event_server, "status", f"UI available at {preview_url}")
-    print(f"Preview: {preview_url}")
+    try:
+        event_server.broadcast("session.started", {
+            "session_id": session_id,
+            "ui_url": preview_url,
+            "host": bound_host,
+            "port": bound_port,
+            "ts": time.time(),
+        })
+    except Exception:
+        pass
+    # One-line announce for orchestrators to parse easily
+    try:
+        print("SESSION_ANNOUNCE " + json.dumps({
+            "session_id": session_id,
+            "ui_url": preview_url,
+            "host": bound_host,
+            "port": bound_port,
+        }))
+    except Exception:
+        print(f"Preview: {preview_url}")
 
     # Load configs
     try:
@@ -686,19 +727,50 @@ async def run(task_override: Optional[str] = None, system_override: Optional[str
         )
     except Exception as e:
         _broadcast(event_server, "error", f"LLM init failed: {e}")
-        _broadcast(event_server, "status", "SSE UI will remain online. Set your API key or base_url and restart.")
-        # Keep the UI running to allow preview even on failure
-        while True:
-            await asyncio.sleep(3600)
+        if keepalive:
+            _broadcast(event_server, "status", "SSE UI will remain online. Set your API key or base_url and restart.")
+            # Keep the UI running to allow preview even on failure
+            while True:
+                await asyncio.sleep(3600)
+        else:
+            try:
+                event_server.broadcast("session.completed", {
+                    "session_id": session_id,
+                    "status": "failed",
+                    "reason": "llm_init_failed",
+                    "ts": time.time(),
+                })
+            except Exception:
+                pass
+            try:
+                httpd.shutdown()
+            except Exception:
+                pass
+            return
 
     # Pick active server (playwright for now)
     active = next((s for s in servers_cfg.get("servers", []) if s.get("name") == "playwright" and s.get("active")), None)
     if not active:
         raise RuntimeError("No active MCP server 'playwright' found in servers.json")
 
+    # Build Playwright MCP CLI args and enforce per-session isolation
+    # Clear comments for easy debug: we add --user-data-dir=<profiles>/<session_id> unless already present
+    args = list(active.get("args", ["--yes", "@playwright/mcp@latest", "--headless"]))
+    try:
+        profile_base = os.getenv("MCP_USER_DATA_DIR_BASE") or os.path.join(BASE_DIR, "profiles")
+        os.makedirs(profile_base, exist_ok=True)
+        user_data_dir = os.path.join(profile_base, session_id)
+        # Only add if not provided in servers.json to avoid duplicates
+        if not any(str(a).startswith("--user-data-dir") for a in args):
+            args.append(f"--user-data-dir={user_data_dir}")
+    except Exception as _e:
+        # If anything fails during profile dir setup, continue without persistent user data dir
+        # This keeps the agent functional while logging can point to _e when needed
+        pass
+
     params = StdioServerParams(
         command=active.get("command", "npx"),
-        args=active.get("args", ["--yes", "@playwright/mcp@latest", "--headless"]),
+        args=args,
         read_timeout_seconds=int(active.get("read_timeout_seconds", 120)),
     )
 
@@ -1078,15 +1150,27 @@ async def run(task_override: Optional[str] = None, system_override: Optional[str
             except Exception:
                 pass
 
-        # Keep the UI server running after the agent finishes so that the GUI proxy
-        # can continue to access /preview.png and other endpoints.
-        # This helps avoid transient 502s from the GUI proxy when the upstream server
-        # exits immediately after completing the task. Clear, explicit keepalive for debug.
+        # Emit session completed event and either exit or keep UI alive based on flag
         try:
-            while True:
-                await asyncio.sleep(3600)
-        except asyncio.CancelledError:
+            event_server.broadcast("session.completed", {
+                "session_id": session_id,
+                "status": "ok",
+                "ts": time.time(),
+            })
+        except Exception:
             pass
+        if keepalive:
+            try:
+                while True:
+                    await asyncio.sleep(3600)
+            except asyncio.CancelledError:
+                pass
+        else:
+            try:
+                httpd.shutdown()
+            except Exception:
+                pass
+            return
 
 if __name__ == "__main__":
     # Support dynamic overrides from CLI for easy integration/testing
@@ -1094,5 +1178,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Playwright MCP Agent runner")
     parser.add_argument("--task", dest="task", help="Goal for the browser agent (e.g., 'Open example.com and read the title')")
     parser.add_argument("--system", dest="system", help="Override system prompt text (optional)")
+    parser.add_argument("--ui-host", dest="ui_host", help="UI bind host (default: env MCP_UI_HOST or 127.0.0.1)")
+    parser.add_argument("--ui-port", dest="ui_port", type=int, help="UI bind port (0 for dynamic; default: env MCP_UI_PORT or 8787)")
+    parser.add_argument("--session-id", dest="session_id", help="Optional session identifier (default: random UUID4)")
+    parser.add_argument("--keepalive", dest="keepalive", action="store_true", help="Keep UI alive after completion (debug mode)")
     args = parser.parse_args()
-    asyncio.run(run(task_override=args.task, system_override=args.system))
+    asyncio.run(run(
+        task_override=args.task,
+        system_override=args.system,
+        ui_host=args.ui_host,
+        ui_port=args.ui_port,
+        session_id=args.session_id,
+        keepalive=bool(args.keepalive),
+    ))

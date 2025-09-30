@@ -1,0 +1,121 @@
+/* Global theme variables and base resets (clear comments for easy debug) */
+/* NOTE: This file applies app-wide styles. Imported in main.tsx. */
+
+/* CSS Variables: cosmic orange theme */
+:root {
+  --background: 15 25% 8%;
+  --foreground: 30 15% 95%;
+  --card: 15 20% 10%;
+  --card-foreground: 30 15% 95%;
+  --popover: 15 20% 10%;
+  --popover-foreground: 30 15% 95%;
+  --primary: 20 95% 60%;
+  --primary-foreground: 30 15% 95%;
+  --secondary: 25 80% 50%;
+  --secondary-foreground: 30 15% 95%;
+  --muted: 15 15% 15%;
+  --muted-foreground: 30 10% 70%;
+  --accent: 35 90% 65%;
+  --accent-foreground: 15 25% 8%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 30 15% 95%;
+  --border: 25 30% 25%;
+  --input: 25 25% 20%;
+  --ring: 20 95% 60%;
+
+  /* Gradients and shadows */
+  --gradient-cosmic: linear-gradient(135deg, hsl(15 95% 55%), hsl(25 90% 60%), hsl(35 85% 65%));
+  --gradient-portal: radial-gradient(circle at center, hsl(25 90% 60% / .8), hsl(15 80% 45% / .6), hsl(10 60% 30% / .3));
+  --gradient-glow: linear-gradient(180deg, hsl(20 95% 60% / .3), hsl(15 85% 50% / .1));
+  --shadow-cosmic: 0 20px 40px hsl(20 90% 50% / .4);
+  --shadow-glow: 0 0 30px hsl(25 95% 60% / .5);
+  --glow-cosmic: 0 0 20px hsl(20 95% 60% / .6);
+
+  /* Typography and radii */
+  --text-cosmic-xl: 3.5rem;
+  --text-cosmic-lg: 1.25rem;
+  --text-cosmic-base: 1rem;
+  --radius: .5rem;
+
+  /* Sidebar theme */
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+/* Base document resets */
+html, :host {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+  font-family: Inter, system-ui, sans-serif;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Global background and text to reflect theme immediately */
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  margin: 0; /* remove default margin for consistent layout */
+}
+
+/* Box sizing and border defaults */
+*, *::before, *::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: hsl(var(--border)); /* use theme border color */
+}
+
+/* Link and focus ring refinements (minimal) */
+a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Utility surfaces (cards/popovers) */
+.card-surface {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+.popover-surface {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+
+/* Button palette examples (optional helpers) */
+.button-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--radius);
+}
+.button-secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-radius: var(--radius);
+}
+.button-accent {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-radius: var(--radius);
+}

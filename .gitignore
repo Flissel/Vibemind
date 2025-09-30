@@ -53,3 +53,8 @@ htmlcov/
 models/
 *.gguf
 *.bin
+
+#playwright MCP
+# Ignore Playwright profiles directories
+src/MCP PLUGINS/servers/playwright/profiles/*
+src/ui/webapp/node_modules/*

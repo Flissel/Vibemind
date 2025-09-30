@@ -6,7 +6,6 @@
   var $events = byId('eventlog');
   var $img = byId('browserimg');
   var $badge = byId('connstatus');
-  var $meta = byId('sessionmeta');
   
   // Notify parent window once when first activity is detected (for auto-switching tabs)
   var _postedPlaywrightActivity = false;
@@ -135,102 +134,11 @@
 
   var useSSE = !!(window.EventSource);
   var lastId = 0;
-  var _session = { id: null, name: null };
-
-  function _parseSessionIdFromPath(){
-    try{
-      var p = String(window.location.pathname||'');
-      // Expect /mcp/playwright/session/<id>/...
-      var parts = p.split('/').filter(function(x){ return !!x; });
-      var idx = -1;
-      for(var i=0;i<parts.length;i++){
-        if(parts[i] === 'session'){ idx = i; break; }
-      }
-      if(idx >= 0 && parts.length > idx+1){ return parts[idx+1]; }
-      // Fallback: /mcp/playwright/<id>/...
-      for(var j=0;j<parts.length;j++){
-        if(parts[j] === 'playwright' && parts.length > j+1){ return parts[j+1]; }
-      }
-      return null;
-    }catch(_e){ return null; }
-  }
-
-  function _setSessionMeta(){
-    try{
-      if(!$meta) return;
-      var idTxt = _session.id ? String(_session.id) : '';
-      var nameTxt = _session.name ? String(_session.name) : '';
-      if(idTxt || nameTxt){
-        var txt = '';
-        if(idTxt) txt += 'id: ' + idTxt;
-        if(nameTxt) txt += (txt? '  ' : '') + 'name: ' + nameTxt;
-        $meta.textContent = txt;
-        $meta.style.display = 'inline-block';
-      } else {
-        $meta.textContent = '';
-        $meta.style.display = 'none';
-      }
-    }catch(_e){}
-  }
-
-  function _fetchSessionName(id, cb){
-    try{
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', '/api/sessions', true);
-      xhr.onreadystatechange = function(){
-        if(xhr.readyState === 4){
-          try{
-            if(xhr.status === 200){
-              var body = xhr.responseText || '{}';
-              var data = {};
-              try{ data = JSON.parse(body); }catch(_e){ data = {}; }
-              var sessions = data.sessions || [];
-              for(var i=0;i<sessions.length;i++){
-                var s = sessions[i];
-                if(s && s.session_id === id){
-                  cb(null, s.name || null);
-                  return;
-                }
-              }
-              cb(null, null);
-            } else {
-              cb(new Error('status '+xhr.status));
-            }
-          }catch(err){ cb(err); }
-        }
-      };
-      xhr.onerror = function(){ cb(new Error('network error')); };
-      xhr.send();
-    }catch(err){ cb(err); }
-  }
-
-  (function _initSession(){
-    _session.id = _parseSessionIdFromPath();
-    if(_session.id){
-      _fetchSessionName(_session.id, function(_err, nm){
-        if(nm) _session.name = nm;
-        _setSessionMeta();
-      });
-    } else {
-      _setSessionMeta();
-    }
-  })();
-  function _resolveSessionPaths(){
-    // Use paths relative to the current document to naturally scope to the session.
-    // Works for both '/mcp/playwright/index.html' and '/mcp/playwright/session/<id>/index.html'.
-    try {
-      return { base: './', sse: './events', json: './events.json' };
-    } catch(_e) {
-      return { base: '/mcp/playwright/', sse: '/mcp/playwright/events', json: '/mcp/playwright/events.json' };
-    }
-  }
-
   function connectSSE(){
     try{
-      // Prefer session-scoped SSE endpoint when embedded under /mcp/playwright/session/<id>/
-      var paths = _resolveSessionPaths();
-      var es = new EventSource(paths.sse);
-      es.onopen = function(){ setBadge('ok', 'Connected (SSE)'); _setSessionMeta(); };
+      // Use session-scoped Playwright SSE proxy (clear comment for easy debug)
+      var es = new EventSource('/mcp/playwright/events');
+      es.onopen = function(){ setBadge('ok', 'Connected (SSE)'); };
       es.onmessage = function(ev){
         try{
           var msg = JSON.parse(ev.data);
@@ -248,8 +156,7 @@
     function loop(){
       var xhr = new XMLHttpRequest();
       // Use session-scoped Playwright JSON proxy
-      var paths = _resolveSessionPaths();
-      xhr.open('GET', paths.json + '?since=' + String(lastId), true);
+      xhr.open('GET', '/mcp/playwright/events.json?since=' + String(lastId), true);
       xhr.onreadystatechange = function(){
         if(xhr.readyState === 4){
           try{
@@ -276,7 +183,6 @@
       xhr.send();
     }
     setBadge('ok', 'Connected (poll)');
-    _setSessionMeta();
     loop();
   }
 

@@ -1,10 +1,20 @@
+# Sakana Assistant Configuration
+
+# Enable the web GUI
+enable_gui: true
+
+# React UI settings for SPA migration
+react_ui_enabled: true
+react_ui_dist_dir: c:\Users\User\Desktop\sakana-desktop-assistant\src\ui\webapp\dist
+
 # Sakana Desktop Assistant Configuration
 
 # LLM Settings
-llm_provider: "openai"
-model_name: "gpt-4o"
+llm_provider: "local"  # Options: local, openai, anthropic
+model_name: "llama-3.2-3b"  # Model to use
+api_key: null  # Set via environment variable or here
 temperature: 0.7
-max_tokens: 256
+max_tokens: 2048
 
 # Memory Settings
 max_short_term_memory: 100
@@ -18,8 +28,11 @@ mutation_rate: 0.1
 
 # Security Settings
 sandbox_enabled: true
-max_execution_time: 30
+max_execution_time: 30  # seconds
+allowed_operations:
+  - read_file
+  - write_file
+  - execute_code
+  - search_web
+  - manage_tasks
 
-# UI Settings
-enable_gui: true
-enable_voice: false

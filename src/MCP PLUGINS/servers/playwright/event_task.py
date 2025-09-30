@@ -304,9 +304,10 @@ setInterval(()=>{ const img=document.getElementById('preview'); img.src='/previe
 
 # ---------- Orchestration helpers ----------
 
-def start_ui_server(event_server: EventServer, host: str = DEFAULT_UI_HOST, port: int = DEFAULT_UI_PORT) -> Tuple[HTTPServer, Thread]:
-    """Start the lightweight UI server in a thread and return (server, thread).
-    NOTE: Use ThreadingHTTPServer so long-lived SSE (/events) won't block other routes like /preview.png.
+def start_ui_server(event_server: EventServer, host: str = DEFAULT_UI_HOST, port: int = DEFAULT_UI_PORT) -> Tuple[HTTPServer, Thread, str, int]:
+    """Start the lightweight UI server in a thread and return (server, thread, bound_host, bound_port).
+    - Supports dynamic port assignment via port=0 (Windows-friendly).
+    - Uses ThreadingHTTPServer so long-lived SSE (/events) won't block other routes like /preview.png.
     """
     class _Handler(UIHandler):
         pass
@@ -314,9 +315,11 @@ def start_ui_server(event_server: EventServer, host: str = DEFAULT_UI_HOST, port
 
     # Switch to ThreadingHTTPServer for concurrent handling of /events and /preview.png
     httpd = ThreadingHTTPServer((host, port), _Handler)
+    # Effective address after binding (port may be 0 -> OS picks an available one)
+    bound_host, bound_port = httpd.server_address[0], httpd.server_address[1]
     t = Thread(target=httpd.serve_forever, name="mcp-ui", daemon=True)
     t.start()
-    return httpd, t
+    return httpd, t, bound_host, bound_port
 
 
 async def stream_think(event_server: EventServer, text: str) -> None:
