@@ -1,6 +1,6 @@
 import { rootRouteWithContext, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import React from 'react'
-import { RootLayout, ChatView, PlaywrightView, ToolsView, SessionsView } from './routes'
+import { RootLayout, ChatView, ToolsView, SessionsView } from './routes'
 
 // Basic route tree with three tabs
 export const rootRoute = createRootRoute({
@@ -13,11 +13,6 @@ export const chatRoute = createRoute({
   component: () => <ChatView />,
 })
 
-export const playwrightRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/playwright',
-  component: () => <PlaywrightView />,
-})
 
 export const toolsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -31,4 +26,4 @@ export const sessionsRoute = createRoute({
   component: () => <SessionsView />,
 })
 
-export const routeTree = rootRoute.addChildren([chatRoute, playwrightRoute, toolsRoute, sessionsRoute])
+export const routeTree = rootRoute.addChildren([chatRoute, toolsRoute, sessionsRoute])

@@ -113,8 +113,82 @@ export function RootLayout() {
   )
 }
 
+// Simple chat helpers
+async function sendMessage(input: string): Promise<{ reply?: string; error?: string; [k: string]: any }> {
+  const res = await fetch('/api/message', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input })
+  })
+  try { return await res.json() } catch { return { error: 'Invalid JSON' } }
+}
+
 export function ChatView() {
-  return <div>Chat coming soon</div>
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>(() => {
+    try {
+      const raw = localStorage.getItem('chat_history')
+      return raw ? JSON.parse(raw) : []
+    } catch {
+      return []
+    }
+  })
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const append = (m: { role: 'user' | 'assistant'; text: string }) => {
+    setMessages(prev => {
+      const next = [...prev, m]
+      try { localStorage.setItem('chat_history', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
+  const onSend = async () => {
+    const text = input.trim()
+    if (!text) return
+    setSending(true)
+    append({ role: 'user', text })
+    setInput('')
+    try {
+      const resp = await sendMessage(text)
+      const reply = typeof resp.reply === 'string' ? resp.reply : JSON.stringify(resp)
+      append({ role: 'assistant', text: reply })
+    } catch (e: any) {
+      append({ role: 'assistant', text: `Error: ${e?.message || 'Failed to send'}` })
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateRows: '1fr auto', height: '70vh' }}>
+      <div style={{ overflow: 'auto', padding: 12, border: '1px solid #ddd', borderRadius: 8, marginBottom: 12 }}>
+        {messages.length === 0 ? (
+          <div style={{ color: '#666' }}>Start chatting with the assistant.</div>
+        ) : (
+          messages.map((m, i) => (
+            <div key={i} style={{ marginBottom: 8 }}>
+              <strong>{m.role === 'user' ? 'You' : 'Assistant'}:</strong>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Type a message"
+          style={{ flex: 1, padding: 8 }}
+          onKeyDown={e => { if (e.key === 'Enter') onSend() }}
+        />
+        <button onClick={onSend} disabled={sending}>
+          {sending ? 'Sending…' : 'Send'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // Session interface for managing multiple sessions - updated to match backend structure
@@ -419,31 +493,7 @@ export function PlaywrightView() {
   )
 }
 
-export function ToolsView() {
-  const [plugins, setPlugins] = useState<Array<{ name: string; version: string; description?: string }>>([])
-
-  useEffect(() => {
-    getPlugins().then((r) => setPlugins(r.plugins)).catch(() => { /* ignore errors for initial debug */ })
-  }, [])
-
-  return (
-    <div>
-      <h3>Registered Plugins</h3>
-      {plugins.length === 0 ? (
-        <p>No plugins found (or still loading)…</p>
-      ) : (
-        <ul style={{ paddingLeft: 16 }}>
-          {plugins.map((p) => (
-            <li key={`${p.name}@${p.version}`}>
-              <strong>{p.name}</strong> <span style={{ color: '#666' }}>v{p.version}</span>
-              {p.description ? <div style={{ fontSize: 12 }}>{p.description}</div> : null}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
+// Duplicate ToolsView removed — see ToolsView defined later with delegate functionality.
 
 export function SessionsView() {
   // State management for sessions
@@ -795,6 +845,80 @@ export function SessionsView() {
             <p>No sessions available. Create a new session to get started.</p>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+// Minimal tools view: list plugins and run a delegate goal
+async function runDelegate(goal: string): Promise<any> {
+  const res = await fetch('/api/delegate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ goal })
+  })
+  try { return await res.json() } catch { return { error: 'Invalid JSON' } }
+}
+
+export function ToolsView() {
+  const [plugins, setPlugins] = useState<Array<{ name: string; version: string; description?: string; commands?: string[] }>>([])
+  const [goal, setGoal] = useState('')
+  const [result, setResult] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    getPlugins().then(r => setPlugins(r.plugins || [])).catch(() => setPlugins([]))
+  }, [])
+
+  const onRun = async () => {
+    const g = goal.trim()
+    if (!g) return
+    setLoading(true)
+    try {
+      const resp = await runDelegate(g)
+      setResult(typeof resp === 'string' ? resp : JSON.stringify(resp, null, 2))
+    } catch (e: any) {
+      setResult(`Error: ${e?.message || 'Failed to run delegate'}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      <h3>Tools</h3>
+      <div style={{ marginBottom: 12 }}>
+        <input
+          value={goal}
+          onChange={e => setGoal(e.target.value)}
+          placeholder="Describe the task to solve"
+          style={{ width: '60%', padding: 8 }}
+          onKeyDown={e => { if (e.key === 'Enter') onRun() }}
+        />
+        <button style={{ marginLeft: 8 }} onClick={onRun} disabled={loading}>{loading ? 'Running…' : 'Run'}</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 3fr', gap: 12 }}>
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
+          <h4 style={{ marginTop: 0 }}>Available Plugins</h4>
+          {plugins.length === 0 ? (
+            <div style={{ color: '#666' }}>No plugins found.</div>
+          ) : (
+            plugins.map(p => (
+              <div key={p.name} style={{ marginBottom: 8 }}>
+                <strong>{p.name}</strong> <span style={{ color: '#666' }}>v{p.version}</span>
+                {p.description && <div style={{ fontSize: 12 }}>{p.description}</div>}
+                {p.commands && p.commands.length > 0 && (
+                  <div style={{ fontSize: 12, color: '#333' }}>commands: {p.commands.join(', ')}</div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
+          <h4 style={{ marginTop: 0 }}>Result</h4>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{result || 'Result will appear here.'}</pre>
+        </div>
       </div>
     </div>
   )
