@@ -421,7 +421,7 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             logger.error(f"Error stopping Playwright session: {e}")
             return {'success': False, 'error': f'Stop failed: {e}'}
 
-    def spawn_playwright_session_agent(self, session_id: str | None = None, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True) -> Dict[str, Any]:
+    def spawn_playwright_session_agent(self, session_id: str | None = None, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True) -> Dict[str, Any]:    
         """Spawn Playwright agent subprocess (wrapper for spawn_mcp_session_agent).
         
         BACKWARD COMPATIBILITY: Delegates to spawn_mcp_session_agent('playwright', ...).
@@ -429,7 +429,9 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
         return self.spawn_mcp_session_agent('playwright', session_id, ui_host, ui_port, keepalive)
 
     def stop_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
-        """Stop Playwright agent for a specific session."""
+        """Stop Playwright agent for a specific session.
+        
+        NOTE: Works with any tool session (github, docker, playwright, etc.) via _mcp_sessions."""
         try:
             with self._mcp_sessions_lock:
                 if session_id not in self._mcp_sessions:
@@ -475,7 +477,9 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             return {'success': False, 'error': f'Stop failed: {e}'}
 
     def start_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
-        """Start Playwright agent for a specific session."""
+        """Start Playwright agent for a specific session.
+        
+        NOTE: Works with any tool session (github, docker, playwright, etc.) via _mcp_sessions."""
         try:
             with self._mcp_sessions_lock:
                 if session_id not in self._mcp_sessions:
@@ -522,7 +526,9 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             return {'success': False, 'error': f'Start failed: {e}'}
 
     def delete_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
-        """Delete a specific Playwright session (stops agent if running)."""
+        """Delete a specific Playwright session (stops agent if running).
+        
+        NOTE: Works with any tool session (github, docker, playwright, etc.) via _mcp_sessions."""
         try:
             # First stop the session if running
             stop_result = self.stop_playwright_session_by_id(session_id)
@@ -546,7 +552,9 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             return {'success': False, 'error': f'Delete failed: {e}'}
 
     def set_playwright_session_upstream_by_id(self, session_id: str, host: str, port: int) -> Dict[str, Any]:
-        """Set upstream connection for a specific session."""
+        """Set upstream connection for a specific session.
+        
+        NOTE: Works with any tool session (github, docker, playwright, etc.) via _mcp_sessions."""
         try:
             with self._mcp_sessions_lock:
                 if session_id not in self._mcp_sessions:
