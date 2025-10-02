@@ -246,10 +246,217 @@ def create_generic_spawn_method(content: str) -> str:
     return content
 
 
+def refactor_spawn_playwright_to_wrapper(content: str) -> str:
+    """Phase 4: Refactore spawn_playwright_session_agent() zu Wrapper."""
+    print("[Phase 4] spawn_playwright_session_agent() zu Wrapper refactoren...")
+    
+    # Ersetze die gesamte spawn_playwright_session_agent() Methode durch einen Wrapper
+    # Der aktuelle Code ist ~90 Zeilen, wir ersetzen ihn durch einen 3-Zeilen Wrapper
+    pattern = r'def spawn_playwright_session_agent\(self.*?\n        """Spawn Playwright agent.*?""".*?return \{\'success\': False, \'error\': f\'Spawn failed: \{e\}\'\}'
+    
+    wrapper = '''def spawn_playwright_session_agent(self, session_id: str | None = None, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True) -> Dict[str, Any]:
+        """Spawn Playwright agent subprocess (wrapper for spawn_mcp_session_agent).
+        
+        BACKWARD COMPATIBILITY: Delegates to spawn_mcp_session_agent('playwright', ...).
+        """
+        return self.spawn_mcp_session_agent('playwright', session_id, ui_host, ui_port, keepalive)'''
+    
+    content = re.sub(pattern, wrapper, content, flags=re.DOTALL)
+    
+    print(f"  ✓ spawn_playwright_session_agent() ist jetzt Wrapper für spawn_mcp_session_agent('playwright')")
+    
+    return content
+
+
+def create_generic_mcp_methods(content: str) -> str:
+    """Phase 4: Erstelle generische create_mcp_session, get_all_mcp_sessions, etc."""
+    print("[Phase 4] Generische MCP-Session-Methoden erstellen...")
+    
+    # Erstelle create_mcp_session() vor create_playwright_session()
+    create_mcp = '''
+    def create_mcp_session(self, tool: str, name: str, model: str = "gpt-4", config: Dict[str, Any] | None = None) -> Dict[str, Any]:
+        """Create a new MCP session entry for any tool (generic method).
+        
+        Args:
+            tool: Tool name (e.g., 'github', 'docker', 'playwright')
+            name: User-friendly session name
+            model: LLM model to use (default: 'gpt-4')
+            config: Tool-specific configuration dict
+            
+        Returns:
+            Dict with success status and session details
+        """
+        try:
+            # Validate tool
+            if tool not in MCP_TOOL_AGENT_PATHS:
+                return {'success': False, 'error': f'Unsupported tool: {tool}. Supported: {list(MCP_TOOL_AGENT_PATHS.keys())}'}
+            
+            # Generate cryptographically secure session ID
+            import secrets
+            session_id = secrets.token_urlsafe(16)
+            
+            with self._mcp_sessions_lock:
+                # Initialize session state
+                self._mcp_sessions[session_id] = {
+                    'session_id': session_id,
+                    'tool': tool,
+                    'name': name,
+                    'model': model,
+                    'status': 'stopped',  # stopped, starting, running, error
+                    'connected': False,
+                    'host': None,
+                    'port': None,
+                    'agent_proc': None,
+                    'agent_pid': None,
+                    'agent_running': False,
+                    'created_at': time.time(),
+                    'updated_at': time.time(),
+                    'config': config or {},
+                }
+                
+                session_logger = setup_session_logging(session_id)
+                session_logger.info(f"Created new {tool} session: {session_id} (name: {name}, model: {model})")
+                
+                self.broadcast_event('mcp.session.created', {
+                    'session_id': session_id,
+                    'tool': tool,
+                    'name': name,
+                    'model': model,
+                })
+                
+                return {
+                    'success': True, 
+                    'session': {
+                        'session_id': session_id,
+                        'tool': tool,
+                        'name': name,
+                        'model': model,
+                        'status': 'stopped'
+                    }
+                }
+        except Exception as e:
+            logger.error(f"Failed to create {tool} session: {e}")
+            return {'success': False, 'error': f'Create failed: {e}'}
+'''
+    
+    # Einfügen vor create_playwright_session()
+    pattern = r'(# --- NEW: Multi-session Playwright management methods ---\n    def create_playwright_session)'
+    replacement = f'# --- NEW: Multi-session MCP management methods (generic + backward-compat wrappers) ---\n{create_mcp}\n\n    def create_playwright_session'
+    content = re.sub(pattern, replacement, content)
+    
+    print(f"  ✓ create_mcp_session() Methode hinzugefügt")
+    
+    return content
+
+
+def refactor_create_playwright_to_wrapper(content: str) -> str:
+    """Phase 4: Refactore create_playwright_session() zu Wrapper."""
+    print("[Phase 4] create_playwright_session() zu Wrapper refactoren...")
+    
+    # Ersetze create_playwright_session() durch Wrapper
+    pattern = r'def create_playwright_session\(self, name: str, model: str = "gpt-4", tools: list = None\) -> Dict\[str, Any\]:.*?return \{\'success\': False, \'error\': f\'Create failed: \{e\}\'\}'
+    
+    wrapper = '''def create_playwright_session(self, name: str, model: str = "gpt-4", tools: list = None) -> Dict[str, Any]:
+        """Create a new Playwright session (wrapper for create_mcp_session).
+        
+        BACKWARD COMPATIBILITY: Delegates to create_mcp_session('playwright', ...).
+        Note: 'tools' parameter is ignored (always ['playwright'] for this wrapper).
+        """
+        return self.create_mcp_session('playwright', name, model)'''
+    
+    content = re.sub(pattern, wrapper, content, flags=re.DOTALL)
+    
+    print(f"  ✓ create_playwright_session() ist jetzt Wrapper für create_mcp_session('playwright')")
+    
+    return content
+
+
+def create_get_all_mcp_sessions(content: str) -> str:
+    """Phase 4: Erstelle get_all_mcp_sessions()."""
+    print("[Phase 4] get_all_mcp_sessions() Methode erstellen...")
+    
+    method = '''
+    def get_all_mcp_sessions(self, tool_filter: str | None = None) -> Dict[str, Any]:
+        """Get status of all MCP sessions (optionally filtered by tool).
+        
+        Args:
+            tool_filter: Optional tool name to filter sessions (e.g., 'github', 'playwright')
+            
+        Returns:
+            Dict with success status and sessions array
+        """
+        try:
+            with self._mcp_sessions_lock:
+                sessions = []
+                for session_id, session in self._mcp_sessions.items():
+                    # Filter by tool if specified
+                    if tool_filter and session.get('tool') != tool_filter:
+                        continue
+                    
+                    proc = session.get('agent_proc')
+                    running = bool(proc and (proc.poll() is None))
+                    
+                    # Update running status
+                    session['agent_running'] = running
+                    if not running and proc:
+                        session['agent_proc'] = None
+                        session['agent_pid'] = None
+                    
+                    sessions.append({
+                        'session_id': session_id,
+                        'tool': session.get('tool', 'unknown'),
+                        'name': session.get('name', f'Session {session_id[:8]}'),
+                        'model': session.get('model', 'Unknown'),
+                        'status': session.get('status', 'stopped'),
+                        'connected': session['connected'],
+                        'host': session['host'],
+                        'port': session['port'],
+                        'agent_pid': session['agent_pid'],
+                        'agent_running': running,
+                        'created_at': session['created_at'],
+                    })
+                
+                return {'success': True, 'sessions': sessions}
+        except Exception as e:
+            logger.error(f"Error getting all sessions: {e}")
+            return {'success': False, 'error': str(e)}
+'''
+    
+    # Einfügen vor get_all_playwright_sessions()
+    pattern = r'(def get_all_playwright_sessions\(self\))'
+    replacement = f'{method}\n\n    {pattern[1:-1]}'
+    content = re.sub(pattern, replacement, content)
+    
+    print(f"  ✓ get_all_mcp_sessions() Methode hinzugefügt")
+    
+    return content
+
+
+def refactor_get_all_playwright_to_wrapper(content: str) -> str:
+    """Phase 4: Refactore get_all_playwright_sessions() zu Wrapper."""
+    print("[Phase 4] get_all_playwright_sessions() zu Wrapper refactoren...")
+    
+    # Ersetze get_all_playwright_sessions() durch Wrapper
+    pattern = r'def get_all_playwright_sessions\(self\) -> Dict\[str, Any\]:.*?return \{\'success\': False, \'error\': str\(e\)\}'
+    
+    wrapper = '''def get_all_playwright_sessions(self) -> Dict[str, Any]:
+        """Get status of all Playwright sessions (wrapper for get_all_mcp_sessions).
+        
+        BACKWARD COMPATIBILITY: Delegates to get_all_mcp_sessions(tool_filter='playwright').
+        """
+        return self.get_all_mcp_sessions(tool_filter='playwright')'''
+    
+    content = re.sub(pattern, wrapper, content, flags=re.DOTALL)
+    
+    print(f"  ✓ get_all_playwright_sessions() ist jetzt Wrapper für get_all_mcp_sessions('playwright')")
+    
+    return content
+
+
 def main():
     """Hauptfunktion für das Refactoring."""
     print("=" * 80)
-    print("MCP Session Refactoring Script")
+    print("MCP Session Refactoring Script - Phase 2, 3, 4")
     print("=" * 80)
     print()
     
@@ -272,6 +479,13 @@ def main():
     # Phase 3: Generische Spawn-Methode
     content = add_mcp_tool_paths_constant(content)
     content = create_generic_spawn_method(content)
+    print()
+    
+    # Phase 4: Playwright-Methoden generalisieren
+    content = refactor_spawn_playwright_to_wrapper(content)
+    content = create_generic_mcp_methods(content)
+    content = refactor_create_playwright_to_wrapper(content)
+    content = refactor_get_all_playwright_to_wrapper(content)
     print()
     
     # Validierung
@@ -300,7 +514,7 @@ def main():
     print("  1. Review: src/ui/gui_interface_refactored.py")
     print("  2. Test: python -m py_compile src/ui/gui_interface_refactored.py")
     print("  3. Replace: copy src\\ui\\gui_interface_refactored.py src\\ui\\gui_interface.py")
-    print("  4. Commit: git add src/ui/gui_interface.py && git commit -m 'Phase 2-3: Generic MCP Session Management'")
+    print("  4. Commit: git add src/ui/gui_interface.py && git commit -m 'Phase 2-4: Generic MCP Session Management'")
 
 
 if __name__ == '__main__':
