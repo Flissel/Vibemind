@@ -44,6 +44,21 @@ LOGS_DIR = None
 SESSIONS_DIR = None
 TMP_DIR = None
 
+# MCP Tool Agent Paths - Maps tool names to their agent script paths
+MCP_TOOL_AGENT_PATHS = {
+    'github': 'MCP PLUGINS/servers/github/agent.py',
+    'docker': 'MCP PLUGINS/servers/docker/agent.py',
+    'desktop': 'MCP PLUGINS/servers/desktop/agent.py',
+    'playwright': 'MCP PLUGINS/servers/playwright/agent.py',
+    'context7': 'MCP PLUGINS/servers/context7/agent.py',
+    'redis': 'MCP PLUGINS/servers/redis/agent.py',
+    'supabase': 'MCP PLUGINS/servers/supabase/agent.py',
+    'cloudflare': 'MCP PLUGINS/servers/cloudflare/agent.py',
+    'travliy': 'MCP PLUGINS/servers/travliy/agent.py',
+    'windows-automation': 'MCP PLUGINS/servers/windows-automation/agent.py',
+}
+
+
 
 def set_data_directories(data_dir, logs_dir, sessions_dir, tmp_dir):
     """Set the data directory paths for use by GUI components."""
@@ -218,10 +233,10 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
         self._event_buffer: list[str] = []  # store JSON strings to avoid re-encoding later
         self._event_buffer_max: int = 1000  # cap to prevent unbounded growth
         
-        # --- NEW: Multi-session Playwright management ---
-        # Track multiple independent Playwright sessions for easy debug
-        self._playwright_sessions: Dict[str, Dict[str, Any]] = {}
-        self._playwright_sessions_lock = threading.Lock()
+        # --- NEW: Multi-session MCP management (supports all tools: github, docker, playwright, etc.) ---
+        # Track multiple independent MCP tool sessions for easy debug
+        self._mcp_sessions: Dict[str, Dict[str, Any]] = {}
+        self._mcp_sessions_lock = threading.Lock()
         
         # --- LEGACY: Single session support for backward compatibility ---
         # Attach this GUI to a running Playwright EventServer for a specific session.
@@ -468,7 +483,7 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
                                 try:
                                     port = int(payload.get('port') or int(os.getenv('MCP_UI_PORT', '8787')))
                                 except Exception:
-                                    port = 8787
+                                    port = 8785
                                 sid2 = str(payload.get('session_id') or sid)
                                 session_logger.info(f"Auto-attaching to upstream: {host}:{port} (session: {sid2})")
                                 try:
@@ -494,7 +509,147 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             else:
                 logger.error(f"Failed to spawn Playwright agent: {e}")
             self.broadcast_event('playwright.session.failed', {'error': str(e), 'session_id': session_id})
-            return {'success': False, 'error': f'Spawn failed: {e}'}
+            return {"success": False, "error": f"Spawn failed: {e}"}
+
+    def spawn_mcp_session_agent(self, tool: str, session_id: str | None = None, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True, **kwargs) -> Dict[str, Any]:
+        """Spawn MCP agent subprocess for any tool (generic method).
+        
+        Supports: github, docker, desktop, playwright, and all tools in MCP_TOOL_AGENT_PATHS.
+        - Reads stdout lines and broadcasts {tool}.session.log events
+        - Parses SESSION_ANNOUNCE JSON to set upstream host/port/session
+        - Reads .event_port file for EventServer discovery (if available)
+        
+        Args:
+            tool: Tool name (e.g., 'github', 'playwright', 'docker')
+            session_id: Optional session ID (generated if None)
+            ui_host: Optional UI host for agent
+            ui_port: Optional UI port for agent
+            keepalive: Keep agent running after task completion
+            **kwargs: Tool-specific additional arguments
+            
+        Returns:
+            Dict with success status, session_id, and agent PID
+        """
+        try:
+            # Validate tool
+            if tool not in MCP_TOOL_AGENT_PATHS:
+                return {'success': False, 'error': f'Unsupported tool: {tool}. Supported: {list(MCP_TOOL_AGENT_PATHS.keys())}'}
+            
+            # Resolve agent script path
+            base = Path(__file__).resolve().parents[1]
+            agent_path = base / MCP_TOOL_AGENT_PATHS[tool]
+            if not agent_path.is_file():
+                return {'success': False, 'error': f'Agent not found: {agent_path}'}
+            
+            # Generate session ID if not provided
+            import secrets
+            sid = session_id or secrets.token_urlsafe(16)
+            
+            # Setup session logging
+            session_logger = setup_session_logging(sid)
+            session_logger.info(f"Spawning {tool} agent with session ID: {sid}")
+            
+            # Build base command args
+            args = [sys.executable, '-u', str(agent_path), '--session-id', sid]
+            if keepalive:
+                args.append('--keepalive')
+            if ui_host:
+                args.extend(['--ui-host', str(ui_host)])
+            if ui_port is not None:
+                args.extend(['--ui-port', str(int(ui_port))])
+            
+            # Add tool-specific args from kwargs
+            for key, value in kwargs.items():
+                if value is not None:
+                    args.extend([f'--{key.replace("_", "-")}', str(value)])
+            
+            session_logger.info(f"Launching {tool} agent: {' '.join(args)}")
+            
+            # Launch subprocess
+            proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            
+            session_logger.info(f"{tool} agent started with PID: {proc.pid}")
+            self.broadcast_event(f'{tool}.session.started', {'session_id': sid, 'pid': proc.pid, 'tool': tool})
+
+            def _reader():
+                try:
+                    for line in iter(proc.stdout.readline, ''):  # type: ignore[union-attr]
+                        ln = line.strip()
+                        if not ln:
+                            continue
+                        
+                        # Log agent output to session log
+                        session_logger.info(f"Agent output: {ln}")
+                        
+                        # Broadcast logs
+                        try:
+                            self.broadcast_event(f'{tool}.session.log', {'session_id': sid, 'line': ln, 'tool': tool})
+                        except Exception:
+                            pass
+                        
+                        # Detect SESSION_ANNOUNCE prefix and parse JSON
+                        try:
+                            if ln.startswith('SESSION_ANNOUNCE '):
+                                session_logger.info(f"Received SESSION_ANNOUNCE: {ln}")
+                                try:
+                                    payload = json.loads(ln[len('SESSION_ANNOUNCE '):])
+                                except Exception:
+                                    payload = {}
+                                host = str(payload.get('host') or os.getenv('MCP_UI_HOST', '127.0.0.1'))
+                                try:
+                                    port = int(payload.get('port') or int(os.getenv('MCP_UI_PORT', '8787')))
+                                except Exception:
+                                    port = 8785
+                                sid2 = str(payload.get('session_id') or sid)
+                                session_logger.info(f"Auto-attaching to upstream: {host}:{port} (session: {sid2})")
+                                try:
+                                    # Update session with upstream info
+                                    with self._mcp_sessions_lock:
+                                        if sid2 in self._mcp_sessions:
+                                            self._mcp_sessions[sid2]['host'] = host
+                                            self._mcp_sessions[sid2]['port'] = port
+                                            self._mcp_sessions[sid2]['connected'] = True
+                                    session_logger.info(f"Upstream set for {tool} session {sid2}")
+                                except Exception as e:
+                                    session_logger.error(f"Failed to set upstream for session {sid2}: {e}")
+                        except Exception:
+                            pass
+                except Exception as e:
+                    session_logger.error(f"Error reading {tool} agent output: {e}")
+            
+            # Start reader thread
+            t = threading.Thread(target=_reader, name=f'{tool.capitalize()}AgentReader-{sid}', daemon=True)
+            t.start()
+            
+            # Try reading .event_port file for EventServer discovery (GitHub, etc.)
+            try:
+                if TMP_DIR:
+                    event_port_file = TMP_DIR / '.event_port'
+                    if event_port_file.exists():
+                        import time
+                        time.sleep(0.5)  # Wait for agent to write port
+                        try:
+                            discovered_port = int(event_port_file.read_text().strip())
+                            session_logger.info(f"Discovered EventServer port from .event_port: {discovered_port}")
+                            with self._mcp_sessions_lock:
+                                if sid in self._mcp_sessions:
+                                    self._mcp_sessions[sid]['port'] = discovered_port
+                                    self._mcp_sessions[sid]['host'] = '127.0.0.1'
+                                    self._mcp_sessions[sid]['connected'] = True
+                        except Exception as e:
+                            session_logger.debug(f"Could not read .event_port: {e}")
+            except Exception:
+                pass
+            
+            return {'success': True, 'session_id': sid, 'pid': proc.pid, 'tool': tool}
+        except Exception as e:
+            if 'sid' in locals():
+                session_logger = setup_session_logging(sid)
+                session_logger.error(f"Failed to spawn {tool} agent: {e}")
+            else:
+                logger.error(f"Failed to spawn {tool} agent: {e}")
+            self.broadcast_event(f'{tool}.session.failed', {'error': str(e), 'session_id': session_id, 'tool': tool})
+            return {'success': False, 'error': f'Spawn failed: {e}', 'tool': tool}
 
     # Backward-compat alias used by older routes
     def start_playwright_session_agent(self):
@@ -511,10 +666,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             import uuid
             session_id = str(uuid.uuid4())
             
-            with self._playwright_sessions_lock:
+            with self._mcp_sessions_lock:
                 # Initialize session state for easy debug
-                self._playwright_sessions[session_id] = {
+                self._mcp_sessions[session_id] = {
                     'session_id': session_id,
+                    'tool': 'playwright',  # Default für create_playwright_session()
                     'name': name,
                     'model': model,
                     'tools': tools,
@@ -555,11 +711,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
     def get_playwright_session_status_by_id(self, session_id: str) -> Dict[str, Any]:
         """Get status for a specific Playwright session."""
         try:
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                session = self._playwright_sessions[session_id]
+                session = self._mcp_sessions[session_id]
                 proc = session.get('agent_proc')
                 running = bool(proc and (proc.poll() is None))
                 
@@ -586,11 +742,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
     def spawn_playwright_session_by_id(self, session_id: str, ui_host: str | None = None, ui_port: int | None = None, keepalive: bool = True) -> Dict[str, Any]:
         """Spawn Playwright agent for a specific session."""
         try:
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                session = self._playwright_sessions[session_id]
+                session = self._mcp_sessions[session_id]
                 
                 # Check if already running for easy debug
                 proc = session.get('agent_proc')
@@ -601,8 +757,8 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             result = self.spawn_playwright_session_agent(session_id, ui_host, ui_port, keepalive)
             
             if result.get('success'):
-                with self._playwright_sessions_lock:
-                    session = self._playwright_sessions[session_id]
+                with self._mcp_sessions_lock:
+                    session = self._mcp_sessions[session_id]
                     session['agent_proc'] = self._playwright_agent_proc
                     session['agent_pid'] = result.get('pid')
                     session['agent_running'] = True
@@ -618,11 +774,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
     def stop_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
         """Stop Playwright agent for a specific session."""
         try:
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                session = self._playwright_sessions[session_id]
+                session = self._mcp_sessions[session_id]
                 proc = session.get('agent_proc')
                 
                 if not proc or proc.poll() is not None:
@@ -664,11 +820,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
     def start_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
         """Start Playwright agent for a specific session."""
         try:
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                session = self._playwright_sessions[session_id]
+                session = self._mcp_sessions[session_id]
                 
                 # Check if already running for easy debug
                 proc = session.get('agent_proc')
@@ -682,8 +838,8 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             result = self.spawn_playwright_session_agent(session_id)
             
             if result.get('success'):
-                with self._playwright_sessions_lock:
-                    session = self._playwright_sessions[session_id]
+                with self._mcp_sessions_lock:
+                    session = self._mcp_sessions[session_id]
                     session['agent_proc'] = self._playwright_agent_proc
                     session['agent_pid'] = result.get('pid')
                     session['agent_running'] = True
@@ -696,16 +852,16 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
                         'session_id': session_id,
                     })
             else:
-                with self._playwright_sessions_lock:
-                    session = self._playwright_sessions[session_id]
+                with self._mcp_sessions_lock:
+                    session = self._mcp_sessions[session_id]
                     session['status'] = 'stopped'
             
             return result
         except Exception as e:
             logger.error(f"Failed to start session {session_id}: {e}")
-            with self._playwright_sessions_lock:
-                if session_id in self._playwright_sessions:
-                    self._playwright_sessions[session_id]['status'] = 'stopped'
+            with self._mcp_sessions_lock:
+                if session_id in self._mcp_sessions:
+                    self._mcp_sessions[session_id]['status'] = 'stopped'
             return {'success': False, 'error': f'Start failed: {e}'}
 
     def delete_playwright_session_by_id(self, session_id: str) -> Dict[str, Any]:
@@ -714,11 +870,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             # First stop the session if running
             stop_result = self.stop_playwright_session_by_id(session_id)
             
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                del self._playwright_sessions[session_id]
+                del self._mcp_sessions[session_id]
                 
                 session_logger = setup_session_logging(session_id)
                 session_logger.info(f"Deleted Playwright session: {session_id}")
@@ -735,11 +891,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
     def set_playwright_session_upstream_by_id(self, session_id: str, host: str, port: int) -> Dict[str, Any]:
         """Set upstream connection for a specific session."""
         try:
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                session = self._playwright_sessions[session_id]
+                session = self._mcp_sessions[session_id]
                 session['host'] = str(host)
                 session['port'] = int(port)
                 session['connected'] = True
@@ -761,9 +917,9 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
     def get_all_playwright_sessions(self) -> Dict[str, Any]:
         """Get status of all Playwright sessions."""
         try:
-            with self._playwright_sessions_lock:
+            with self._mcp_sessions_lock:
                 sessions = []
-                for session_id, session in self._playwright_sessions.items():
+                for session_id, session in self._mcp_sessions.items():
                     proc = session.get('agent_proc')
                     running = bool(proc and (proc.poll() is None))
                     
@@ -798,11 +954,11 @@ class _AssistantHTTPServer(ThreadingHTTPServer):
             # First stop the session if running
             stop_result = self.stop_playwright_session_by_id(session_id)
             
-            with self._playwright_sessions_lock:
-                if session_id not in self._playwright_sessions:
+            with self._mcp_sessions_lock:
+                if session_id not in self._mcp_sessions:
                     return {'success': False, 'error': f'Session {session_id} not found'}
                 
-                del self._playwright_sessions[session_id]
+                del self._mcp_sessions[session_id]
                 
                 session_logger = setup_session_logging(session_id)
                 session_logger.info(f"Deleted Playwright session: {session_id}")
