@@ -748,6 +748,15 @@ class MCPToolsPlugin(Plugin):
                     end_ts = datetime.now()
                     dt_ms = int((end_ts - start_ts).total_seconds() * 1000)
                     self._record_tool_metrics(command_name, True, dt_ms)
+                    # Centralized telemetry & memory
+                    try:
+                        learner = getattr(self.assistant, 'mcp_tool_learner', None)
+                        if learner:
+                            await learner.record_event(command_name, extra, True, dt_ms, context={
+                                'mode': 'subprocess_smoke', 'cmd': cmd
+                            })
+                    except Exception:
+                        pass
                     await self._record_pattern(command_name, {'args': extra, 'cmd': cmd}, True, extra={'dynamic': True, 'mode': 'subprocess_smoke'})
 
                     # Prepare text output with truncation indicators
@@ -783,6 +792,14 @@ class MCPToolsPlugin(Plugin):
                     except Exception:
                         dt_ms = 0
                     self._record_tool_metrics(command_name, False, dt_ms)
+                    try:
+                        learner = getattr(self.assistant, 'mcp_tool_learner', None)
+                        if learner:
+                            await learner.record_event(command_name, user_args, False, dt_ms, context={
+                                'mode': 'subprocess_smoke'
+                            })
+                    except Exception:
+                        pass
                     try:
                         await self._record_pattern(command_name, {'args': user_args, 'error': str(e)}, False, extra={'dynamic': True, 'mode': 'subprocess_smoke'})
                     except Exception:
@@ -820,6 +837,14 @@ class MCPToolsPlugin(Plugin):
                 except Exception:
                     dt_ms = 0
                 self._record_tool_metrics(command_name, False, dt_ms)
+                try:
+                    learner = getattr(self.assistant, 'mcp_tool_learner', None)
+                    if learner:
+                        await learner.record_event(command_name, user_args, False, dt_ms, context={
+                            'mode': 'subprocess_smoke'
+                        })
+                except Exception:
+                    pass
                 try:
                     await self._record_pattern(
                         command_name,
@@ -871,11 +896,19 @@ class MCPToolsPlugin(Plugin):
         """Placeholder for Travliy Search via MCP.
         Usage: travliy.search <query>
         """
+        start_ts = datetime.now()
         query = ' '.join(args) if isinstance(args, list) else (args or '')
         if not query:
             return {'content': 'Usage: travliy.search <query>', 'type': 'error'}
         # No network yet: echo back intent, integrate with memory/metrics
-        self._record_tool_metrics('travliy.search', True, 0)
+        dt_ms = int((datetime.now() - start_ts).total_seconds() * 1000)
+        self._record_tool_metrics('travliy.search', True, dt_ms)
+        try:
+            learner = getattr(self.assistant, 'mcp_tool_learner', None)
+            if learner:
+                await learner.record_event('travliy.search', {'query': query}, True, dt_ms, context={'mode': 'scaffold'})
+        except Exception:
+            pass
         await self._record_pattern('travliy.search', {'query': query}, True)
         return {
             'content': f"[MCP scaffold] Travliy would search for: {query}",
@@ -887,10 +920,18 @@ class MCPToolsPlugin(Plugin):
         """Placeholder for Desktop Commander via MCP.
         Usage: desktop.cmd <action...>
         """
+        start_ts = datetime.now()
         action = ' '.join(args) if isinstance(args, list) else (args or '')
         if not action:
             return {'content': 'Usage: desktop.cmd <action...>', 'type': 'error'}
-        self._record_tool_metrics('desktop.cmd', True, 0)
+        dt_ms = int((datetime.now() - start_ts).total_seconds() * 1000)
+        self._record_tool_metrics('desktop.cmd', True, dt_ms)
+        try:
+            learner = getattr(self.assistant, 'mcp_tool_learner', None)
+            if learner:
+                await learner.record_event('desktop.cmd', {'action': action}, True, dt_ms, context={'mode': 'scaffold'})
+        except Exception:
+            pass
         await self._record_pattern('desktop.cmd', {'action': action}, True)
         return {
             'content': f"[MCP scaffold] Desktop Commander would perform: {action}",
@@ -902,10 +943,18 @@ class MCPToolsPlugin(Plugin):
         """Placeholder for Context7 integration via MCP.
         Usage: ctx7.search <query>
         """
+        start_ts = datetime.now()
         query = ' '.join(args) if isinstance(args, list) else (args or '')
         if not query:
             return {'content': 'Usage: ctx7.search <query>', 'type': 'error'}
-        self._record_tool_metrics('ctx7.search', True, 0)
+        dt_ms = int((datetime.now() - start_ts).total_seconds() * 1000)
+        self._record_tool_metrics('ctx7.search', True, dt_ms)
+        try:
+            learner = getattr(self.assistant, 'mcp_tool_learner', None)
+            if learner:
+                await learner.record_event('ctx7.search', {'query': query}, True, dt_ms, context={'mode': 'scaffold'})
+        except Exception:
+            pass
         await self._record_pattern('ctx7.search', {'query': query}, True)
         return {
             'content': f"[MCP scaffold] Context7 would search for: {query}",

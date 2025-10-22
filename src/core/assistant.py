@@ -11,6 +11,7 @@ from .config import Config
 from .llm_interface import LLMFactory
 from ..memory import MemoryManager, Memory, MemoryType, PatternDetector
 from ..learning import EvolutionaryLearner, SelfModifier, ReinforcementLearner
+from ..learning.mcp_tool_learner import MCPToolLearner
 from ..execution import SandboxExecutor
 from ..plugins import PluginManager
 
@@ -61,6 +62,9 @@ class SakanaAssistant:
         
         # Project discovery learner
         self.project_discovery_learner = None
+
+        # MCP tool learner (telemetry-driven tool selection)
+        self.mcp_tool_learner = None
     
     async def initialize(self):
         """Initialize all components"""
@@ -107,6 +111,9 @@ class SakanaAssistant:
         self.project_discovery_learner = ProjectDiscoveryLearner()
         # Start project discovery in background (after file discovery)
         asyncio.create_task(self._initialize_project_discovery())
+
+        # Initialize MCP tool learner
+        self.mcp_tool_learner = MCPToolLearner(self)
         
         # Initialize execution sandbox
         if self.config.sandbox_enabled:
@@ -874,6 +881,19 @@ Answer in 1-3 sentences unless more detail is requested."""
 
         steps: List[Dict[str, str]] = []
         text = goal.strip()
+
+        # Bias toward learned MCP tool suggestions when appropriate
+        try:
+            if self.mcp_tool_learner:
+                sugg = self.mcp_tool_learner.suggest_tools(text, top_k=1)
+                if sugg:
+                    name = sugg[0].get('name')
+                    if name and name in available_cmds:
+                        # Insert an initial step using the suggested tool with no args;
+                        # downstream logic may refine or add specific arguments.
+                        steps.append({"command": name, "args": ""})
+        except Exception:
+            pass
 
         # Heuristic: extract Windows paths and intents
         path_pattern = r"[A-Za-z]:\\[^\s\"]+"

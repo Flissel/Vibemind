@@ -119,3 +119,126 @@ a:hover {
   color: hsl(var(--accent-foreground));
   border-radius: var(--radius);
 }
+
+/* App shell and navigation */
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.app-nav {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--gradient-cosmic);
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-cosmic);
+}
+.app-nav .nav-link {
+  color: hsl(var(--primary-foreground));
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.app-content {
+  padding: 16px;
+}
+
+/* Cards */
+.card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+.card-header {
+  font-weight: 600;
+  padding: 8px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.card-body {
+  padding: 12px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: background-color .15s ease, box-shadow .15s ease, transform .05s ease;
+}
+.btn:hover { background-color: hsl(var(--input)); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: transparent;
+  box-shadow: var(--glow-cosmic);
+}
+.btn-danger {
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  border-color: transparent;
+}
+.btn-ghost {
+  background-color: transparent;
+  color: hsl(var(--foreground));
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  font-size: 12px;
+}
+.badge-success { background-color: hsl(140 40% 20%); color: hsl(140 90% 85%); }
+.badge-danger { background-color: hsl(0 40% 20%); color: hsl(0 90% 85%); }
+.badge-warning { background-color: hsl(45 40% 20%); color: hsl(45 90% 85%); }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; overflow-x: auto; }
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid hsl(var(--border));
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  cursor: pointer;
+  min-width: 100px;
+  font-size: 11px;
+}
+.tab.active { background-color: hsl(var(--card)); }
+
+/* Frames */
+.frame {
+  width: 100%;
+  height: 480px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background-color: hsl(var(--popover));
+}
+.frame-sm { height: 360px; }
+
+/* Inputs */
+.input {
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--input));
+  color: hsl(var(--foreground));
+}
+.muted { color: hsl(var(--muted-foreground)); }

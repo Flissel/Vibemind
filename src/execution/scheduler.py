@@ -115,6 +115,88 @@ class Scheduler:
                     'route': 'playwright',
                     'note': 'Routed to Playwright server (stub)'
                 }
+            elif target == 'github':
+                # Signal UI for GitHub operations
+                try:
+                    self._emit('open_github', {
+                        'correlation_id': job.correlation_id,
+                        'job_id': job.job_id,
+                        'task': job.task,
+                        'info': 'Scheduler requested GitHub MCP'
+                    })
+                except Exception:
+                    pass
+                # Simulate brief work for Phase 1
+                time.sleep(0.2)
+                outputs = {
+                    'route': 'github',
+                    'note': 'Routed to GitHub MCP server (stub)'
+                }
+            elif target == 'docker':
+                # Signal UI for Docker operations
+                try:
+                    self._emit('open_docker', {
+                        'correlation_id': job.correlation_id,
+                        'job_id': job.job_id,
+                        'task': job.task,
+                        'info': 'Scheduler requested Docker MCP'
+                    })
+                except Exception:
+                    pass
+                # Simulate brief work for Phase 1
+                time.sleep(0.2)
+                outputs = {
+                    'route': 'docker',
+                    'note': 'Routed to Docker MCP server (stub)'
+                }
+            elif target == 'desktop':
+                # Signal UI for Desktop Commander operations
+                try:
+                    self._emit('open_desktop', {
+                        'correlation_id': job.correlation_id,
+                        'job_id': job.job_id,
+                        'task': job.task,
+                        'info': 'Scheduler requested Desktop Commander MCP'
+                    })
+                except Exception:
+                    pass
+                time.sleep(0.2)
+                outputs = {
+                    'route': 'desktop',
+                    'note': 'Routed to Desktop Commander MCP server (stub)'
+                }
+            elif target == 'context7':
+                # Signal UI for Context7 operations
+                try:
+                    self._emit('open_context7', {
+                        'correlation_id': job.correlation_id,
+                        'job_id': job.job_id,
+                        'task': job.task,
+                        'info': 'Scheduler requested Context7 MCP'
+                    })
+                except Exception:
+                    pass
+                time.sleep(0.2)
+                outputs = {
+                    'route': 'context7',
+                    'note': 'Routed to Context7 MCP server (stub)'
+                }
+            elif target == 'redis':
+                # Signal UI for Redis operations
+                try:
+                    self._emit('open_redis', {
+                        'correlation_id': job.correlation_id,
+                        'job_id': job.job_id,
+                        'task': job.task,
+                        'info': 'Scheduler requested Redis MCP'
+                    })
+                except Exception:
+                    pass
+                time.sleep(0.2)
+                outputs = {
+                    'route': 'redis',
+                    'note': 'Routed to Redis MCP server (stub)'
+                }
             else:
                 # Unknown target: simulate processing
                 time.sleep(0.2)

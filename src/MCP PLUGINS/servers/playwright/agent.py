@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import sys
 import threading
 import time
 import queue
@@ -10,6 +11,8 @@ import base64
 import re
 import urllib.parse
 import uuid
+from dataclasses import dataclass
+import importlib.util
 
 # Load .env for environment variables like OPENAI_API_KEY
 try:
@@ -18,20 +21,68 @@ try:
 except Exception:
     pass
 
-# Autogen / MCP imports
-from autogen_ext.models.openai import OpenAIChatCompletionClient
-from autogen_ext.tools.mcp import McpWorkbench
-from autogen_ext.tools.mcp import StdioServerParams, create_mcp_server_session, mcp_server_tools
-from autogen_agentchat.agents import AssistantAgent
-from autogen_core.tools import ImageResultContent
-from event_task import EventServer, start_ui_server
+# ========== DIAGNOSTIC LOGGING: AutoGen Import Status ==========
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [PLAYWRIGHT-AGENT] %(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
+
+logger.info("=" * 80)
+logger.info("PLAYWRIGHT AGENT STARTUP - DIAGNOSTIC MODE")
+logger.info("=" * 80)
+
+# Autogen / MCP imports - Society of Mind pattern
+try:
+    logger.info("Attempting to import AutoGen dependencies...")
+    from autogen_ext.models.openai import OpenAIChatCompletionClient
+    logger.info("✓ autogen_ext.models.openai imported successfully")
+    
+    from autogen_ext.tools.mcp import McpWorkbench
+    logger.info("✓ autogen_ext.tools.mcp.McpWorkbench imported successfully")
+    
+    from autogen_ext.tools.mcp import StdioServerParams, create_mcp_server_session, mcp_server_tools
+    logger.info("✓ autogen_ext.tools.mcp utilities imported successfully")
+    
+    from autogen_agentchat.agents import AssistantAgent, SocietyOfMindAgent
+    logger.info("✓ autogen_agentchat.agents imported successfully")
+    
+    from autogen_agentchat.teams import RoundRobinGroupChat
+    logger.info("✓ autogen_agentchat.teams imported successfully")
+    
+    from autogen_agentchat.conditions import TextMentionTermination
+    logger.info("✓ autogen_agentchat.conditions imported successfully")
+    
+    from autogen_core.tools import ImageResultContent
+    from pydantic import BaseModel
+    logger.info("✓ autogen_core.tools imported successfully")
+    
+    logger.info("✓✓✓ ALL AUTOGEN DEPENDENCIES IMPORTED SUCCESSFULLY ✓✓✓")
+except ImportError as e:
+    logger.error("=" * 80)
+    logger.error("CRITICAL ERROR: AutoGen dependency import failed!")
+    logger.error(f"Missing dependency: {e}")
+    logger.error("Please install AutoGen: pip install 'autogen-agentchat>=0.4' 'autogen-ext[openai]>=0.4'")
+    logger.error("=" * 80)
+    sys.exit(1)
+except Exception as e:
+    logger.error(f"Unexpected error during AutoGen import: {e}")
+    sys.exit(1)
+
+# Import event server and preview utilities from shared and local modules
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from event_server import EventServer, start_ui_server
+
 from preview_utils import PreviewManager
+
+# Event broadcasting for live GUI updates
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from model_init import init_model_client as shared_init_model_client
+
 # Optional tools module for centralized config/prompt loading
 try:
-    from tools import init_model_client, get_system_prompt, get_task_prompt, load_servers_config  # noqa: F401
+    from tools import get_system_prompt, get_task_prompt, load_servers_config  # noqa: F401
 except Exception:
     # Fallback stubs if running without module resolution
-    init_model_client = None  # type: ignore
     get_system_prompt = None  # type: ignore
     get_task_prompt = None  # type: ignore
     load_servers_config = None  # type: ignore
@@ -44,10 +95,6 @@ try:
     console = Console()
 except Exception:
     console = None
-
-# ========== Constants ==========
-DEFAULT_UI_HOST = "127.0.0.1"
-DEFAULT_UI_PORT = int(os.getenv("MCP_UI_PORT", "8787"))
 
 # ========== File helpers ==========
 BASE_DIR = os.path.dirname(__file__)
@@ -80,7 +127,7 @@ DEFAULT_SERVERS_JSON = {
             "active": True,
             "type": "stdio",
             "command": "npx",
-            "args": ["--yes", "@playwright/mcp@latest", "--headless"],
+            "args": ["--yes", "@playwright/mcp@latest", "--browser", "msedge"],
             "read_timeout_seconds": 120
         }
     ]
@@ -113,7 +160,72 @@ if not os.path.exists(MODEL_CONFIG_PATH):
     with open(MODEL_CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(DEFAULT_MODEL_JSON, f, indent=2)
 
+# ========== Agent System Prompts (Society of Mind) - Loaded from Python modules ==========
+def load_prompt_from_module(module_name: str, default: str) -> str:
+    """Load prompt from a Python module's PROMPT variable."""
+    try:
+        # Try to import the prompt module
+        import importlib.util
+        module_path = os.path.join(BASE_DIR, f"{module_name}.py")
+
+        if os.path.exists(module_path):
+            spec = importlib.util.spec_from_file_location(module_name, module_path)
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                if hasattr(module, 'PROMPT'):
+                    return module.PROMPT
+        return default
+    except Exception as e:
+        print(f"Warning: Failed to load prompt from {module_name}: {e}")
+        return default
+
+# Default prompts (used if modules don't exist or fail to load)
+DEFAULT_BROWSER_OPERATOR_PROMPT = """ROLE: Browser Operator (Playwright MCP)
+GOAL: Complete the task entirely in the browser (navigation, search, clicks, forms, scraping).
+TOOLS: Use ONLY the available MCP Playwright tools (browser_navigate, browser_click, browser_fill, browser_wait_for_selector, browser_evaluate, browser_screenshot).
+GUIDELINES:
+- Be robust: wait for visible/clickable elements before interacting.
+- Log steps briefly (bullet points).
+- Extract only what's necessary (concise, structured).
+- Do NOT enter sensitive data.
+- When the task is fulfilled, provide a compact summary and signal completion clearly.
+OUTPUT:
+- Brief step log
+- Relevant results (compact, JSON-like if appropriate)
+- Completion signal: "READY_FOR_VALIDATION"
+"""
+
+DEFAULT_QA_VALIDATOR_PROMPT = """ROLE: QA Validator
+GOAL: Verify that the user's task is completely and correctly fulfilled.
+CHECK:
+- Were the required information/actions precisely delivered?
+- Are the results traceable (links/confirmations)?
+RESPONSE:
+- If everything is correct: respond ONLY with 'APPROVE' plus 1-2 bullet points (no long texts).
+- If something is missing: name precisely 1-2 gaps (why/what is missing).
+"""
+
+# Load prompts from Python modules (executed once at module import)
+PROMPT_BROWSER_OPERATOR = load_prompt_from_module("browser_operator_prompt", DEFAULT_BROWSER_OPERATOR_PROMPT)
+PROMPT_QA_VALIDATOR = load_prompt_from_module("qa_validator_prompt", DEFAULT_QA_VALIDATOR_PROMPT)
+
+
+def init_model_client(task: str = "") -> OpenAIChatCompletionClient:
+    """Initialize OpenAI chat completion client with intelligent routing.
+
+    Args:
+        task: Task description (optional, used for model selection)
+
+    Returns:
+        OpenAIChatCompletionClient configured with appropriate model
+    """
+    # Use shared model initialization utility
+    return shared_init_model_client("playwright", task)
+
+
 # ========== Simple SSE UI + Event Server ==========
+
 class _EventServer(ThreadingHTTPServer):
     """Threaded HTTP server with channel-aware event broadcasting and image storage.
 
@@ -647,11 +759,8 @@ async def run(
     # Start UI early using new EventServer/start_ui_server so the user sees status even if model init fails
     event_server = EventServer()
     # Resolve UI bind parameters with safe defaults; allow dynamic port assignment via 0
-    ui_bind_host = (ui_host or os.getenv("MCP_UI_HOST") or DEFAULT_UI_HOST)
-    try:
-        env_port = int(os.getenv("MCP_UI_PORT", str(DEFAULT_UI_PORT)))
-    except Exception:
-        env_port = DEFAULT_UI_PORT
+    ui_bind_host = (ui_host or os.getenv("MCP_UI_HOST") or "127.0.0.1")
+    env_port = int(os.getenv("MCP_UI_PORT", "0"))
     # Prefer dynamic port assignment when no explicit port is provided.
     # Using 0 lets the OS pick a free port, avoiding conflicts when starting multiple agents.
     env_port = int(os.getenv("MCP_UI_PORT", "0") or "0")
@@ -691,62 +800,6 @@ async def run(
             servers_cfg = json.load(f)
     except Exception:
         servers_cfg = DEFAULT_SERVERS_JSON
-    try:
-        with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as f:
-            model_cfg = json.load(f)
-    except Exception:
-        model_cfg = DEFAULT_MODEL_JSON
-
-    # Resolve model client
-    model = model_cfg.get("model")
-    base_url = model_cfg.get("base_url")
-    api_key_env = model_cfg.get("api_key_env") or "OPENAI_API_KEY"
-    api_key = os.getenv(api_key_env)
-
-    model_info = None
-    if base_url:
-        from autogen_core.models import ModelFamily
-        model_info = {
-            "vision": False,
-            "function_calling": True,
-            "json_output": False,
-            "structured_output": False,
-            "family": ModelFamily.UNKNOWN,
-        }
-        # Fallback: lokale Server (Ollama/LM Studio) benötigen i. d. R. keinen echten API-Key.
-        # OpenAI-Client verlangt aber einen Wert, daher Dummy setzen, wenn nicht vorhanden.
-        if not api_key:
-            api_key = os.getenv("LOCAL_API_KEY", "not-needed")
-
-    try:
-        model_client = OpenAIChatCompletionClient(
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
-            model_info=model_info,
-        )
-    except Exception as e:
-        _broadcast(event_server, "error", f"LLM init failed: {e}")
-        if keepalive:
-            _broadcast(event_server, "status", "SSE UI will remain online. Set your API key or base_url and restart.")
-            # Keep the UI running to allow preview even on failure
-            while True:
-                await asyncio.sleep(3600)
-        else:
-            try:
-                event_server.broadcast("session.completed", {
-                    "session_id": session_id,
-                    "status": "failed",
-                    "reason": "llm_init_failed",
-                    "ts": time.time(),
-                })
-            except Exception:
-                pass
-            try:
-                httpd.shutdown()
-            except Exception:
-                pass
-            return
 
     # Pick active server (playwright for now)
     active = next((s for s in servers_cfg.get("servers", []) if s.get("name") == "playwright" and s.get("active")), None)
@@ -774,85 +827,57 @@ async def run(
         read_timeout_seconds=int(active.get("read_timeout_seconds", 120)),
     )
 
-    # Initialize MCP and tools (also log names for the LLM)
-    async with create_mcp_server_session(params) as session:
-        await session.initialize()
-        tools = await mcp_server_tools(server_params=params, session=session)
-        tool_names = [getattr(t, "name", "") for t in tools]
-        _broadcast(event_server, "status", f"Playwright tools: {tool_names}")
-
-        # Heuristically pick a screenshot tool and tabs tool, if available
-        screenshot_tool = next((n for n in tool_names if isinstance(n, str) and 'screenshot' in n.lower()), None)
-        tabs_tool_name = next((n for n in tool_names if isinstance(n, str) and 'tabs' in n.lower()), 'browser_tabs')
-
-        # expose to event_server for compatibility if needed
-        event_server.screenshot_tool_name = screenshot_tool  # type: ignore
-        event_server.tabs_tool_name = tabs_tool_name  # type: ignore
-
-    # Compose dynamic system message (supports override via arg/env)
-    # Clear comments for easy debug and maintenance
-    try:
-        # Highest priority: explicit override passed into run()
-        sys_override_val = system_override
-        # Next: environment-based overrides
-        if not sys_override_val:
-            sys_override_val = os.getenv("MCP_SYSTEM_PROMPT") or os.getenv("SYSTEM_PROMPT")
-        if sys_override_val and isinstance(sys_override_val, str) and sys_override_val.strip():
-            sys_tmpl = sys_override_val
-        else:
-            with open(SYSTEM_PROMPT_PATH, "r", encoding="utf-8") as f:
-                sys_tmpl = f.read()
-    except Exception:
-        sys_tmpl = DEFAULT_SYSTEM_PROMPT
-    sys_msg = sys_tmpl.replace("{MCP_EVENT}", "playwright")
-
-    # Compose task prompt (supports dynamic assignment via arg/env)
-    try:
-        with open(TASK_PROMPT_PATH, "r", encoding="utf-8") as f:
-            task_msg = f.read()
-    except Exception:
-        task_msg = DEFAULT_TASK_PROMPT
-
     # Determine goal override from args/env and build final task
     goal_override = task_override or os.getenv("MCP_TASK") or os.getenv("TASK")
-    if isinstance(goal_override, str) and goal_override.strip():
-        # Combine generic task instructions with the dynamic user goal
-        task = task_msg + "\nGoal: " + goal_override.strip()
-    else:
-        # No dynamic goal provided; use base task prompt only
-        task = task_msg
+    if not goal_override or not goal_override.strip():
+        goal_override = "Browse the web and complete the requested task."
 
-    # Run agent with workbench
-    async with McpWorkbench(params) as mcp:
-        agent = AssistantAgent(
-            name="playwright",
-            model_client=model_client,
-            workbench=mcp,
-            reflect_on_tool_use=True,
-            model_client_stream=True,
-            system_message=sys_msg,
-        )
-
-        _broadcast(event_server, "status", "Agent started. Streaming...")
-
-        # Heartbeat: send status regularly so the UI shows liveness
-        stop_heartbeat = asyncio.Event()
-
-        async def _heartbeat():
+    # Initialize model client with task-aware model selection
+    # This allows intelligent routing based on task complexity
+    try:
+        # Operator needs Function Calling for MCP tools - force primary/balanced model
+        operator_client = init_model_client(goal_override)
+        
+        # QA Validator doesn't need tools, can use reasoning model
+        # But we'll use the same for consistency since o1 models have issues
+        validator_client = init_model_client(goal_override)
+    except Exception as e:
+        _broadcast(event_server, "error", f"LLM init failed: {e}")
+        if keepalive:
+            _broadcast(event_server, "status", "SSE UI will remain online. Set your API key or base_url and restart.")
+            # Keep the UI running to allow preview even on failure
+            while True:
+                await asyncio.sleep(3600)
+        else:
             try:
-                while not stop_heartbeat.is_set():
-                    event_server.broadcast("log", "heartbeat: running")
-                    await asyncio.sleep(5)
-            except asyncio.CancelledError:
-                pass
+                event_server.broadcast("session.completed", {
+                    "session_id": session_id,
+                    "status": "failed",
+                    "reason": "llm_init_failed",
+                    "ts": time.time(),
+                })
             except Exception:
-                # Heartbeat must not raise
                 pass
+            try:
+                httpd.shutdown()
+            except Exception:
+                pass
+            return
 
-        hb_task = asyncio.create_task(_heartbeat())
+    # Run Society of Mind multi-agent system with workbench
+    async with McpWorkbench(params) as mcp:
+        # Initialize MCP tools
+        async with create_mcp_server_session(params) as session:
+            await session.initialize()
+            tools = await mcp_server_tools(server_params=params, session=session)
+            tool_names = [getattr(t, "name", "") for t in tools]
+            _broadcast(event_server, "status", f"Playwright tools: {tool_names}")
 
-        # Initialize PreviewManager with MCP workbench, event server, and tool names
-        # This modularizes screenshot/source capture logic and keeps consistent naming.
+            # Heuristically pick a screenshot tool and tabs tool, if available
+            screenshot_tool = next((n for n in tool_names if isinstance(n, str) and 'screenshot' in n.lower()), None)
+            tabs_tool_name = next((n for n in tool_names if isinstance(n, str) and 'tabs' in n.lower()), 'browser_tabs')
+
+        # Initialize PreviewManager with event streaming
         preview_mgr = PreviewManager(
             mcp=mcp,
             event_server=event_server,
@@ -860,74 +885,53 @@ async def run(
             tabs_tool_name=tabs_tool_name,
         )
 
-        last_shot: float = 0.0
+        _broadcast(event_server, "status", "Society of Mind: Browser Operator + QA Validator")
 
-        async def maybe_capture_screenshot() -> None:
-            """Thin wrapper delegating screenshot capture to PreviewManager for modularity."""
-            try:
-                await preview_mgr.maybe_capture_screenshot()
-            except Exception as e:
-                _broadcast(event_server, "error", f"Screenshot failed: {e}")
+        # Create Browser Operator Agent with MCP tools
+        browser_operator = AssistantAgent(
+            "BrowserOperator",
+            model_client=operator_client,
+            workbench=mcp,
+            system_message=PROMPT_BROWSER_OPERATOR,
+            reflect_on_tool_use=True,
+            model_client_stream=True,
+        )
 
-        async def maybe_capture_source():
-            """Delegate to PreviewManager for source extraction and browser state broadcasting."""
-            try:
-                await preview_mgr.maybe_capture_source()
-            except Exception as e:
-                _broadcast(event_server, "error", f"Source capture failed: {e}")
+        # Create QA Validator Agent (no tools, pure evaluation)
+        qa_validator = AssistantAgent(
+            "QAValidator",
+            model_client=validator_client,
+            system_message=PROMPT_QA_VALIDATOR,
+        )
 
-        async def ensure_initial_preview():
-            """Perform a safe initial navigation and screenshot to populate /preview.png.
-            This helps GUI proxy consumers avoid 404 'No preview yet' on first load.
-            """
-            try:
-                # If no screenshot tool is available, nothing to do.
-                if not screenshot_tool:
-                    return
-                # Navigate to a safe, simple page to ensure the browser opens.
-                try:
-                    await mcp.call_tool('browser_navigate', { 'url': 'https://example.com' })
-                    event_server.broadcast('log', 'Initial navigate: example.com')
-                except Exception as e:
-                    _broadcast(event_server, 'error', f'Initial navigate failed: {e}')
-                # Give the page a moment to settle before capturing.
-                try:
-                    await asyncio.sleep(1.5)
-                except Exception:
-                    pass
-                # Attempt an initial screenshot; PreviewManager will persist PNG bytes.
-                try:
-                    await preview_mgr.maybe_capture_screenshot()
-                except Exception as e:
-                    _broadcast(event_server, 'error', f'Initial screenshot failed: {e}')
-            except Exception:
-                # Never raise from bootstrap path.
-                pass
+        # Inner team termination: wait for "APPROVE" from QA Validator
+        inner_termination = TextMentionTermination("APPROVE")
+        inner_team = RoundRobinGroupChat(
+            [browser_operator, qa_validator],
+            termination_condition=inner_termination,
+            max_turns=30,  # Safety limit to prevent infinite loops
+        )
 
-        # Try initial preview
-        try:
-            asyncio.create_task(maybe_capture_screenshot())
-            asyncio.create_task(ensure_initial_preview())
-        except Exception:
-            pass
+        # Society of Mind wrapper
+        som_agent = SocietyOfMindAgent(
+            "society_of_mind",
+            team=inner_team,
+            model_client=operator_client,  # Use operator client for coordination
+        )
 
-        # Precompute tokens for detecting Playwright tool activity in streamed text
-        try:
-            tool_tokens = set(n.lower() for n in tool_names if n)
-        except Exception:
-            tool_tokens = set()
+        # Outer team (just the SoM agent)
+        team = RoundRobinGroupChat([som_agent], max_turns=1)
 
-        # Continuous preview loop to keep the browser stream updating
+        _broadcast(event_server, "status", f"Starting task: {goal_override}")
+
+        # Background task for preview updates during execution
         preview_stop = asyncio.Event()
         async def _preview_loop():
             try:
                 while not preview_stop.is_set():
                     try:
-                        await maybe_capture_source()
-                    except Exception:
-                        pass
-                    try:
-                        await maybe_capture_screenshot()
+                        await preview_mgr.maybe_capture_source()
+                        await preview_mgr.maybe_capture_screenshot()
                     except Exception:
                         pass
                     await asyncio.sleep(2.5)
@@ -936,219 +940,59 @@ async def run(
 
         preview_task = asyncio.create_task(_preview_loop())
 
-        # Helper: coerce arbitrary value structures into text
-        def _coerce_text_from_value(v):
-            try:
-                if v is None:
-                    return ""
-                if isinstance(v, str):
-                    return v
-                if isinstance(v, dict):
-                    # Prefer common text-bearing keys first
-                    for key in ("text", "content", "delta_text", "delta", "partial", "output_text", "value"):
-                        if key in v:
-                            t = _coerce_text_from_value(v[key])
-                            if t:
-                                return t
-                    # Handle OpenAI-like streaming shapes
-                    if "choices" in v and isinstance(v["choices"], list):
-                        for ch in v["choices"]:
-                            t = _coerce_text_from_value(ch)
-                            if t:
-                                return t
-                    # Fallback: concatenate any nested text values
-                    parts = []
-                    for _k, _val in v.items():
-                        t = _coerce_text_from_value(_val)
-                        if t:
-                            parts.append(t)
-                    return "".join(parts)
-                if isinstance(v, (list, tuple)):
-                    parts = []
-                    for item in v:
-                        t = _coerce_text_from_value(item)
-                        if t:
-                            parts.append(t)
-                    return "".join(parts)
-                # Pydantic-like / dataclass-like objects
-                if hasattr(v, "model_dump"):
-                    return _coerce_text_from_value(v.model_dump())
-                if hasattr(v, "__dict__"):
-                    return _coerce_text_from_value(vars(v))
-                return ""
-            except Exception:
-                return ""
-
-        # Helper: robustly extract only the human-readable text from streaming chunks
-        def _extract_human_text_from_chunk(chunk):
-            try:
-                # Fast-path: handle plain dict/list/tuple chunks by coercing to text directly
-                # This covers cases where the streaming event is yielded as a raw mapping like
-                # {"type": "content", "content": {"text": "..."}} or similar nested shapes.
-                if isinstance(chunk, (dict, list, tuple)):
-                    txt = _coerce_text_from_value(chunk)
-                    if txt:
-                        return txt
-
-                # Direct attributes commonly used by streaming events
-                if hasattr(chunk, "content"):
-                    txt = _coerce_text_from_value(getattr(chunk, "content"))
-                    if txt:
-                        return txt
-                if hasattr(chunk, "text") and isinstance(getattr(chunk, "text"), str):
-                    t = getattr(chunk, "text")
-                    if t:
-                        return t
-                if hasattr(chunk, "delta"):
-                    txt = _coerce_text_from_value(getattr(chunk, "delta"))
-                    if txt:
-                        return txt
-                # Dict-like conversions
-                if hasattr(chunk, "model_dump"):
-                    data = chunk.model_dump()
-                    txt = _coerce_text_from_value(data)
-                    if txt:
-                        return txt
-                if hasattr(chunk, "__dict__"):
-                    data = vars(chunk)
-                    txt = _coerce_text_from_value(data)
-                    if txt:
-                        return txt
-                # Last resort: try to parse JSON from string repr or capture content=...
-                s = str(chunk)
-                try:
-                    j = json.loads(s)
-                    txt = _coerce_text_from_value(j)
-                    if txt:
-                        return txt
-                except Exception:
-                    try:
-                        m = re.search(r"content=(?:'|\")(.+?)(?:'|\")", s, re.DOTALL)
-                        if m:
-                            return m.group(1)
-                    except Exception:
-                        pass
-                return ""
-            except Exception:
-                try:
-                    return str(getattr(chunk, "content", "")) or ""
-                except Exception:
-                    return ""
-
-        # Parse and broadcast <think> blocks separately, while forwarding other content
-        # Clear comments added for easy debug and maintenance
-        think_open = False
-        think_buf = ""
         try:
-            async for chunk in agent.run_stream(task=task):
-                # Extract only the human-readable content from the streaming chunk
-                text = _extract_human_text_from_chunk(chunk)
-                if not isinstance(text, str):
-                    try:
-                        text = str(text)
-                    except Exception:
-                        text = ""
-                text = text or ""
-                if not text.strip():
-                    # Skip empty/whitespace-only payloads to keep UI clean
-                    continue
-
-                remaining = text
-                normal_out: List[str] = []
-
-                # Stream-safe THINK parser that handles:
-                # - Inline <think>...</think> segments within a single chunk
-                # - Open <think> tags that span across multiple chunks
-                # - Multiple THINK segments within the same chunk
+            # Stream execution to UI
+            async for message in team.run_stream(task=goal_override):
                 try:
-                    while remaining:
-                        if think_open:
-                            # Inside a THINK block — look for the closing tag
-                            m_close = re.search(r'(?is)</think>', remaining)
-                            if m_close:
-                                # Append up to the closing tag to buffer
-                                think_buf += remaining[:m_close.start()]
-                                # Broadcast the THINK block (separated on UI)
-                                event_server.broadcast("think", {"text": think_buf})
-                                # Reset THINK state
-                                think_buf = ""
-                                think_open = False
-                                # Continue parsing after the closing tag
-                                remaining = remaining[m_close.end():]
-                                continue
-                            else:
-                                # No closing tag yet — buffer everything and wait for next chunk
-                                think_buf += remaining
-                                remaining = ""
-                                break
+                    # Extract and broadcast message content
+                    if hasattr(message, 'content'):
+                        content = message.content
+                        if isinstance(content, str):
+                            event_server.broadcast("chunk", {"text": content})
                         else:
-                            # Not inside THINK — look for the next opening tag
-                            m_open = re.search(r'(?is)<think>', remaining)
-                            if m_open:
-                                # Normal content before the THINK tag goes to output
-                                before = remaining[:m_open.start()]
-                                if before:
-                                    normal_out.append(before)
-                                # Enter THINK mode and continue parsing after the opening tag
-                                remaining = remaining[m_open.end():]
-                                think_open = True
-                                continue
-                            else:
-                                # No more THINK tags — remaining is normal output
-                                normal_out.append(remaining)
-                                remaining = ""
-                                break
-                except Exception:
-                    # If parser fails for any reason, forward the raw text as normal content
-                    normal_out.append(text)
+                            event_server.broadcast("chunk", {"text": str(content)})
 
-                # Broadcast any normal content (outside THINK)
-                out_text = ("".join(normal_out)).strip()
-                if out_text:
-                    event_server.broadcast("chunk", {"text": out_text})
+                    # Capture screenshots after tool usage
+                    msg_str = str(message).lower()
+                    if 'browser_' in msg_str or 'tool' in msg_str:
+                        try:
+                            await preview_mgr.maybe_capture_screenshot()
+                        except Exception:
+                            pass
+                except Exception as e:
+                    _broadcast(event_server, "error", f"Message processing error: {e}")
 
-                # Surface tool call lines specially (based on original text to preserve detection)
-                low = (text or "").lower()
-                if (
-                    "tool_call" in low
-                    or "mcp_playwright_" in text
-                    or "toolcallexecutionevent" in low
-                    or "name='browser_" in text
-                    or " browser_" in text
-                    or any(tok and tok in low for tok in tool_tokens)
-                ):
-                    event_server.broadcast("tool", {"text": text})
-                    # Opportunistically update preview and source on tool activity
-                    try:
-                        await maybe_capture_source()
-                        await maybe_capture_screenshot()
-                    except Exception:
-                        pass
-                    try:
-                        await maybe_capture_source()
-                    except Exception:
-                        pass
-            # On stream end, flush any pending THINK buffer
-            if think_open and think_buf.strip():
-                event_server.broadcast("think", {"text": think_buf})
-                think_buf = ""
-                think_open = False
-            # Stream-Ende an UI melden
-            event_server.broadcast("status", {"text": "stream end"})
+            _broadcast(event_server, "status", "Society of Mind workflow completed")
+
+            # Send final result event for modal display (Playwright uses iframe viewer, but we add this for consistency)
+            try:
+                event_server.broadcast("agent.completion", {
+                    "status": "success",
+                    "content": "Browser automation task completed successfully",
+                    "tool": "playwright",
+                    "timestamp": time.time()
+                })
+            except Exception:
+                pass
+
+            # Close browser after task completion
+            try:
+                await mcp.call_tool('browser_close', {})
+                _broadcast(event_server, "status", "Browser closed")
+            except Exception as e:
+                _broadcast(event_server, "error", f"Failed to close browser: {e}")
+
         except Exception as e:
-            _broadcast(event_server, "error", f"Agent error: {e}")
+            _broadcast(event_server, "error", f"Execution error: {e}")
+            # Try to close browser even on error
+            try:
+                await mcp.call_tool('browser_close', {})
+            except Exception:
+                pass
             raise
         finally:
-            try:
-                stop_heartbeat.set()
-                hb_task.cancel()
-            except Exception:
-                pass
-            try:
-                preview_stop.set()
-                preview_task.cancel()
-            except Exception:
-                pass
+            preview_stop.set()
+            preview_task.cancel()
 
         # Emit session completed event and either exit or keep UI alive based on flag
         try:

@@ -66,7 +66,13 @@ class Config:
     tool_selection_enabled: bool = True
     tool_selection_exploration_rate: float = 0.1  # epsilon for epsilon-greedy
     tool_selection_min_samples: int = 5  # min calls before exploitation kicks in
-    
+
+    # MCP Session Settings
+    mcp_session: dict = None  # MCP session termination config
+
+    # OpenRouter Settings (Global)
+    openrouter: dict = None  # OpenRouter configuration (loaded from config.yaml, used globally)
+
     def __post_init__(self):
         # Set default paths
         if self.data_dir is None:

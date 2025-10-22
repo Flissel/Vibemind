@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-event_task.py
-Event broadcasting server and UI handler extracted from agent.py for reuse.
-Provides: EventServer, UIHandler, start_ui_server, and helper tasks.
-Clear comments for easy debug; naming aligned with other agents.
+event_task.py - DEPRECATED
+This module is deprecated and will be removed in a future version.
+Please use shared.event_server instead.
+
+Keeping for backward compatibility only.
 """
 import base64
 import json
@@ -12,114 +13,22 @@ from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from threading import Thread, Lock
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse, parse_qs
-
-# Allow running as a standalone module or as part of the package
-try:
-    from .constants import DEFAULT_UI_HOST, DEFAULT_UI_PORT  # type: ignore
-except Exception:
-    # Fallback for running this file or importing as a sibling module
-    from constants import DEFAULT_UI_HOST, DEFAULT_UI_PORT  # type: ignore
-
-# ---------- EventServer ----------
-
-@dataclass
-class Event:
-    type: str
-    value: Any
-    # Monotonic sequence ID for polling fallback
-    seq: int = 0
+import warnings
+import sys
+import os
 
 
-class EventServer:
-    """Minimal event broadcast server with SSE endpoint and image cache.
+# Issue deprecation warning
+warnings.warn(
+    "playwright/event_task.py is deprecated. Use shared.event_server instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
-    Compatible with legacy agent expectations by exposing simple state fields.
-    """
-
-    def __init__(self):
-        # Last N events for late subscribers
-        self._buffer: List[Event] = []
-        self._max_buffer = 200
-        self._clients: List = []  # list of wfile objects
-        self._latest_preview_png_b64: Optional[str] = None
-        self._lock = Lock()
-        # Global increasing sequence for events
-        self._seq: int = 0
-        # --- Compatibility state (used by legacy agent code) ---
-        self.browser_open_last_state: Optional[bool] = None
-        self.screenshot_skip_last_log_ts: float = 0.0
-        self.last_image_ts: float = 0.0
-        self.last_source: Optional[str] = None
-        self.last_open_signal_ts: float = 0.0
-
-    def broadcast(self, type_: str, value: Any) -> None:
-        """Broadcast an event to all connected clients and buffer it (synchronous).
-        Uses a simple lock for thread-safety.
-        """
-        # Normalize text-centric event values to strings to avoid "[object Object]" in UI
-        text_types = {"log", "tool", "think", "error", "url", "replace_last"}
-        try:
-            value_out = value
-            if type_ in text_types and not isinstance(value_out, str):
-                if isinstance(value_out, (dict, list)):
-                    value_out = json.dumps(value_out, ensure_ascii=False)
-                else:
-                    value_out = str(value_out)
-        except Exception:
-            value_out = str(value)
-
-        with self._lock:
-            # assign next sequence id
-            self._seq += 1
-            evt = Event(type=type_, value=value_out, seq=self._seq)
-            # buffer maintenance
-            self._buffer.append(evt)
-            if len(self._buffer) > self._max_buffer:
-                self._buffer = self._buffer[-self._max_buffer :]
-            # write to all clients; drop broken ones
-            stale = []
-            payload = f"data: {json.dumps({'type': type_, 'value': value_out}, ensure_ascii=False)}\n\n".encode("utf-8")
-            for w in list(self._clients):
-                try:
-                    w.write(payload)
-                    w.flush()
-                except Exception:
-                    stale.append(w)
-            # cleanup stale
-            for s in stale:
-                try:
-                    self._clients.remove(s)
-                except ValueError:
-                    pass
-
-    def get_events_since(self, since: int) -> Tuple[int, List[Dict[str, Any]]]:
-        """Return (last_seq, items) where items are events with seq > since.
-        Items are shaped for polling UI: {type, payload, seq}.
-        """
-        with self._lock:
-            last_seq = self._seq
-            items: List[Dict[str, Any]] = []
-            for e in self._buffer:
-                if e.seq > since:
-                    items.append({"type": e.type, "payload": e.value, "seq": e.seq})
-            return last_seq, items
-
-    def set_preview_png(self, png_b64: str) -> None:
-        self._latest_preview_png_b64 = png_b64
-
-    def get_preview_png(self) -> Optional[str]:
-        return self._latest_preview_png_b64
-
-    def set_channel_image(self, img_bytes: bytes, mime: str = "image/png", channel: str = "default") -> None:
-        """Compatibility shim for legacy agent: store preview from raw bytes."""
-        try:
-            self._latest_preview_png_b64 = base64.b64encode(img_bytes).decode("ascii")
-        except Exception:
-            # Keep previous preview if conversion fails
-            pass
-
-    def _register_client(self, wfile) -> None:
-        self._clients.append(wfile)
+# Forward imports to shared module for backward compatibility
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from event_server import EventServer, start_ui_server
+from constants import DEFAULT_UI_HOST, DEFAULT_UI_PORT
 
 
 # ---------- UI Handler ----------
@@ -304,31 +213,13 @@ setInterval(()=>{ const img=document.getElementById('preview'); img.src='/previe
 
 # ---------- Orchestration helpers ----------
 
-def start_ui_server(event_server: EventServer, host: str = DEFAULT_UI_HOST, port: int = DEFAULT_UI_PORT) -> Tuple[HTTPServer, Thread, str, int]:
-    """Start the lightweight UI server in a thread and return (server, thread, bound_host, bound_port).
-    - Supports dynamic port assignment via port=0 (Windows-friendly).
-    - Uses ThreadingHTTPServer so long-lived SSE (/events) won't block other routes like /preview.png.
-    """
-    class _Handler(UIHandler):
-        pass
-    _Handler.event_server = event_server  # inject instance
-
-    # Switch to ThreadingHTTPServer for concurrent handling of /events and /preview.png
-    httpd = ThreadingHTTPServer((host, port), _Handler)
-    # Effective address after binding (port may be 0 -> OS picks an available one)
-    bound_host, bound_port = httpd.server_address[0], httpd.server_address[1]
-    t = Thread(target=httpd.serve_forever, name="mcp-ui", daemon=True)
-    t.start()
-    return httpd, t, bound_host, bound_port
-
-
-async def stream_think(event_server: EventServer, text: str) -> None:
+def stream_think(event_server: EventServer, text: str) -> None:
     """Emit think blocks line by line (for stream-safe rendering)."""
     for line in text.splitlines():
         event_server.broadcast("think", line)
 
 
-async def update_preview(event_server: EventServer, png_b64: str, url: Optional[str] = None) -> None:
+def update_preview(event_server: EventServer, png_b64: str, url: Optional[str] = None) -> None:
     event_server.set_preview_png(png_b64)
     if url:
         event_server.broadcast("url", url)

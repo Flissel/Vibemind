@@ -3,19 +3,39 @@
 Sakana Desktop Assistant - Self-learning AI assistant inspired by Sakana AI
 """
 
-import asyncio
-import signal
+# CRITICAL: Set environment variables BEFORE any imports
+import os
 import sys
 from pathlib import Path
+
+# FORCE venv Python for subprocess spawning (MUST be before any other imports)
+PROJECT_ROOT = Path(__file__).parent.parent
+VENV_PYTHON = PROJECT_ROOT / '.venv' / 'Scripts' / 'python.exe'
+if VENV_PYTHON.exists():
+    os.environ['SAKANA_VENV_PYTHON'] = str(VENV_PYTHON)
+    print(f"[INIT] Set SAKANA_VENV_PYTHON={os.environ['SAKANA_VENV_PYTHON']}", file=sys.stderr)
+
+# Load .env EARLY to get OpenRouter API key
+try:
+    from dotenv import load_dotenv
+    env_file = PROJECT_ROOT / '.env'
+    if env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+        print(f"[INIT] Loaded environment from {env_file}", file=sys.stderr)
+except Exception as e:
+    print(f"[INIT] Warning: Could not load .env: {e}", file=sys.stderr)
+
+# Add parent directory to path
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# Now safe to import other modules
+import asyncio
+import signal
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import argparse
 from typing import Optional
-import os
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core import Config, SakanaAssistant
 from src.ui.cli_interface import CLIInterface
@@ -66,6 +86,78 @@ setup_logging()
 
 logger = logging.getLogger(__name__)
 
+def setup_openrouter_config():
+    """Load OpenRouter config from config.yaml and set as environment variables.
+
+    This makes OpenRouter settings available to all MCP agents globally.
+    """
+    try:
+        import yaml
+        config_file = PROJECT_ROOT / 'config.yaml'
+
+        if not config_file.exists():
+            logger.warning("config.yaml not found, skipping OpenRouter setup")
+            return
+
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+
+        openrouter_config = config.get('openrouter', {})
+
+        if not openrouter_config.get('enabled', False):
+            logger.info("[OpenRouter] Disabled in config.yaml")
+            return
+
+        # Set OpenRouter API key from config or keep existing env var
+        api_key = openrouter_config.get('api_key') or os.getenv('OPENROUTER_API_KEY')
+        if api_key:
+            os.environ['OPENROUTER_API_KEY'] = api_key
+            logger.info("[OpenRouter] API key configured")
+        else:
+            logger.warning("[OpenRouter] No API key found in config or environment")
+
+        # Set base URL
+        base_url = openrouter_config.get('base_url', 'https://openrouter.ai/api/v1')
+        os.environ['OPENROUTER_BASE_URL'] = base_url
+
+        # Get environment mode (dev or prod)
+        import json
+        mode = openrouter_config.get('mode', 'prod')
+        os.environ['OPENROUTER_MODE'] = mode
+
+        # Set dev models configuration
+        dev_models = openrouter_config.get('dev_models', {})
+        os.environ['OPENROUTER_DEV_MODELS'] = json.dumps(dev_models)
+
+        # Set model selection strategy as JSON string (agents will parse it)
+        model_selection = openrouter_config.get('model_selection', {})
+        os.environ['OPENROUTER_MODEL_SELECTION'] = json.dumps(model_selection)
+
+        # Set task routing rules
+        task_routing = openrouter_config.get('task_routing', {})
+        os.environ['OPENROUTER_TASK_ROUTING'] = json.dumps(task_routing)
+
+        # Set per-tool model overrides
+        tool_models = openrouter_config.get('tool_models', {})
+        os.environ['OPENROUTER_TOOL_MODELS'] = json.dumps(tool_models)
+
+        logger.info("[OpenRouter] Global configuration loaded")
+        logger.info(f"  Mode: {mode}")
+        if mode == "dev":
+            logger.info(f"  Dev default model: {dev_models.get('default', 'not set')}")
+            logger.info(f"  Dev alternative model: {dev_models.get('alternative', 'not set')}")
+        else:
+            logger.info(f"  Primary model: {model_selection.get('primary', 'not set')}")
+            logger.info(f"  Complex model: {model_selection.get('complex', 'not set')}")
+            logger.info(f"  Reasoning model: {model_selection.get('reasoning', 'not set')}")
+        logger.info(f"  Tool-specific models: {list(tool_models.keys())}")
+
+    except Exception as e:
+        logger.error(f"[OpenRouter] Failed to load config: {e}")
+
+# Setup OpenRouter before starting assistant
+setup_openrouter_config()
+
 class AssistantRunner:
     """Main runner for the assistant"""
     
@@ -99,7 +191,7 @@ class AssistantRunner:
         
         if self.config.enable_gui:
             try:
-                from src.ui.gui_interface import GUIInterface, set_data_directories
+                from src.gui import GUIInterface, set_data_directories
                 # Configure data directories for GUI components
                 set_data_directories(DATA_DIR, LOGS_DIR, SESSIONS_DIR, TMP_DIR)
                 self.interface = GUIInterface(self.assistant)

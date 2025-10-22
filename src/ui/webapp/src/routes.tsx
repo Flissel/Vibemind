@@ -1,5 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { Outlet, Link } from '@tanstack/react-router'
+import { ensureSessionStream, stopSessionStream } from './hooks/streamsManager'
+import SessionStreamsStatus from './components/SessionStreamsStatus'
+import { MCPSessionViewer } from './components/MCPSessionViewer'
+import { SecretsManager } from './components/SecretsManager'
+import { MCPToolViewer } from './components/MCPToolViewer'
 
 // --- Typed API client (clear comments for easy debug) ---
 // Playwright session status shape
@@ -45,12 +50,12 @@ async function getPlugins(): Promise<{ plugins: Array<{ name: string; version: s
 }
 
 // Session management API functions
-async function getSessions(): Promise<{ sessions: Array<{ session_id: string; name: string; model: string; tools: string[]; status: string; host?: string; port?: number; agent_pid?: number }> }> {
+async function getSessions(): Promise<{ sessions: Array<{ session_id: string; name: string; model: string; tools: string[]; status: string; host?: string; port?: number; agent_pid?: number; connected?: boolean; task?: string; target_tool?: string; last_response?: string; last_tool_executed?: string; started_at?: number; stopped_at?: number; duration_ms?: number }> }> {
   const res = await fetch('/api/sessions')
   return await res.json()
 }
 
-async function createSession(sessionData: { name: string; model: string; tools: string[] }): Promise<{ success: boolean; session?: any; error?: string }> {
+async function createSession(sessionData: { name: string; model: string; tools: string[]; task?: string; target_tool?: string }): Promise<{ success: boolean; session?: any; error?: string }> {
   const res = await fetch('/api/sessions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -98,15 +103,151 @@ async function createPlaywrightSession(sessionData: { name: string; model: strin
   })
   return await res.json()
 }
+
+// Get session logs
+async function getSessionLogs(sessionId: string): Promise<{ session_id: string; lines: string[]; total_lines: number; showing_lines: number }> {
+  const res = await fetch(`/api/sessions/${sessionId}/logs`)
+  return await res.json()
+}
+
+// SessionViewerModal component with logs
+function SessionViewerModal({ sessionId, sessions, onClose }: { sessionId: string; sessions: any[]; onClose: () => void }) {
+  const [showLogs, setShowLogs] = useState(false)
+  const [logs, setLogs] = useState<string[]>([])
+  const [logsError, setLogsError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!showLogs) return
+
+    const loadLogs = async () => {
+      try {
+        const data = await getSessionLogs(sessionId)
+        setLogs(data.lines || [])
+        setLogsError(null)
+      } catch (e: any) {
+        setLogsError(e.message || 'Failed to load logs')
+      }
+    }
+
+    loadLogs()
+    const interval = setInterval(loadLogs, 3000)
+    return () => clearInterval(interval)
+  }, [sessionId, showLogs])
+
+  const session = sessions.find(s => s.session_id === sessionId)
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '10px'
+    }} onClick={onClose}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        maxWidth: '98vw',
+        maxHeight: '98vh',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ padding: '16px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0 }}>
+            {session?.name || 'Session Viewer'}
+          </h3>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={() => setShowLogs(!showLogs)}
+              className="btn btn-secondary"
+              style={{ fontSize: '14px', padding: '6px 12px' }}
+            >
+              {showLogs ? 'Hide Logs' : 'Show Logs'}
+            </button>
+            <button
+              onClick={onClose}
+              className="btn btn-ghost"
+              style={{ fontSize: '20px', padding: '4px 12px' }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: showLogs ? '0 0 60%' : 1, overflow: 'auto' }}>
+            {(() => {
+              if (!session) return <div style={{ padding: '20px' }}>Session not found</div>
+
+              if (session.target_tool === 'playwright') {
+                return (
+                  <iframe
+                    key={sessionId}
+                    title={`Playwright Viewer - ${session.name}`}
+                    src={`/mcp/playwright/session/${sessionId}/`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
+                )
+              } else if (session.target_tool === 'github') {
+                return (
+                  <MCPSessionViewer
+                    sessionId={sessionId}
+                    targetTool="github"
+                  />
+                )
+              } else {
+                return (
+                  <MCPToolViewer
+                    sessionId={sessionId}
+                    toolName={session.target_tool || 'unknown'}
+                    sessionName={session.name}
+                  />
+                )
+              }
+            })()}
+          </div>
+          {showLogs && (
+            <div style={{ flex: '0 0 40%', borderTop: '2px solid #343a40', display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e' }}>
+              <div style={{ padding: '8px 16px', backgroundColor: '#2d2d30', fontWeight: 'bold', fontSize: '13px', color: '#d4d4d4', borderBottom: '1px solid #3e3e42' }}>
+                Session Logs ({logs.length} lines)
+              </div>
+              <div style={{ flex: 1, overflow: 'auto', padding: '12px', fontFamily: 'Consolas, "Courier New", monospace', fontSize: '12px', lineHeight: '1.5', backgroundColor: '#1e1e1e' }}>
+                {logsError ? (
+                  <div style={{ color: '#f48771' }}>Error: {logsError}</div>
+                ) : logs.length === 0 ? (
+                  <div style={{ color: '#858585' }}>No logs available yet...</div>
+                ) : (
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#d4d4d4' }}>
+                    {logs.join('\n')}
+                  </pre>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function RootLayout() {
   return (
-    <div style={{ fontFamily: 'sans-serif' }}>
-      <nav style={{ display: 'flex', gap: 12, padding: 12, borderBottom: '1px solid #ddd' }}>
-        <Link to="/" activeOptions={{ exact: true }}>Chat</Link>
-        <Link to="/sessions">Sessions</Link>
-        <Link to="/tools">Tools</Link>
+    <div className="app-root">
+      <nav className="app-nav">
+        <Link to="/" activeOptions={{ exact: true }} className="nav-link">Chat</Link>
+        <Link to="/sessions" className="nav-link">Sessions</Link>
+        <Link to="/tools" className="nav-link">Tools</Link>
+        <Link to="/secrets" className="nav-link">Secrets</Link>
       </nav>
-      <div style={{ padding: 16 }}>
+      <div className="app-content">
         <Outlet />
       </div>
     </div>
@@ -135,15 +276,15 @@ export function ChatView() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
 
-  const append = (m: { role: 'user' | 'assistant'; text: string }) => {
+  const append = useCallback((m: { role: 'user' | 'assistant'; text: string }) => {
     setMessages(prev => {
       const next = [...prev, m]
       try { localStorage.setItem('chat_history', JSON.stringify(next)) } catch {}
       return next
     })
-  }
+  }, [])
 
-  const onSend = async () => {
+  const onSend = useCallback(async () => {
     const text = input.trim()
     if (!text) return
     setSending(true)
@@ -158,7 +299,7 @@ export function ChatView() {
     } finally {
       setSending(false)
     }
-  }
+  }, [input, append])
 
   return (
     <div style={{ display: 'grid', gridTemplateRows: '1fr auto', height: '70vh' }}>
@@ -203,6 +344,14 @@ interface PlaywrightSession {
   port?: number | null
   agent_pid?: number | null
   agent_running?: boolean
+  // NEW: session metadata fields from backend
+  task?: string
+  target_tool?: string
+  last_response?: string
+  last_tool_executed?: string
+  started_at?: number
+  stopped_at?: number
+  duration_ms?: number
   loading?: boolean  // Frontend-only state
   iframeKey?: number  // Frontend-only state for iframe refresh
 }
@@ -211,6 +360,7 @@ export function PlaywrightView() {
   // Multi-session state management - now using backend sessions
   const [sessions, setSessions] = useState<PlaywrightSession[]>([])
   const [loading, setLoading] = useState(false)
+  const [viewerSessionId, setViewerSessionId] = useState<string | null>(null)
 
   // Function to fetch all sessions from backend
   const refreshSessions = async () => {
@@ -298,7 +448,9 @@ export function PlaywrightView() {
 
   // Remove a session using backend API
   const removeSession = async (sessionId: string) => {
-    if (confirm('Are you sure you want to delete this session?')) {
+    const skipConfirmation = localStorage.getItem('skipDeleteConfirmation') === 'true'
+
+    if (skipConfirmation || confirm('Are you sure you want to delete this session?')) {
       setLoading(true)
       try {
         const result = await deleteSession(sessionId)
@@ -361,15 +513,6 @@ export function PlaywrightView() {
   // Initial setup - load sessions from backend
   useEffect(() => {
     refreshSessions()
-  }, [])
-
-  // Polling for all sessions - refresh from backend periodically
-  useEffect(() => {
-    const pollInterval = setInterval(() => {
-      refreshSessions()
-    }, 3000)  // Increased to 3 seconds to reduce load
-    
-    return () => clearInterval(pollInterval)
   }, [])
 
   // Track connection status changes and refresh iframe when it changes
@@ -497,64 +640,132 @@ export function PlaywrightView() {
 
 export function SessionsView() {
   // State management for sessions
-  const [sessions, setSessions] = useState<Array<{ session_id: string; name: string; model: string; tools: string[]; status: string; host?: string; port?: number; agent_pid?: number }>>([])
+  const [sessions, setSessions] = useState<PlaywrightSession[]>([])
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [viewerSessionId, setViewerSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newSessionName, setNewSessionName] = useState('')
-  const [newSessionModel, setNewSessionModel] = useState('gpt-4')
-  const [newSessionTools, setNewSessionTools] = useState(['playwright'])
-  const viewerRef = useRef<HTMLIFrameElement | null>(null)
+  const [newSessionModel, setNewSessionModel] = useState('openai/gpt-4o')
+  const [newSessionTools, setNewSessionTools] = useState<string[]>([])
+  const [newSessionTask, setNewSessionTask] = useState('')
+  const [newTargetTool, setNewTargetTool] = useState('playwright')
+  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() =>
+    localStorage.getItem('skipDeleteConfirmation') === 'true'
+  )
+  const [availableModels, setAvailableModels] = useState<Array<{id: string; name: string; type: string}>>([])
+  const [availableTools, setAvailableTools] = useState<Array<{name: string; description: string}>>([])
+
+  // Fetch available models and tools on mount
+  useEffect(() => {
+    const fetchAvailableOptions = async () => {
+      try {
+        // Fetch models
+        const modelsRes = await fetch('/api/models/available')
+        const modelsData = await modelsRes.json()
+
+        // Filter to only show top-tier models (Sonnet 4.0, GPT-4o, and minis)
+        const topTierModels = modelsData.available_models?.filter((m: any) =>
+          m.id === 'anthropic/claude-sonnet-4.0' ||
+          m.id === 'openai/gpt-4o' ||
+          m.id === 'openai/gpt-4o-mini' ||
+          m.id === 'anthropic/claude-3.5-haiku'
+        ) || []
+
+        setAvailableModels(topTierModels)
+
+        // Fetch tools
+        const toolsRes = await fetch('/api/mcp/tools')
+        const toolsData = await toolsRes.json()
+        setAvailableTools(toolsData.tools || [])
+      } catch (error) {
+        console.error('Failed to fetch available options:', error)
+      }
+    }
+    fetchAvailableOptions()
+  }, [])
+  const [showDevSettings, setShowDevSettings] = useState(false)
+
+  // Sync tools array with selected target tool
+  React.useEffect(() => {
+    setNewSessionTools([newTargetTool])
+  }, [newTargetTool])
 
   // Refresh sessions from API
   const refreshSessions = async () => {
     try {
       const result = await getSessions()
-      setSessions(result.sessions || [])
-      // Auto-select first session if none selected
-      if (!selectedSessionId && result.sessions.length > 0) {
-        setSelectedSessionId(result.sessions[0].session_id)
+      const normalized = (result.sessions || []).map(session => ({
+        ...session,
+        connected: Boolean((session as any).connected ?? false)
+      }))
+      setSessions(normalized)
+
+      // Only clear selection if selected session was deleted
+      if (normalized.length === 0) {
+        setSelectedSessionId(null)
+      } else if (selectedSessionId && !normalized.find(s => s.session_id === selectedSessionId)) {
+        setSelectedSessionId(null)
       }
     } catch (error) {
       console.error('Failed to refresh sessions:', error)
     }
   }
 
-  // Auto-refresh sessions every 3 seconds
+  // Auto-refresh sessions every 3 seconds (not too aggressive)
   useEffect(() => {
     refreshSessions()
     const interval = setInterval(refreshSessions, 3000)
     return () => clearInterval(interval)
   }, [])
 
-  // When switching session tabs, bring the live viewer into focus
+  // Ensure background streaming for running sessions and cleanup stopped ones
   useEffect(() => {
-    const el = viewerRef.current
-    if (el) {
-      try {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        el.focus()
-      } catch {}
-    }
-  }, [selectedSessionId])
+    // Health-aware filter: must have status='running', host/port, AND agent_running=true
+    const runningSessions = sessions.filter(s =>
+      s.status === 'running' &&
+      s.host &&
+      s.port &&
+      s.agent_running !== false  // Include if undefined (older sessions) or true
+    )
+    const runningIds = new Set(runningSessions.map(s => s.session_id))
 
-  // Create new session
+    // Start streams ONLY for Playwright sessions (others use MCPSessionViewer with own SSE)
+    runningSessions
+      .filter(s => s.target_tool === 'playwright')
+      .forEach(s => ensureSessionStream(s.session_id))
+
+    // Stop streams for sessions that are no longer running
+    sessions
+      .filter(s => s.status !== 'running' && !runningIds.has(s.session_id))
+      .forEach(s => stopSessionStream(s.session_id))
+  }, [sessions])
+
+  // Create new session with auto-generated UUID-based name
   const handleCreateSession = async () => {
-    if (newSessionName.trim()) {
+    if (newSessionTask.trim()) {
       setLoading(true)
       try {
+        // Generate UUID-based name
+        const uuid = crypto.randomUUID()
+        const shortId = uuid.split('-')[0]
+        const autoGeneratedName = `session-${shortId}`
+
         const result = await createSession({
-          name: newSessionName.trim(),
+          name: autoGeneratedName,
           model: newSessionModel,
-          tools: newSessionTools
+          tools: newSessionTools,
+          task: newSessionTask.trim(),
+          target_tool: newTargetTool.trim() || undefined
         })
         if (result.success && result.session) {
           await refreshSessions()
           setSelectedSessionId(result.session.session_id)
           setShowCreateForm(false)
-          setNewSessionName('')
           setNewSessionModel('gpt-4')
           setNewSessionTools(['playwright'])
+          setNewSessionTask('')
+          setNewTargetTool('playwright')
         } else {
           alert(`Failed to create session: ${result.error || 'Unknown error'}`)
         }
@@ -602,7 +813,9 @@ export function SessionsView() {
 
   // Delete session
   const handleDeleteSession = async (sessionId: string) => {
-    if (confirm('Are you sure you want to delete this session?')) {
+    const skipConfirmation = localStorage.getItem('skipDeleteConfirmation') === 'true'
+
+    if (skipConfirmation || confirm('Are you sure you want to delete this session?')) {
       setLoading(true)
       try {
         const result = await deleteSession(sessionId)
@@ -623,60 +836,141 @@ export function SessionsView() {
     }
   }
 
+  // Toggle skip delete confirmation setting
+  const toggleSkipDeleteConfirmation = () => {
+    const newValue = !skipDeleteConfirmation
+    setSkipDeleteConfirmation(newValue)
+    localStorage.setItem('skipDeleteConfirmation', String(newValue))
+  }
+
   const selectedSession = sessions.find(s => s.session_id === selectedSessionId)
+  // Health-aware filter for viewer display: exclude stuck/unhealthy sessions
+  const runningSessions = sessions.filter(s =>
+    s.status === 'running' &&
+    s.host &&
+    s.port &&
+    s.agent_running !== false  // Exclude explicitly dead agents
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header with session tabs and controls */}
-      <div style={{ borderBottom: '1px solid #ddd', padding: '8px 16px', backgroundColor: '#f8f9fa' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <h3 style={{ margin: 0, fontSize: '16px' }}>Agent Sessions</h3>
-          <button 
-            onClick={() => setShowCreateForm(!showCreateForm)} 
-            style={{ padding: '4px 8px', fontSize: '12px' }}
+      <div className="card">
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>Agent Sessions</div>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="btn btn-primary"
             disabled={loading}
           >
             + New Session
           </button>
-          <button 
-            onClick={refreshSessions} 
-            style={{ padding: '4px 8px', fontSize: '12px' }}
+          <button
+            onClick={refreshSessions}
+            className="btn btn-ghost"
             disabled={loading}
           >
             Refresh
           </button>
+          <div style={{ marginLeft: 'auto' }}>
+            <button
+              onClick={() => setShowDevSettings(!showDevSettings)}
+              className="btn btn-ghost"
+              style={{ fontSize: 12 }}
+            >
+              {showDevSettings ? '⚙️ Hide Dev' : '⚙️ Dev'}
+            </button>
+          </div>
         </div>
 
-        {/* Create session form */}
+        {/* Dev Settings Panel */}
+        {showDevSettings && (
+          <div className="card" style={{ margin: '8px 12px', backgroundColor: '#f5f5f5' }}>
+            <div className="card-body" style={{ padding: '12px' }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Developer Settings</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={skipDeleteConfirmation}
+                  onChange={toggleSkipDeleteConfirmation}
+                />
+                <span>Skip delete confirmation dialogs</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Compact status table fed by background streams */}
+        {sessions.length > 0 && (
+          <SessionStreamsStatus sessions={sessions.map(s => ({ id: s.session_id, name: s.name, status: s.status }))} />
+        )}
+
+        {/* Create session form - simplified with auto-generated name */}
         {showCreateForm && (
-          <div style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: 'white', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="card" style={{ margin: '8px 12px' }}>
+            <div className="card-body" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="text"
-                placeholder="Session name"
-                value={newSessionName}
-                onChange={(e) => setNewSessionName(e.target.value)}
-                style={{ padding: '4px 8px', minWidth: '120px' }}
+                placeholder="Task (required)"
+                value={newSessionTask}
+                onChange={(e) => setNewSessionTask(e.target.value)}
+                className="input"
+                style={{ minWidth: '300px', flex: 1 }}
               />
               <select
                 value={newSessionModel}
                 onChange={(e) => setNewSessionModel(e.target.value)}
-                style={{ padding: '4px 8px' }}
+                className="input"
               >
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="claude-3">Claude 3</option>
+                {availableModels.length > 0 ? (
+                  availableModels.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="openai/gpt-4o">GPT-4o</option>
+                    <option value="anthropic/claude-sonnet-4.0">Claude Sonnet 4.0</option>
+                    <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                    <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku</option>
+                  </>
+                )}
+              </select>
+              <select
+                value={newTargetTool}
+                onChange={(e) => setNewTargetTool(e.target.value)}
+                className="input"
+                title={availableTools.find(t => t.name === newTargetTool)?.description || ''}
+              >
+                {availableTools.length > 0 ? (
+                  availableTools.map((tool) => (
+                    <option key={tool.name} value={tool.name} title={tool.description}>
+                      {tool.name}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="playwright">playwright</option>
+                    <option value="github">github</option>
+                    <option value="docker">docker</option>
+                    <option value="desktop">desktop</option>
+                    <option value="context7">context7</option>
+                    <option value="redis">redis</option>
+                    <option value="supabase">supabase</option>
+                  </>
+                )}
               </select>
               <button
                 onClick={handleCreateSession}
-                disabled={loading || !newSessionName.trim()}
-                style={{ padding: '4px 12px' }}
+                disabled={loading || !newSessionTask.trim()}
+                className="btn btn-primary"
               >
                 Create
               </button>
               <button
                 onClick={() => setShowCreateForm(false)}
-                style={{ padding: '4px 8px' }}
+                className="btn btn-ghost"
               >
                 Cancel
               </button>
@@ -684,96 +978,103 @@ export function SessionsView() {
           </div>
         )}
 
-        {/* Session tabs */}
-        <div style={{ display: 'flex', gap: '2px', overflowX: 'auto' }}>
-          {sessions.map((session) => (
-            <div
-              key={session.session_id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '4px 8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px 4px 0 0',
-                backgroundColor: selectedSessionId === session.session_id ? 'white' : '#f0f0f0',
-                cursor: 'pointer',
-                minWidth: '100px',
-                fontSize: '11px'
-              }}
-              onClick={() => setSelectedSessionId(session.session_id)}
-            >
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '1px', fontSize: '11px' }}>{session.name}</div>
-                <div style={{ color: '#666', fontSize: '9px', lineHeight: '1.2' }}>
-                  <span style={{ 
-                    padding: '1px 3px', 
-                    borderRadius: '6px', 
-                    backgroundColor: session.status === 'running' ? '#d4edda' : '#f8d7da',
-                    color: session.status === 'running' ? '#155724' : '#721c24'
-                  }}>
-                    {session.status}
-                  </span>
-                  <span style={{ margin: '0 2px' }}>•</span>
-                  <span>{session.model.replace('gpt-', '').replace('-turbo', '')}</span>
-                </div>
-                <div style={{ color: '#0066cc', fontSize: '9px', fontWeight: 'bold' }}>
-                  {session.tools.join(', ')}
+        {/* Session list */}
+        {sessions.length > 0 && (
+          <div style={{ margin: '12px' }}>
+            {sessions.map((session) => (
+              <div
+                key={session.session_id}
+                className="card"
+                style={{ marginBottom: '8px', cursor: 'pointer' }}
+                onClick={() => setSelectedSessionId(session.session_id)}
+              >
+                <div className="card-body" style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{session.name}</div>
+                      <span className={`badge ${
+                        session.status === 'running' && session.agent_running !== false
+                          ? 'badge-success'
+                          : session.status === 'running' && session.agent_running === false
+                          ? 'badge-warning'
+                          : session.status === 'completed'
+                          ? 'badge-info'
+                          : 'badge-danger'
+                      }`} style={{ fontSize: '10px' }}>
+                        {session.status === 'running' && session.agent_running === false ? 'stuck' : session.status}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#666' }}>{session.model}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#888' }}>
+                        {session.tools.join(', ')}
+                      </span>
+                    </div>
+                    {session.task && (
+                      <div style={{ fontSize: '11px', color: '#555', marginBottom: '4px' }}>
+                        Task: {session.task}
+                      </div>
+                    )}
+                    {session.last_response && (
+                      <div style={{ fontSize: '11px', color: '#007bff', marginTop: '4px', padding: '4px 8px', backgroundColor: '#e7f3ff', borderRadius: '4px' }}>
+                        <strong>Final Response:</strong> {session.last_response}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                    {session.status === 'running' && session.agent_running !== false && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setViewerSessionId(session.session_id) }}
+                        className="btn btn-primary"
+                        style={{ fontSize: '11px', padding: '4px 10px' }}
+                        disabled={loading}
+                      >
+                        View Live
+                      </button>
+                    )}
+                    {session.status === 'running' ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleStopSession(session.session_id) }}
+                        className="btn btn-danger"
+                        style={{ fontSize: '11px', padding: '4px 10px' }}
+                        disabled={loading}
+                      >
+                        Stop
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleStartSession(session.session_id) }}
+                        className="btn btn-primary"
+                        style={{ fontSize: '11px', padding: '4px 10px' }}
+                        disabled={loading}
+                      >
+                        Start
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.session_id) }}
+                      className="btn btn-ghost"
+                      style={{ fontSize: '11px', padding: '4px 10px' }}
+                      disabled={loading}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '1px', marginLeft: '4px' }}>
-                {session.status === 'running' ? (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleStopSession(session.session_id) }}
-                    style={{ padding: '2px 4px', fontSize: '10px' }}
-                    disabled={loading}
-                  >
-                    Stop
-                  </button>
-                ) : (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleStartSession(session.session_id) }}
-                    style={{ padding: '2px 4px', fontSize: '10px' }}
-                    disabled={loading}
-                  >
-                    Start
-                  </button>
-                )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.session_id) }}
-                  style={{ padding: '2px 4px', fontSize: '10px', color: 'red' }}
-                  disabled={loading}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Session details and iframe */}
-      <div style={{ flex: 1, padding: '16px' }}>
+      {/* Session details */}
+      <div style={{ flex: 1, padding: '16px', overflow: 'auto' }}>
         {selectedSession ? (
           <div>
             <h4>Session: {selectedSession.name}</h4>
-            <div style={{ 
-              marginBottom: '16px', 
-              padding: '8px', 
-              backgroundColor: '#f8f9fa', 
-              border: '1px solid #dee2e6', 
-              borderRadius: '4px',
-              fontSize: '12px'
-            }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', alignItems: 'center' }}>
+            <div className="card" style={{ marginBottom: '16px', fontSize: '12px' }}>
+              <div className="card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <strong style={{ fontSize: '11px' }}>Status:</strong> 
-                  <span style={{ 
-                    padding: '1px 6px', 
-                    borderRadius: '8px', 
-                    fontSize: '10px',
-                    backgroundColor: selectedSession.status === 'running' ? '#d4edda' : '#f8d7da',
-                    color: selectedSession.status === 'running' ? '#155724' : '#721c24'
-                  }}>
+                  <span className={`badge ${selectedSession.status === 'running' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
                     {selectedSession.status}
                   </span>
                 </div>
@@ -803,40 +1104,39 @@ export function SessionsView() {
                     <strong>PID:</strong> {selectedSession.agent_pid}
                   </div>
                 )}
+                {selectedSession.task && (
+                  <div style={{ fontSize: '11px' }}>
+                    <strong>Task:</strong> {selectedSession.task}
+                  </div>
+                )}
+                <div style={{ fontSize: '11px' }}>
+                  <strong>Target Tool:</strong> {selectedSession.target_tool || '-'}
+                </div>
+                <div style={{ fontSize: '11px' }}>
+                  <strong>Last Tool:</strong> {selectedSession.last_tool_executed || '-'}
+                </div>
+                <div style={{ fontSize: '11px' }}>
+                  <strong>Duration:</strong> {typeof selectedSession.duration_ms === 'number' ? `${Math.round(selectedSession.duration_ms / 1000)}s` : '-'}
+                </div>
+                <div style={{ gridColumn: '1 / -1', fontSize: '11px' }}>
+                  <strong>Last Response:</strong> <span title={selectedSession.last_response || ''}>{selectedSession.last_response ? `${selectedSession.last_response.slice(0, 160)}${selectedSession.last_response.length > 160 ? '…' : ''}` : '-'}</span>
+                </div>
                 <div style={{ gridColumn: '1 / -1', fontSize: '11px', marginTop: '2px' }}>
                   <strong>ID:</strong> 
-                  <code style={{ 
-                    marginLeft: '6px', 
-                    padding: '1px 4px', 
-                    backgroundColor: '#f1f3f4', 
-                    borderRadius: '3px',
-                    fontSize: '10px',
-                    fontFamily: 'monospace'
-                  }}>
+                  <code className="card-surface" style={{ marginLeft: '6px', padding: '1px 4px', fontSize: '10px', fontFamily: 'monospace' }}>
                     {selectedSession.session_id}
                   </code>
                 </div>
               </div>
             </div>
 
-            {/* Iframe for running sessions */}
-            {selectedSession.status === 'running' && selectedSession.host && selectedSession.port && (
-              <div>
-                <h5>Playwright Viewer</h5>
-                <iframe
-                  ref={viewerRef}
-                  tabIndex={-1}
-                  title={`Playwright Viewer - ${selectedSession.name}`}
-                  src={`/mcp/playwright/session/${selectedSession.session_id}/`}
-                  style={{ width: '100%', height: '480px', border: '1px solid #ccc' }}
-                />
-              </div>
-            )}
-
-            {/* Message for stopped sessions */}
-            {selectedSession.status !== 'running' && (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-                <p>Session is not running. Start the session to view the Playwright interface.</p>
+            {/* Session task info */}
+            {selectedSession.task && (
+              <div className="card" style={{ marginTop: '12px' }}>
+                <div className="card-header">Task</div>
+                <div className="card-body" style={{ fontSize: '12px' }}>
+                  {selectedSession.task}
+                </div>
               </div>
             )}
           </div>
@@ -844,6 +1144,15 @@ export function SessionsView() {
           <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
             <p>No sessions available. Create a new session to get started.</p>
           </div>
+        )}
+
+        {/* Modal viewer for active sessions */}
+        {viewerSessionId && (
+          <SessionViewerModal
+            sessionId={viewerSessionId}
+            sessions={sessions}
+            onClose={() => setViewerSessionId(null)}
+          />
         )}
       </div>
     </div>
@@ -922,4 +1231,8 @@ export function ToolsView() {
       </div>
     </div>
   )
+}
+
+export function SecretsView() {
+  return <SecretsManager />
 }

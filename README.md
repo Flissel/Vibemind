@@ -51,6 +51,12 @@ pip install -r requirements.txt
 python src/main.py
 ```
 
+## Documentation
+
+- `docs/QUICK_START.md` for setup details
+- `docs/HELP_MODULES.md` for commands and modules
+- `docs/mcp_usage.md` for MCP tools usage and telemetry learning (Windows-friendly)
+
 ## Security
 
 - All code execution happens in sandboxed environments

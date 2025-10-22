@@ -40,6 +40,9 @@ data/sandbox/
 .env
 .env.local
 
+# MCP Secrets
+src/MCP PLUGINS/servers/secrets.json
+
 # OS
 .DS_Store
 Thumbs.db
