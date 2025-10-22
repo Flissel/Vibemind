@@ -1,0 +1,133 @@
+{
+  "summary": {
+    "total": 11,
+    "success": 0,
+    "partial": 0,
+    "fallback": 10,
+    "failed": 1,
+    "openrouter_used": 0
+  },
+  "results": [
+    {
+      "agent": "GitHub",
+      "description": "List popular Python repositories",
+      "task": "Search for the top 3 most starred Python repositories on GitHub",
+      "expected_model": "gpt-4o-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.046478748321533
+    },
+    {
+      "agent": "GitHub",
+      "description": "Analyze repository structure (reasoning)",
+      "task": "Analyze the architecture of the tensorflow/tensorflow repository",
+      "expected_model": "o1-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.05107069015503
+    },
+    {
+      "agent": "Docker",
+      "description": "List running containers",
+      "task": "List all Docker containers currently running on the system",
+      "expected_model": "gpt-4o-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.041475772857666
+    },
+    {
+      "agent": "Docker",
+      "description": "Design container orchestration (reasoning)",
+      "task": "Design a Docker Compose setup for a microservices architecture with Redis, PostgreSQL, and a Node.js API",
+      "expected_model": "o1-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.047831535339355
+    },
+    {
+      "agent": "Playwright",
+      "description": "Navigate to website",
+      "task": "Navigate to https://example.com and capture a screenshot",
+      "expected_model": "gpt-4o",
+      "status": "failed",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": "Failed to get events: 502",
+      "execution_time": 25.045982360839844
+    },
+    {
+      "agent": "Context7",
+      "description": "Search documentation",
+      "task": "Search for React hooks documentation and summarize useState",
+      "expected_model": "gpt-4o",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.049579858779907
+    },
+    {
+      "agent": "Supabase",
+      "description": "List database tables",
+      "task": "List all tables in the Supabase database",
+      "expected_model": "gpt-4o-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.039185523986816
+    },
+    {
+      "agent": "Supabase",
+      "description": "Design database schema (reasoning)",
+      "task": "Design a database schema for a multi-tenant SaaS application with user authentication, subscriptions, and audit logs",
+      "expected_model": "o1-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.052383661270142
+    },
+    {
+      "agent": "Redis",
+      "description": "Get Redis info",
+      "task": "Get Redis server information and list all keys",
+      "expected_model": "gpt-4o-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.047948837280273
+    },
+    {
+      "agent": "Desktop",
+      "description": "List files in current directory",
+      "task": "List all Python files in the current directory",
+      "expected_model": "gpt-4o-mini",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.049138307571411
+    },
+    {
+      "agent": "Windows Automation",
+      "description": "Get system information",
+      "task": "Get Windows system information including OS version and hostname",
+      "expected_model": "gpt-4o",
+      "status": "fallback",
+      "actual_model": null,
+      "openrouter_used": false,
+      "error": null,
+      "execution_time": 15.03860878944397
+    }
+  ]
+}

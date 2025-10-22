@@ -1,1 +1,1 @@
-{"root":["./src/main.tsx","./src/routetree.gen.tsx","./src/routes.tsx"],"version":"5.9.2"}
+{"root":["./src/main.tsx","./src/routetree.gen.tsx","./src/routes.tsx","./src/components/browserpreview.tsx","./src/components/finalresponsemodal.tsx","./src/components/mcpsessionviewer.tsx","./src/components/mcptoolviewer.tsx","./src/components/modelstream.tsx","./src/components/secretsmanager.tsx","./src/components/sessionstreamsstatus.tsx","./src/components/toolevents.tsx","./src/hooks/streamsmanager.ts","./src/hooks/useplaywrightsessionviewer.ts"],"version":"5.9.2"}

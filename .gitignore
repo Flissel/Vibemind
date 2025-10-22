@@ -35,6 +35,10 @@ data/*.db
 data/cache/
 data/logs/
 data/sandbox/
+data/test_results/
+data/.key_salt
+data/evolution_archive.json
+data/metrics.json
 
 # Environment
 .env
@@ -51,6 +55,9 @@ Thumbs.db
 .coverage
 .pytest_cache/
 htmlcov/
+tests/mcp_servers/test_results.json
+tests/mcp_servers/test_results_mcp.log
+tests/integration/test_mcp_routing_output.txt
 
 # Models
 models/
@@ -61,3 +68,30 @@ models/
 # Ignore Playwright profiles directories
 src/MCP PLUGINS/servers/playwright/profiles/*
 src/ui/webapp/node_modules/*
+
+# Logs and temporary files
+*.log
+mcp_server.log
+ml_engine.log
+sakana_assistant.log
+nul
+
+# Images and media
+docs/img_*.png
+docs/img_*.jpg
+docs/img_*.gif
+
+# Temporary scripts
+fix_*.py
+*_backup.py
+
+# Build artifacts
+*.exe
+docker_test.json
+tsconfig.tsbuildinfo
+
+# Utility scripts
+src/MCP PLUGINS/servers/apply_*.py
+src/MCP PLUGINS/servers/check_*.py
+src/MCP PLUGINS/servers/count_*.py
+src/MCP PLUGINS/servers/integrate_*.py
