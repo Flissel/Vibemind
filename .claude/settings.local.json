@@ -60,7 +60,9 @@
       "Bash(git config:*)",
       "Bash(git remote set-url:*)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
