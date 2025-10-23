@@ -45,9 +45,9 @@ Enhance Sakana's 7-layer learning system with Tahlamus's 13 cognitive features t
 
 ---
 
-## 🔗 Integration Strategy: Python Package Import
+## 🔗 Integration Strategy: Path-Based Import
 
-**Approach**: Install Tahlamus as editable Python package in Sakana's environment.
+**Approach**: Add Tahlamus to Python path dynamically (not pip install, not git submodule).
 
 ### Why Python Package (Not Submodule)?
 
@@ -65,10 +65,20 @@ Enhance Sakana's 7-layer learning system with Tahlamus's 13 cognitive features t
 
 ### Installation Command
 
+**Repository**: https://github.com/Flissel/the_brain
+
+**Option A: Install from local clone (recommended for development)**
 ```bash
 cd C:\Users\User\Desktop\sakana-desktop-assistant
 .venv\Scripts\activate
 pip install -e C:\Users\User\Desktop\Tahlamus
+```
+
+**Option B: Install directly from GitHub**
+```bash
+cd C:\Users\User\Desktop\sakana-desktop-assistant
+.venv\Scripts\activate
+pip install git+https://github.com/Flissel/the_brain.git
 ```
 
 This creates a **live link** - changes to Tahlamus immediately available in Sakana.
