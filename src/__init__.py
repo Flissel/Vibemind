@@ -1,1 +1,0 @@
-# Sakana Desktop Assistant

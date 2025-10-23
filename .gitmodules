@@ -10,3 +10,6 @@
 [submodule "sakana-desktop-assistant"]
 	path = sakana-desktop-assistant
 	url = https://github.com/Flissel/sakana-desktop-assistant-.git
+[submodule "the_brain"]
+	path = the_brain
+	url = https://github.com/Flissel/the_brain

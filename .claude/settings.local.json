@@ -76,7 +76,8 @@
       "Bash(git pull:*)",
       "Bash(git fetch:*)",
       "Bash(git log:*)",
-      "Bash(.venv/Scripts/python.exe -m pytest tests/test_evolutionary_meta_learning.py -v)"
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_evolutionary_meta_learning.py -v)",
+      "Bash(xargs rm:*)"
     ],
     "deny": [],
     "ask": []
