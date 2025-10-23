@@ -67,7 +67,16 @@
       "Read(//c/Users/User/Desktop/Moire/**)",
       "Read(//c/Users/User/Desktop/**)",
       "Bash(git submodule:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(pip install:*)",
+      "Bash(.venv/Scripts/python -m pip install:*)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(git stash:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_evolutionary_meta_learning.py -v)"
     ],
     "deny": [],
     "ask": []
