@@ -65,7 +65,9 @@
       "Bash(git checkout:*)",
       "Read(//c/Users/User/Desktop/Moire/build/**)",
       "Read(//c/Users/User/Desktop/Moire/**)",
-      "Read(//c/Users/User/Desktop/**)"
+      "Read(//c/Users/User/Desktop/**)",
+      "Bash(git submodule:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
