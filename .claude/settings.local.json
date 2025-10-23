@@ -62,7 +62,10 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(git commit:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Read(//c/Users/User/Desktop/Moire/build/**)",
+      "Read(//c/Users/User/Desktop/Moire/**)",
+      "Read(//c/Users/User/Desktop/**)"
     ],
     "deny": [],
     "ask": []

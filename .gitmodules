@@ -1,0 +1,3 @@
+[submodule "external/moire"]
+	path = external/moire
+	url = https://github.com/Flissel/MoireTracker.git
