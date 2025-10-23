@@ -1,0 +1,12 @@
+[submodule "MoireTracker"]
+	path = MoireTracker
+	url = https://github.com/Flissel/MoireTracker.git
+[submodule "electron"]
+	path = electron
+	url = https://github.com/Flissel/VibeMind-Electron.git
+[submodule "voice_dialog"]
+	path = voice_dialog
+	url = https://github.com/Flissel/VibeMind-VoiceDialog.git
+[submodule "sakana-desktop-assistant"]
+	path = sakana-desktop-assistant
+	url = https://github.com/Flissel/sakana-desktop-assistant-.git
