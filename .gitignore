@@ -62,3 +62,6 @@ venv/
 env/
 ENV/
 secrets.json
+
+# MCP Playwright browser profiles (large binary files)
+src/MCP\ PLUGINS/servers/playwright/profiles/
