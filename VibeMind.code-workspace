@@ -1,0 +1,50 @@
+{
+  "folders": [
+    {
+      "name": "VibeMind (Root)",
+      "path": "."
+    },
+    {
+      "name": "Sakana Desktop Assistant",
+      "path": "sakana-desktop-assistant"
+    },
+    {
+      "name": "The Brain (ATM-R)",
+      "path": "the_brain"
+    },
+    {
+      "name": "MoireTracker",
+      "path": "MoireTracker"
+    },
+    {
+      "name": "Electron Voice UI",
+      "path": "electron"
+    },
+    {
+      "name": "Voice Dialog",
+      "path": "voice_dialog"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/__pycache__": true,
+      "**/.venv": true,
+      "**/dist": true,
+      "**/build": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.venv": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ms-vscode.cpptools"
+    ]
+  }
+}

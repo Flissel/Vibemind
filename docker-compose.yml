@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  sakana:
+    build:
+      context: ./sakana-desktop-assistant
+      dockerfile: Dockerfile
+    ports:
+      - "8765:8765"  # Web GUI
+    volumes:
+      - ./sakana-desktop-assistant:/app
+      - ./the_brain:/the_brain:ro  # Mount the_brain for imports
+    environment:
+      - PYTHONPATH=/the_brain
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    command: python src/main.py
+
+  electron-ui:
+    build:
+      context: ./electron
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./electron:/app
+    environment:
+      - SAKANA_API_URL=http://sakana:8765
+    command: npm run dev
+
+  # Add other services as needed
+
+networks:
+  vibemind:
+    driver: bridge
