@@ -69,25 +69,39 @@ class SakanaAssistant:
     async def initialize(self):
         """Initialize all components"""
         logger.info("Initializing Sakana Desktop Assistant...")
-        
+
         # Initialize LLM
         self.llm = LLMFactory.create(self.config)
-        
+
         # Initialize memory system
         self.memory_manager = MemoryManager(
             db_path=self.config.memory_db_path,
             llm_interface=self.llm
         )
         await self.memory_manager.initialize()
-        
+
         # Initialize pattern detector
         self.pattern_detector = PatternDetector(self.memory_manager)
-        
-        # Initialize learning systems
+
+        # Initialize Tahlamus bridge (Phase 2: Meta-Learning integration)
+        tahlamus_bridge = None
+        try:
+            from ..tahlamus import TahalamusBridge, TAHLAMUS_AVAILABLE
+            if TAHLAMUS_AVAILABLE:
+                tahlamus_bridge = TahalamusBridge(
+                    data_dir=self.config.data_dir,
+                    openrouter_api_key=getattr(self.config, 'openrouter_api_key', None)
+                )
+                logger.info("Tahlamus bridge initialized - Meta-Learning enabled")
+        except Exception as e:
+            logger.warning(f"Tahlamus unavailable, using standard learning: {e}")
+
+        # Initialize learning systems WITH Tahlamus integration
         self.evolutionary_learner = EvolutionaryLearner(
             population_size=self.config.population_size,
             mutation_rate=self.config.mutation_rate,
-            archive_path=self.config.data_dir / "evolution_archive.json"
+            archive_path=self.config.data_dir / "evolution_archive.json",
+            tahlamus_bridge=tahlamus_bridge
         )
         self.evolutionary_learner.load_archive()
         

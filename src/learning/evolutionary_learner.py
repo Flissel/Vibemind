@@ -105,25 +105,46 @@ class Individual:
 
 class EvolutionaryLearner:
     """Evolutionary algorithm for self-improvement inspired by Sakana AI"""
-    
+
     def __init__(
         self,
         population_size: int = 20,
         mutation_rate: float = 0.1,
         crossover_rate: float = 0.7,
         elite_size: int = 2,
-        archive_path: Optional[Path] = None
+        archive_path: Optional[Path] = None,
+        tahlamus_bridge: Optional[Any] = None
     ):
         self.population_size = population_size
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.elite_size = elite_size
         self.archive_path = archive_path
-        
+
         self.population: List[Individual] = []
         self.archive: List[Individual] = []  # Best individuals across all generations
         self.generation = 0
         self.fitness_function: Optional[Callable] = None
+
+        # Tahlamus Meta-Learning integration
+        self.tahlamus = tahlamus_bridge
+        self.meta_learner = None
+        self.last_best_fitness = 0.0  # Track improvement for meta-learning
+
+        # Initialize Tahlamus Meta-Learning if available
+        if self.tahlamus and hasattr(self.tahlamus, 'planner') and self.tahlamus.planner:
+            try:
+                from core.meta_learning import MetaLearner, MetaParameters
+                initial_params = MetaParameters(
+                    exploration_rate=mutation_rate,
+                    memory_learning_rate=crossover_rate,
+                    attention_focus_strength=elite_size / population_size
+                )
+                self.meta_learner = MetaLearner(initial_meta_params=initial_params)
+                logger.info("Tahlamus Meta-Learning enabled for EvolutionaryLearner")
+            except ImportError as e:
+                logger.warning(f"Tahlamus Meta-Learning unavailable: {e}")
+                self.meta_learner = None
     
     def initialize_population(self, base_genome: Dict[str, Any]):
         """Initialize population with variations of base genome"""
@@ -149,25 +170,29 @@ class EvolutionaryLearner:
     async def evaluate_population(self, fitness_function: Callable):
         """Evaluate fitness of all individuals"""
         self.fitness_function = fitness_function
-        
+
         # Evaluate fitness in parallel
         tasks = []
         for individual in self.population:
             task = asyncio.create_task(self._evaluate_individual(individual))
             tasks.append(task)
-        
+
         fitnesses = await asyncio.gather(*tasks)
-        
+
         for individual, fitness in zip(self.population, fitnesses):
             individual.fitness = fitness
-        
+
         # Sort by fitness
         self.population.sort(key=lambda x: x.fitness, reverse=True)
-        
+
         # Update archive with best individuals
         self._update_archive()
-        
+
         logger.info(f"Generation {self.generation} - Best fitness: {self.population[0].fitness:.3f}")
+
+        # Adapt meta-parameters if Tahlamus enabled
+        if self.meta_learner:
+            await self._adapt_parameters_from_tahlamus()
     
     async def _evaluate_individual(self, individual: Individual) -> float:
         """Evaluate a single individual"""
@@ -296,3 +321,59 @@ class EvolutionaryLearner:
             return self.population[0].fitness
         else:
             return 0.0
+
+    async def _adapt_parameters_from_tahlamus(self):
+        """Adapt genetic algorithm parameters using Tahlamus Meta-Learning"""
+        if not self.meta_learner or not self.population:
+            return
+
+        # Compute performance metrics
+        best_fitness = self.population[0].fitness
+        fitness_improvement = best_fitness - self.last_best_fitness
+
+        # Determine outcome
+        outcome = 'success' if fitness_improvement > 0 else 'failure'
+
+        # Compute prediction error (normalized fitness delta)
+        # High error = unstable fitness, low error = stable/improving
+        prediction_error = abs(fitness_improvement) / (abs(best_fitness) + 1e-6)
+        prediction_error = min(prediction_error, 1.0)  # Clip to [0, 1]
+
+        # Compute confidence (normalized fitness)
+        # Assume max fitness is around 100.0 for normalization
+        confidence = min(best_fitness / 100.0, 1.0)
+
+        # Adapt meta-parameters
+        updated_params = self.meta_learner.adapt_meta_parameters(
+            outcome=outcome,
+            prediction_error=prediction_error,
+            confidence=confidence,
+            attention_entropy=None  # Not applicable for GA
+        )
+
+        # Apply adapted parameters to genetic algorithm
+        old_mutation = self.mutation_rate
+        old_crossover = self.crossover_rate
+        old_elite = self.elite_size
+
+        self.mutation_rate = updated_params.exploration_rate
+        self.crossover_rate = updated_params.memory_learning_rate
+
+        # Update elite size based on attention focus
+        new_elite_size = max(1, int(updated_params.attention_focus_strength * self.population_size))
+        self.elite_size = min(new_elite_size, self.population_size // 2)
+
+        # Log adaptation if parameters changed significantly
+        if (abs(self.mutation_rate - old_mutation) > 0.01 or
+                abs(self.crossover_rate - old_crossover) > 0.01 or
+                self.elite_size != old_elite):
+            logger.info(
+                f"Tahlamus adapted GA params (gen {self.generation}): "
+                f"mutation={old_mutation:.3f}→{self.mutation_rate:.3f}, "
+                f"crossover={old_crossover:.3f}→{self.crossover_rate:.3f}, "
+                f"elite={old_elite}→{self.elite_size}, "
+                f"fitness_delta={fitness_improvement:+.3f}"
+            )
+
+        # Update last fitness for next iteration
+        self.last_best_fitness = best_fitness
